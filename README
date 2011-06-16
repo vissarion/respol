@@ -1,0 +1,14 @@
+# some simple instructions
+
+To compile the sources we assume you have installed the CGAL library.
+Then you can go to examples directory and run:
+
+$ cmake .
+$ make 
+
+Then you can test the code with some inputs from the examples/input 
+directory. For example you can run 
+
+$ ./res_enum_d_notopcom < inputs/cayley4_small.tmp
+
+and wait ;)
