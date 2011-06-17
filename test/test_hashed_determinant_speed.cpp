@@ -25,17 +25,20 @@ clock_t time_det(){
 #define TEST_DIMENSION(_D,_N) \
         total_topcom=0; \
         total_linbox=0; \
+        total_naive=0; \
         for(size_t i=0;i<_N;++i){ \
                 total_topcom+=time_det<_D,det_topcom<_D,mpq_class> >(); \
                 total_linbox+=time_det<_D,det_linbox<mpq_class> >(); \
+                total_naive+=time_det<_D,det_naive<_D,mpq_class> >(); \
         } \
         std::cout<<_D<<'\t'<<_N<<'\t'<< \
                 ((double)total_topcom)/CLOCKS_PER_SEC<<'\t'<< \
-                ((double)total_linbox)/CLOCKS_PER_SEC<<std::endl;
+                ((double)total_linbox)/CLOCKS_PER_SEC<<'\t'<< \
+                ((double)total_naive)/CLOCKS_PER_SEC<<std::endl;
 
 int main(){
-        clock_t total_topcom,total_linbox;
-        std::cout<<"# size\tqty\ttopcom\tlinbox"<<std::endl;
+        clock_t total_topcom,total_linbox,total_naive;
+        std::cout<<"# size\tqty\ttopcom\tlinbox\tnaive"<<std::endl;
         TEST_DIMENSION(2,1000);
         TEST_DIMENSION(3,1000);
         TEST_DIMENSION(4,1000);

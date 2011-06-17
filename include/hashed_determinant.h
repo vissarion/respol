@@ -15,32 +15,13 @@
 #include <ostream>
 #include <vector>
 #include <numeric>
+#include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
 #ifdef USE_LINBOX_DET
 #include <CGAL/LinBox/mpq_class_field.h>
 #include <CGAL/LinBox/dense_matrix.h>
 #include <linbox/solutions/det.h>
 #endif
-
-// Test equality of two vectors.
-template <class _vec>
-struct eqvec:std::binary_function<_vec,_vec,bool>{
-        bool operator()(const _vec v1,const _vec v2)const{
-                return std::equal(v1.begin(),v1.end(),v2.begin());
-        }
-};
-
-// This gives a perfect hashing function when n is at least the maximum
-// element of the vector.
-template <class _vec,size_t n>
-struct hashvec:std::unary_function<_vec,size_t>{
-        size_t operator()(const _vec v)const{
-                size_t hash=0,count=0;
-                for(typename _vec::const_iterator i=v.begin();i!=v.end();++i)
-                        hash+=(size_t)pow((*i)*n,(count++));
-                return hash;
-        }
-};
 
 // This function object computes the determinant of a matrix using the
 // naive algorithm. The template parameter d makes the generated code not
@@ -52,21 +33,26 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
+        typedef det_naive<d-1,NT>                               NaiveMinorDet;
         __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+                NaiveMinorDet nd;
                 NT det(0);
-                size_t idx2[d];
-                // Compute the first index array (don't care about the last
-                // element, it's there to be consistent with the last
-                // iteration of the last loop).
+                size_t *idx2=(size_t*)malloc((d-1)*sizeof(size_t));
+                // Compute the first index array.
                 for(size_t i=1;i<d;++i)
                         idx2[i-1]=idx[i];
-                for(size_t i=0;i<d;++i){
-                        det+=((i+d)%2?-1:1)*
-                             m[idx[i]][d-1]*
-                             det_naive<d-1,NT>()(idx2,m);
+                for(size_t i=0;i<d-1;++i){
+                        if((i+d)%2)
+                                det+=(m[idx[i]][d-1]*nd(idx2,m));
+                        else
+                                det-=(m[idx[i]][d-1]*nd(idx2,m));
                         // Update the index array.
                         idx2[i]=idx[i];
                 }
+                // We do the last iteration outside the loop to avoid
+                // modifying the array (small speedup).
+                det+=m[idx[d-1]][d-1]*nd(idx2,m);
+                free(idx2);
                 return det;
         }
 };
@@ -106,7 +92,7 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        NT operator()(const size_t *idx,const Matrix &m)const{
+        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
                 // Copy the matrix, since it can be modified.
                 Matrix tmp;
                 for(size_t i=0;i<d;++i)
@@ -173,7 +159,7 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        NT operator()(const size_t *idx,const Matrix &m)const{
+        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
                 typedef CGAL::Linbox_rational_field<NT>         Field;
                 typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
                 // TODO: check that the constructed matrix is correct!
@@ -191,10 +177,12 @@ public std::binary_function<size_t*,
 
 // HashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
-// of this matrix. It takes two template parameters: _NT is the number type
-// of the matrix elements and _dimensions is the number of rows of the
-// matrix (which is equal to dimension of the points). The amount of
-// columns is determined at construction time.
+// of this matrix. It takes three template parameters: _NT is the number
+// type of the matrix elements. _dimensions is the number of rows of the
+// matrix (which is equal to dimension of the points; the amount of columns
+// is determined at construction time). _DetF is a function object that
+// computes a determinant of a submatrix of the given one.
+// TODO: describe the _DetF interface
 
 template <class _NT,
           size_t d,
@@ -212,10 +200,7 @@ class HashedDeterminant{
         typedef std::vector<NT>                         Column;
         typedef std::vector<Column>                     Matrix;
         typedef std::vector<size_t>                     Index;
-        typedef boost::unordered_map<Index,
-                                     NT,
-                                     hashvec<Index,d>,
-                                     eqvec<Index> >     Determinants;
+        typedef boost::unordered_map<Index,NT>          Determinants;
 
         public:
         HashedDeterminant(size_t columns):
@@ -224,7 +209,7 @@ class HashedDeterminant{
         number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
 #endif
-        _points(columns,Column(d)),_determinants()
+        _points(columns,Column(d)),_determinants(),_compute_det()
         {};
 
         template <class Iterator>
@@ -234,19 +219,29 @@ class HashedDeterminant{
         number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
 #endif
-        _points(),_determinants(){
+        _points(),_determinants(),_compute_det(){
                 for(Iterator i=begin;i!=end;++i)
                         _points.push_back(*i);
         }
 
         ~HashedDeterminant(){
 #ifdef HASH_STATISTICS
+        size_t number_of_collisions=0,bad_buckets=0;
+        for(size_t bucket=0;bucket!=_determinants.bucket_count();++bucket)
+                if(_determinants.bucket_size(bucket)>1){
+                        number_of_collisions+=
+                                (_determinants.bucket_size(bucket)-1);
+                        ++bad_buckets;
+                }
         std::cerr<<"hash statistics:\nnumber of determinant calls: "<<
                 number_of_determinant_calls<<
                 "\nnumber of hashed determinants: "<<
                 number_of_hashed_determinants<<
                 "\nnumber of computed determinants: "<<
-                number_of_computed_determinants<<std::endl;
+                number_of_computed_determinants<<
+                "\nnumber of collisions: "<<
+                number_of_collisions<<
+                " (in "<<bad_buckets<<" buckets)"<<std::endl;
 #endif
         }
 
@@ -262,7 +257,7 @@ class HashedDeterminant{
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
 #endif
-                        _determinants[idx]=DetF()(&(idx[0]),_points);
+                        _determinants[idx]=_compute_det(&(idx[0]),_points);
                 }else{
 #ifdef HASH_STATISTICS
                         ++number_of_hashed_determinants;
@@ -296,6 +291,7 @@ class HashedDeterminant{
         private:
         Matrix _points;
         Determinants _determinants;
+        DetF _compute_det;
 #ifdef HASH_STATISTICS
         public:
         unsigned number_of_determinant_calls;
