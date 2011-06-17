@@ -1,6 +1,17 @@
 #ifndef HASHED_DETERMINANT_H
 #define HASHED_DETERMINANT_H
 
+// Force inlining of template functions is very important to avoid
+// recursion in the naive determinant computation.
+#ifdef _MSC_VER
+#define __FORCE_INLINE __forceinline
+#elif defined(__GNUC__)
+#define __FORCE_INLINE __inline__ __attribute__((always_inline))
+#else
+#define __FORCE_INLINE inline
+#endif
+
+#include <cmath>
 #include <ostream>
 #include <vector>
 #include <numeric>
@@ -26,28 +37,80 @@ struct hashvec:std::unary_function<_vec,size_t>{
         size_t operator()(const _vec v)const{
                 size_t hash=0,count=0;
                 for(typename _vec::const_iterator i=v.begin();i!=v.end();++i)
-                        hash+=(*i)*n^(count++);
+                        hash+=(size_t)pow((*i)*n,(count++));
                 return hash;
+        }
+};
+
+// This function object computes the determinant of a matrix using the
+// naive algorithm. The template parameter d makes the generated code not
+// recursive, since the function calls are expanded at compilation time.
+template <int d,class _NT>
+struct det_naive:
+public std::binary_function<size_t*,
+                            std::vector<std::vector<_NT> >,
+                            _NT>{
+        typedef _NT                                             NT;
+        typedef std::vector<std::vector<NT> >                   Matrix;
+        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+                NT det(0);
+                size_t idx2[d];
+                // Compute the first index array (don't care about the last
+                // element, it's there to be consistent with the last
+                // iteration of the last loop).
+                for(size_t i=1;i<d;++i)
+                        idx2[i-1]=idx[i];
+                for(size_t i=0;i<d;++i){
+                        det+=((i+d)%2?-1:1)*
+                             m[idx[i]][d-1]*
+                             det_naive<d-1,NT>()(idx2,m);
+                        // Update the index array.
+                        idx2[i]=idx[i];
+                }
+                return det;
+        }
+};
+
+// Base cases for the previous functor, d=2 and d=1.
+template <class _NT>
+struct det_naive<2,_NT>:
+public std::binary_function<size_t*,
+                            std::vector<std::vector<_NT> >,
+                            _NT>{
+        typedef _NT                                             NT;
+        typedef std::vector<std::vector<NT> >                   Matrix;
+        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+                return m[idx[0]][0]*m[idx[1]][1]-m[idx[0]][1]*m[idx[1]][0];
+        }
+};
+
+template <class _NT>
+struct det_naive<1,_NT>:
+public std::binary_function<size_t*,
+                            std::vector<std::vector<_NT> >,
+                            _NT>{
+        typedef _NT                                             NT;
+        typedef std::vector<std::vector<NT> >                   Matrix;
+        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+                return m[idx[0]][0];
         }
 };
 
 // This function object computes the determinant of a matrix using TOPCOM's
 // algorithm (copied from TOPCOM sources).
+// TODO: this function seems to be buggy!
 template <int d,class _NT>
 struct det_topcom:
-public std::binary_function<std::vector<size_t>,
+public std::binary_function<size_t*,
                             std::vector<std::vector<_NT> >,
                             _NT>{
         typedef _NT                                             NT;
-        typedef std::vector<size_t>                             Index;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        NT operator()(const Index &idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 // Copy the matrix, since it can be modified.
                 Matrix tmp;
-                for(typename Index::const_iterator ii=idx.begin();
-                    ii!=idx.end();
-                    ++ii)
-                        tmp.push_back(m[*ii]);
+                for(size_t i=0;i<d;++i)
+                        tmp.push_back(m[idx[i]]);
                 // In order to swap rows efficiently, we copy the pointers
                 // to the columns of tmpmatrix to a pointer array.
                 //NT** tmp=(NT**)malloc(d*sizeof(NT*));
@@ -105,13 +168,12 @@ public std::binary_function<std::vector<size_t>,
 // This function object computes the determinant of a matrix using LinBox.
 template <class _NT>
 struct det_linbox:
-public std::binary_function<std::vector<size_t>,
+public std::binary_function<size_t*,
                             std::vector<std::vector<_NT> >,
                             _NT>{
         typedef _NT                                             NT;
-        typedef std::vector<size_t>                             Index;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        NT operator()(const Index &idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 typedef CGAL::Linbox_rational_field<NT>         Field;
                 typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
                 // TODO: check that the constructed matrix is correct!
@@ -139,7 +201,8 @@ template <class _NT,
 #ifdef USE_LINBOX_DET
           class _DetF=det_linbox<_NT>
 #else
-          class _DetF=det_topcom<d,_NT>
+          //class _DetF=det_topcom<d,_NT>
+          class _DetF=det_naive<d,_NT>
 #endif
          >
 class HashedDeterminant{
@@ -156,13 +219,35 @@ class HashedDeterminant{
 
         public:
         HashedDeterminant(size_t columns):
-        _points(columns,Column(d)),_determinants(){};
+#ifdef HASH_STATISTICS
+        number_of_determinant_calls(0),
+        number_of_hashed_determinants(0),
+        number_of_computed_determinants(0),
+#endif
+        _points(columns,Column(d)),_determinants()
+        {};
 
         template <class Iterator>
         HashedDeterminant(Iterator begin,Iterator end):
+#ifdef HASH_STATISTICS
+        number_of_determinant_calls(0),
+        number_of_hashed_determinants(0),
+        number_of_computed_determinants(0),
+#endif
         _points(),_determinants(){
                 for(Iterator i=begin;i!=end;++i)
                         _points.push_back(*i);
+        }
+
+        ~HashedDeterminant(){
+#ifdef HASH_STATISTICS
+        std::cerr<<"hash statistics:\nnumber of determinant calls: "<<
+                number_of_determinant_calls<<
+                "\nnumber of hashed determinants: "<<
+                number_of_hashed_determinants<<
+                "\nnumber of computed determinants: "<<
+                number_of_computed_determinants<<std::endl;
+#endif
         }
 
         void set_column(size_t i,Column c){
@@ -170,8 +255,19 @@ class HashedDeterminant{
         }
 
         NT& determinant(const Index &idx){
-                if(_determinants.count(idx)==0)
-                        _determinants[idx]=DetF()(idx,_points);
+#ifdef HASH_STATISTICS
+                ++number_of_determinant_calls;
+#endif
+                if(_determinants.count(idx)==0){
+#ifdef HASH_STATISTICS
+                        ++number_of_computed_determinants;
+#endif
+                        _determinants[idx]=DetF()(&(idx[0]),_points);
+                }else{
+#ifdef HASH_STATISTICS
+                        ++number_of_hashed_determinants;
+#endif
+                }
                 return _determinants[idx];
         }
 
@@ -200,6 +296,12 @@ class HashedDeterminant{
         private:
         Matrix _points;
         Determinants _determinants;
+#ifdef HASH_STATISTICS
+        public:
+        unsigned number_of_determinant_calls;
+        unsigned number_of_hashed_determinants;
+        unsigned number_of_computed_determinants;
+#endif
 };
 
 template <class Matrix>
