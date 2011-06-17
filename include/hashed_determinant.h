@@ -11,7 +11,6 @@
 #define __FORCE_INLINE inline
 #endif
 
-#include <cmath>
 #include <ostream>
 #include <vector>
 #include <numeric>
@@ -21,6 +20,9 @@
 #include <CGAL/LinBox/mpq_class_field.h>
 #include <CGAL/LinBox/dense_matrix.h>
 #include <linbox/solutions/det.h>
+#endif
+#ifdef HASH_STATISTICS
+#include <ctime>
 #endif
 
 // This function object computes the determinant of a matrix using the
@@ -208,6 +210,7 @@ class HashedDeterminant{
         number_of_determinant_calls(0),
         number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
+        determinant_time(0),
 #endif
         _points(columns,Column(d)),_determinants(),_compute_det()
         {};
@@ -218,6 +221,7 @@ class HashedDeterminant{
         number_of_determinant_calls(0),
         number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
+        determinant_time(0),
 #endif
         _points(),_determinants(),_compute_det(){
                 for(Iterator i=begin;i!=end;++i)
@@ -241,7 +245,9 @@ class HashedDeterminant{
                 number_of_computed_determinants<<
                 "\nnumber of collisions: "<<
                 number_of_collisions<<
-                " (in "<<bad_buckets<<" buckets)"<<std::endl;
+                " (in "<<bad_buckets<<" buckets)\ndeterminant time: "<<
+                (double)determinant_time/CLOCKS_PER_SEC<<
+                " seconds"<<std::endl;
 #endif
         }
 
@@ -256,10 +262,12 @@ class HashedDeterminant{
                 if(_determinants.count(idx)==0){
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
+                        clock_t start=clock();
 #endif
                         _determinants[idx]=_compute_det(&(idx[0]),_points);
-                }else{
 #ifdef HASH_STATISTICS
+                        determinant_time+=(clock()-start);
+                }else{
                         ++number_of_hashed_determinants;
 #endif
                 }
@@ -297,6 +305,7 @@ class HashedDeterminant{
         unsigned number_of_determinant_calls;
         unsigned number_of_hashed_determinants;
         unsigned number_of_computed_determinants;
+        clock_t determinant_time;
 #endif
 };
 
