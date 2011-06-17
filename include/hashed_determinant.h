@@ -1,16 +1,6 @@
 #ifndef HASHED_DETERMINANT_H
 #define HASHED_DETERMINANT_H
 
-// Force inlining of template functions is very important to avoid
-// recursion in the naive determinant computation.
-#ifdef _MSC_VER
-#define __FORCE_INLINE __forceinline
-#elif defined(__GNUC__)
-#define __FORCE_INLINE __inline__ __attribute__((always_inline))
-#else
-#define __FORCE_INLINE inline
-#endif
-
 #include <ostream>
 #include <vector>
 #include <numeric>
@@ -36,7 +26,7 @@ public std::binary_function<size_t*,
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
         typedef det_naive<d-1,NT>                               NaiveMinorDet;
-        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 NaiveMinorDet nd;
                 NT det(0);
                 size_t *idx2=(size_t*)malloc((d-1)*sizeof(size_t));
@@ -67,7 +57,7 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 return m[idx[0]][0]*m[idx[1]][1]-m[idx[0]][1]*m[idx[1]][0];
         }
 };
@@ -79,7 +69,7 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 return m[idx[0]][0];
         }
 };
@@ -94,7 +84,7 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 // Copy the matrix, since it can be modified.
                 Matrix tmp;
                 for(size_t i=0;i<d;++i)
@@ -161,7 +151,7 @@ public std::binary_function<size_t*,
                             _NT>{
         typedef _NT                                             NT;
         typedef std::vector<std::vector<NT> >                   Matrix;
-        __FORCE_INLINE NT operator()(const size_t *idx,const Matrix &m)const{
+        NT operator()(const size_t *idx,const Matrix &m)const{
                 typedef CGAL::Linbox_rational_field<NT>         Field;
                 typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
                 // TODO: check that the constructed matrix is correct!
@@ -171,7 +161,10 @@ public std::binary_function<size_t*,
                         for(size_t column=0;column<d;++column)
                                 M.setEntry(row,column,m[idx[column]][row]);
                 NT det(0);
-                LinBox::detin(det,M);
+                LinBox::det(det,
+                              M,
+                              LinBox::RingCategories::RationalTag(),
+                              LinBox::Method::Elimination());
                 return det;
         }
 };
