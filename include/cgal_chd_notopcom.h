@@ -352,7 +352,7 @@ vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Fiel
 	  //Field volume = abs(det(simplex));
 	  //Field volume = abs(linbox_det(simplex,CD));
 	  //std::cout << simplex_vec << std::endl;
-	  Field volume = abs(dets.determinant(simplex_vec));
+	  //Field volume = abs(dets.determinant(simplex_vec));
 	  
 	  vector<int> mixed_vertices;
 	  for (int i=0; i<d; i++){
@@ -360,15 +360,18 @@ vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Fiel
 	  	  mixed_vertices.push_back(i);
 	  	}
 	  }
-	  if (mixed_vertices.size() == 1)
-	  	r[sets[mixed_vertices[0]][0]] += volume; 
+	  if (mixed_vertices.size() == 1){
+	  	Field volume = abs(dets.determinant(simplex_vec));
+	  	r[sets[mixed_vertices[0]][0]] += volume;
+	  }  
 	}
+	std::cout << r << std::endl;
 	return r;
 }
 
 vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HashedDeterminant<Field,CD>& dets, vector<int> proj){
 	double top1, top2;
-	vector<Field> r(m,0);
+	vector<Field> r(PD,0);
 	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
 		vector<vector<Field> > simplex;
 		vector<size_t> simplex_vec;
@@ -383,11 +386,6 @@ vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Fiel
 	    simplex.push_back(point);
 	    simplex_vec.push_back(points_index[points[*it2]]);
 	  } 
-	  //Field volume = abs(det(simplex));
-	  //Field volume = abs(linbox_det(simplex,CD));
-	  //std::cout << simplex_vec << std::endl;
-	  
-	  
 	  vector<int> mixed_vertices;
 	  for (int i=0; i<d; i++){
 	  	if (sets[i].size() == 1){
@@ -395,10 +393,15 @@ vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Fiel
 	  	}
 	  }
 	  if (mixed_vertices.size() == 1){
-	  	Field volume = abs(dets.determinant(simplex_vec));
-	  	r[sets[mixed_vertices[0]][0]] += volume;
-	  } 
+	  	// find where is the mixed vertex in the vector of projection coordinates
+	  	vector<int>::iterator pit = find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
+	  	if (pit != proj.end()){
+	  		Field volume = abs(dets.determinant(simplex_vec));
+	  		r[pit-proj.begin()] += volume;
+			}
+	  }
 	}
+	//std::cout << r << std::endl;
 	return r;
 }
 
@@ -465,14 +468,14 @@ vector<set<int> > project_lower_upper_hull(Convex_hull_d& CH, map<vector<Field>,
 	  	  //triang.insert(s);
 	  	} else {
 	  	  triang.push_back(s);
-	  	}	
+	  	}
   	}
   }
   return triang;
 }
 
 vector<set<int> > LiftingTriangulation(vector<vector<Field> >& points, Direction_d nli, std::vector<int> r, map<vector<Field>,int>& points_index, bool lower){
-	// lift TOPCOM Cayley pointset
+	// lift Cayley pointset
   vector<vector<Field> > P = lift(points,nli,r);
   //std::cout << "points[" << i << j << "]" << points[i][j] << std::endl;
   //std::cout << points.no() << " " << points.rank() << std::endl;
@@ -517,13 +520,13 @@ void insert_new_Rvertex(Convex_hull_d& CH, std::vector<Vector_d>& normal_list_d,
 	}
 }
 
+//update_CH()
+
 ////////////////////////////////////////////////////////////////////
 // The algorithm!
 
 void compute_res(std::vector<std::vector<Field> >& pointset, map<std::vector<Field>,int>& points_index, int m, std::vector<int>& mi, vector<int>& proj, HD& dets, int& numof_triangs, int& numof_init_Res_vertices, Convex_hull_d& CH){
-	// the pure complex to hold the Resultant projection
-	//Convex_hull_d *CH = new Convex_hull_d(PD);
-  
+
 	// make a stack (stl vector) with normals vectors
   std::vector<Vector_d> normal_list_d;
   // initialize with some normal vectors
@@ -553,7 +556,8 @@ void compute_res(std::vector<std::vector<Field> >& pointset, map<std::vector<Fie
 		  // compute the new Res vertex from t
 		  //std::cout << compute_r_fast(t, points, m, mi, mi.size()) << std::endl;
 		  //SRvertex new_vertex = project(compute_r_fast(t, pointset, m, mi, mi.size()),proj);
-		  SRvertex new_vertex = project(compute_r_fast(t, pointset, m, mi, mi.size(),points_index,dets),proj);
+		  //SRvertex new_vertex = project(compute_r_fast(t, pointset, m, mi, mi.size(),points_index,dets),proj);
+		  SRvertex new_vertex = compute_r_proj(t, pointset, m, mi, mi.size(),points_index,dets,proj);
 		  #ifdef PRINT_INFO  
 		    cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
 		  #endif
@@ -568,7 +572,110 @@ void compute_res(std::vector<std::vector<Field> >& pointset, map<std::vector<Fie
 	}
 }
 
-////////////////////////////////////////////////////////////////
+// not working :(
+// I cannot copy the CH object nor delete a vertex !!!!!
+
+/*
+void compute_res_fast(std::vector<std::vector<Field> >& pointset, map<std::vector<Field>,int>& points_index, int m, std::vector<int>& mi, vector<int>& proj, HD& dets, int& numof_triangs, int& numof_init_Res_vertices, Convex_hull_d& CH){
+	// the lifted static convex hull
+	Convex_hull_d sCH(CD);
+	
+	// we have d points that will be lifted in all steps (i.e. dynamic points)
+	// and n-d points that will stay in 0 (i.e.) static points
+	
+	// lift static points to 0 
+	vector<vector<Field> > static_points;
+  for (vector<vector<Field> >::iterator vit=pointset.begin(); vit!=pointset.end(); vit++){
+  	vector<Field> lv = *vit;
+  	lv.push_back(0);
+  	static_points.push_back(lv);
+  }
+	
+	// put static points on the convex hull
+	for (vector<vector<Field> >::iterator Pit=static_points.begin(); Pit!=static_points.end(); Pit++){
+		std::cout << Point_d(CD,Pit->begin(),Pit->end()) << "static point inserted" << std::endl;
+  	Vertex_handle_d vertex = sCH.insert(Point_d(CD,Pit->begin(),Pit->end()));
+  }
+		
+	// print points on sCH	
+	for (Vertex_iterator_d vit = sCH.vertices_begin(); vit != sCH.vertices_end(); vit++)
+		std::cout << vit->point() << "\n";
+	std::cout << std::endl;
+	 
+	// make a stack (stl vector) with normals vectors
+  std::vector<Vector_d> normal_list_d;
+  // initialize with some normal vectors
+  init_normal_list(CH, normal_list_d);
+  int init_size = normal_list_d.size();
+  
+  // make a copy of static CH (i.e. dCH)
+	Convex_hull_d dCH(sCH);
+	
+	//lift dynamic points
+	Vector_d lift_test = *(normal_list_d.begin());
+	vector<vector<Field> > dynamic_points;
+	Vector_d::Cartesian_const_iterator lit = lift_test.cartesian_begin();
+	for (vector<int>::iterator pit=proj.begin(); pit!=proj.end(); pit++){
+		vector<Field> lv = pointset[*pit];
+		lv.push_back(0);
+		dynamic_points.push_back(lv);
+	}
+	
+	// and insert lifted dynamic points to dCH
+	for (vector<vector<Field> >::iterator Pit=dynamic_points.begin(); Pit!=dynamic_points.end(); Pit++){
+		//std::cout << Point_d(CD,Pit->begin(),Pit->end()) << " point inserted" << std::endl;
+  	Vertex_handle_d vertex = dCH.insert(Point_d(CD,Pit->begin(),Pit->end()));
+  }
+	
+	// print points on CH	
+	for (Vertex_iterator_d vit = dCH.vertices_begin(); vit != dCH.vertices_end(); vit++)
+		std::cout << vit->point() << "\n";
+	std::cout << std::endl;
+
+  exit(0);
+	
+  
+  while(!normal_list_d.empty()){
+		#ifdef PRINT_INFO
+		  std::cout << "dim=" << CH.current_dimension() << std::endl;
+			std::cout << "current normal vectors:" << " ";
+			typedef std::vector<Vector_d>::iterator LDIterator_d;
+			for (LDIterator_d it=normal_list_d.begin(); it!=normal_list_d.end(); ++it){
+		  	std::cout << *it << " ";
+		  }
+		  std::cout << std::endl;
+	  #endif
+	  
+	  // take the first(last more efficient with vectors??) normal and remove it from normals stack
+		Vector_d nli = *(normal_list_d.begin());
+		normal_list_d.erase(normal_list_d.begin());
+		
+		// outer normal vector --> upper hull projection
+	  vector<set<int> > t = LiftingTriangulation(pointset,nli,proj,points_index,false);
+	  //std::cout << t << std::endl;
+	  
+	  if (t.size() != 0){//if t is indeed a triangulation!
+		  // compute the new Res vertex from t
+		  //std::cout << compute_r_fast(t, points, m, mi, mi.size()) << std::endl;
+		  //SRvertex new_vertex = project(compute_r_fast(t, pointset, m, mi, mi.size()),proj);
+		  //SRvertex new_vertex = project(compute_r_fast(t, pointset, m, mi, mi.size(),points_index,dets),proj);
+		  SRvertex new_vertex = compute_r_proj(t, pointset, m, mi, mi.size(),points_index,dets,proj);
+		  #ifdef PRINT_INFO  
+		    cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		  #endif
+		  // insert it in the complex ppc (if it is not already there) 
+		  Point_d new_point(PD,new_vertex.begin(),new_vertex.end());
+		  insert_new_Rvertex(CH,normal_list_d,new_point);
+	  }
+		numof_triangs++;
+		if (numof_triangs == init_size)
+			numof_init_Res_vertices = CH.number_of_vertices();
+			
+	}
+}
+*/
+
+//////////////////////////////////////////////////////////////////
 // misc
 
 //NOT WORKING !!!!!!! 
