@@ -72,7 +72,7 @@ typedef std::vector<Direction_d>::iterator    LDIterator_3;
 typedef vector<Field> 												SRvertex;
 typedef vector<SRvertex> 											Resvertex;
 typedef set<SRvertex> 												Polytope;
-typedef vector<set<int> > 										Triangulation;
+typedef vector<set<int> > 										TriangSet;
 typedef vector<vector<Field> >								VertexSet;
 
 // big matrix determinants typedefs
