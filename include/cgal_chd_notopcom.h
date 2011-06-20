@@ -27,6 +27,9 @@
 #include <CGAL/Convex_hull_d.h>
 #include <CGAL/Delaunay_d.h>
 
+// for fast determinant computation
+#include <../include/fast_hashed_determinant.h>
+
 // future includes of TOPCOM
 //#include "../TOPCOM-0.16.0/lib-src/Field.hh"
 
@@ -73,7 +76,7 @@ typedef vector<set<int> > 										Triangulation;
 typedef vector<vector<Field> >								VertexSet;
 
 // big matrix determinants typedefs
-typedef HashedDeterminant<Field,CD>           HD;
+typedef FastHashedDeterminant<Field,CD>         HD;
 
 /////////////////////////////////////////////////////////////////////
 // implimentations
@@ -332,7 +335,7 @@ Field linbox_det(vector<vector<Field> >& simplex,int d){
 //////////////////////////////////////////////////////////////////
 // basic functions for the algorithm
 
-vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HashedDeterminant<Field,CD>& dets){
+vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets){
 	double top1, top2;
 	vector<Field> r(m,0);
 	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
@@ -369,7 +372,7 @@ vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Fiel
 	return r;
 }
 
-vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HashedDeterminant<Field,CD>& dets, vector<int> proj){
+vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets, vector<int> proj){
 	double top1, top2;
 	vector<Field> r(PD,0);
 	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
