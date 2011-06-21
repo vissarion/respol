@@ -135,31 +135,9 @@ class FastHashedDeterminant{
                 return _determinants[idx];
         }
 
-        // This computes a determinant of size dim+1, where the matrix
-        // _points is enlarged by adding at the bottom the vector r. The
-        // size of idx must be dim+1.
-        NT determinant(const Index &idx,const Row &r){
-                assert(idx.size()==dim+1);
-                assert(r.size()==dim+1);
-                Index idx2;
-                size_t n=dim+1;
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
-                assert(idx2.size()==dim);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=(r[idx[i]]*determinant(idx2));
-                        else
-                                det-=(r[idx[i]]*determinant(idx2));
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-                return det;
-        }
-
-        // This function is the same of determinant(idx,r), where r is a
-        // vector full of ones. The size of idx must be dim+1.
+        // This function computes the determinant of a submatrix, enlarged
+        // with row at the bottom full of ones. The size of idx must be
+        // dim+1.
         NT homogeneous_determinant(const Index &idx){
                 assert(idx.size()==dim+1);
                 Index idx2;
@@ -180,23 +158,32 @@ class FastHashedDeterminant{
         }
 
         // This function is the same homogeneous_determinant(idx), but
-        // adding the vector r between _points and the vector of ones. The
-        // size of idx must be dim+2.
+        // adding the vector r between the submatrix and the vector of
+        // ones. The size of idx must be dim+2.
         NT homogeneous_determinant(const Index &idx,const Row &r){
                 assert(idx.size()==dim+2);
-                Index idx2;
+                assert(r.size()==dim+2);
+                Index idx2,idxr;
                 size_t n=dim+2;
-                for(size_t i=1;i<n;++i)
+                for(size_t i=1;i<n;++i){
                         idx2.push_back(idx[i]);
+                        idxr.push_back(i);
+                }
                 assert(idx2.size()==dim+1);
+                assert(idxr.size()==dim+1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
-                                det+=determinant(idx2,r);
+                                det+=enlarged_homogeneous_determinant(idx2,
+                                                                      r,
+                                                                      idxr);
                         else
-                                det-=determinant(idx2,r);
+                                det-=enlarged_homogeneous_determinant(idx2,
+                                                                      r,
+                                                                      idxr);
                         // update the index array
                         idx2[i]=idx[i];
+                        idxr[i]=i;
                 }
                 return det;
         }
@@ -229,10 +216,8 @@ class FastHashedDeterminant{
         private:
         // This function computes the determinant of a submatrix of
         // _points. The parameter idx is a vector of indices of the indices
-        // of the columns which will form the submatrix. This function is
-        // private, since it is not supposed to be called from outside the
-        // class. Inlining this function is very important for efficiency
-        // reasons!
+        // of the columns which will form the submatrix. Inlining this
+        // function is very important for efficiency reasons!
         inline NT compute_determinant(const Index &idx){
                 assert(idx.size()<=dim);
                 Index idx2;
@@ -246,6 +231,33 @@ class FastHashedDeterminant{
                                 det+=(_points[idx[i]][n-1]*determinant(idx2));
                         else
                                 det-=(_points[idx[i]][n-1]*determinant(idx2));
+                        // update the index array
+                        idx2[i]=idx[i];
+                }
+                return det;
+        }
+
+        // This function computes a determinant of size dim+1, where the
+        // matrix is enlarged by adding at the bottom the vector r. There
+        // is also a vector of indices of r, idxr, which specifies the
+        // elements of r used to compute the determinant.  The size of idx
+        // and idxr must be dim+1.
+        NT enlarged_homogeneous_determinant(const Index &idx,
+                                            const Row &r,
+                                            const Index &idxr){
+                assert(idx.size()==dim+1);
+                assert(idxr.size()==dim+1);
+                Index idx2;
+                size_t n=dim+1;
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
+                assert(idx2.size()==dim);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det+=(r[idxr[i]]*determinant(idx2));
+                        else
+                                det-=(r[idxr[i]]*determinant(idx2));
                         // update the index array
                         idx2[i]=idx[i];
                 }
