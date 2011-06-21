@@ -12,13 +12,13 @@
 // FastHashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
 // of this matrix. It takes two template parameters: _NT is the number type
-// of the matrix elements. _dimensions is the number of rows of the matrix
-// (which is equal to dimension of the points). Determinants are stored in
-// a hash table, and are never recomputed. Moreover, the computed minors of
+// of the matrix elements. dim is the number of rows of the matrix (which
+// is equal to the dimension of the points). Determinants are stored in a
+// hash table, and are never recomputed. Moreover, the computed minors of
 // the submatrices are also stored in the hash table, which speeds up the
 // computation of determinants of some matrices.
 
-template <class _NT,size_t d>
+template <class _NT,size_t dim>
 class FastHashedDeterminant{
         private:
         typedef _NT                                     NT;
@@ -37,7 +37,7 @@ class FastHashedDeterminant{
         number_of_computed_determinants(0),
         determinant_time(0),
 #endif
-        _points(columns,Column(d)),_determinants()
+        _points(columns,Column(dim)),_determinants()
         {};
 
         template <class Iterator>
@@ -78,65 +78,62 @@ class FastHashedDeterminant{
 #endif
         }
 
+        // This function sets a column of the matrix. This function must be
+        // called before any determinant computation, since it will
+        // invalidate the determinants which are hashed. The column i must
+        // exist in the matrix.
         void set_column(size_t i,const Column &c){
                 _points[i]=c;
         }
 
         // Push back a column, at the end of the matrix; returns the index
-        // of this inserted element.
+        // of this inserted element. In contrast with set_column, this
+        // function will not invalidate hashed values.
         size_t add_column(const Column &c){
                 _points.push_back(c);
                 return _points.size()-1;
         }
 
-        // Inlining this function is very important for efficiency reasons!
-        inline NT compute_determinant(const Index &idx){
-                Index idx2;
-                size_t n=idx.size();
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=(_points[idx[i]][n-1]*determinant(idx2));
-                        else
-                                det-=(_points[idx[i]][n-1]*determinant(idx2));
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-                return det;
-        }
-
-        // The size of idx must be d.
+        // This function returns the determinant of a submatrix of _points.
+        // This submatrix is formed by the columns whose indices are in
+        // idx. If this determinant was already computed (i.e., it is in
+        // the hash table), it is returned. Otherwise, the private function
+        // compute_determinant is called. The size of idx must be dim.
         NT& determinant(const Index &idx){
                 if(idx.size()==1)
                         return _points[idx[0]][0];
 #ifdef HASH_STATISTICS
                 ++number_of_determinant_calls;
-                if(idx.size()==d)
+                clock_t start;
+                if(idx.size()==dim){
+                        start=clock();
+                        determinant_time+=(clock()-start);
                         ++number_of_full_determinant_calls;
+                }
 #endif
                 if(_determinants.count(idx)==0){
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
-                        clock_t start=clock();
 #endif
                         _determinants[idx]=compute_determinant(idx);
 #ifdef HASH_STATISTICS
-                        determinant_time+=(clock()-start);
                 }else{
                         ++number_of_hashed_determinants;
 #endif
                 }
+#ifdef HASH_STATISTICS
+                if(idx.size()==dim)
+                        determinant_time+=(clock()-start);
+#endif
                 return _determinants[idx];
         }
 
-        // This computes a determinant of size d+1, where the matrix
-        // _points is enlarged by adding on the bottom the vector r. The
-        // size of idx must be d+1.
-        NT& determinant(const Index &idx,const Row &r){
+        // This computes a determinant of size dim+1, where the matrix
+        // _points is enlarged by adding at the bottom the vector r. The
+        // size of idx must be dim+1.
+        NT determinant(const Index &idx,const Row &r){
                 Index idx2;
-                size_t n=idx.size();
+                size_t n=dim+1;
                 for(size_t i=0;i<n;++i)
                         idx2.push_back(idx[i+1]);
                 NT det(0);
@@ -152,10 +149,10 @@ class FastHashedDeterminant{
         }
 
         // This function is the same of determinant(idx,r), where r is a
-        // vector full of ones. The size of idx must be d+1.
-        NT& homogeneous_determinant(const Index &idx){
+        // vector full of ones. The size of idx must be dim+1.
+        NT homogeneous_determinant(const Index &idx){
                 Index idx2;
-                size_t n=idx.size();
+                size_t n=dim+1;
                 for(size_t i=0;i<n;++i)
                         idx2.push_back(idx[i+1]);
                 NT det(0);
@@ -170,6 +167,7 @@ class FastHashedDeterminant{
                 return det;
         }
 
+        // This function prints the matrix _points to an output stream.
         std::ostream& print_matrix(std::ostream &o)const{
                 for(size_t i=0;i<_points.size();++i){
                         o<<"[ ";
@@ -180,8 +178,10 @@ class FastHashedDeterminant{
                 return o;
         }
 
+        // This function prints a submatrix, formed by the columns whose
+        // indices are in idx, to an output stream.
         std::ostream& print_submatrix(const Index &idx,std::ostream &o)const{
-                for(size_t row=0;row<d;++row){
+                for(size_t row=0;row<dim;++row){
                         o<<"[ ";
                         for(Index::const_iterator i=idx.begin();
                             i!=idx.end();
@@ -190,6 +190,30 @@ class FastHashedDeterminant{
                         o<<"]\n";
                 }
                 return o;
+        }
+
+        private:
+        // This function computes the determinant of a submatrix of
+        // _points. The parameter idx is a vector of indices of the indices
+        // of the columns which will form the submatrix. This function is
+        // private, since it is not supposed to be called from outside the
+        // class. Inlining this function is very important for efficiency
+        // reasons!
+        inline NT compute_determinant(const Index &idx){
+                Index idx2;
+                size_t n=idx.size();
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det+=(_points[idx[i]][n-1]*determinant(idx2));
+                        else
+                                det-=(_points[idx[i]][n-1]*determinant(idx2));
+                        // update the index array
+                        idx2[i]=idx[i];
+                }
+                return det;
         }
 
         private:
