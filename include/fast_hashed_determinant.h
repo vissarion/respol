@@ -1,12 +1,11 @@
 #ifndef FAST_HASHED_DETERMINANT_H
 #define FAST_HASHED_DETERMINANT_H
 
-#include <ostream>
 #include <vector>
-#include <numeric>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
 #ifdef HASH_STATISTICS
+#include <ostream>
 #include <ctime>
 #endif
 
@@ -24,6 +23,7 @@ class FastHashedDeterminant{
         private:
         typedef _NT                                     NT;
         typedef std::vector<NT>                         Column;
+        typedef std::vector<NT>                         Row;
         typedef std::vector<Column>                     Matrix;
         typedef std::vector<size_t>                     Index;
         typedef boost::unordered_map<Index,NT>          Determinants;
@@ -78,10 +78,36 @@ class FastHashedDeterminant{
 #endif
         }
 
-        void set_column(size_t i,Column c){
+        void set_column(size_t i,const Column &c){
                 _points[i]=c;
         }
 
+        // Push back a column, at the end of the matrix; returns the index
+        // of this inserted element.
+        size_t add_column(const Column &c){
+                _points.push_back(c);
+                return _points.size()-1;
+        }
+
+        // Inlining this function is very important for efficiency reasons!
+        inline NT compute_determinant(const Index &idx){
+                Index idx2;
+                size_t n=idx.size();
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det+=(_points[idx[i]][n-1]*determinant(idx2));
+                        else
+                                det-=(_points[idx[i]][n-1]*determinant(idx2));
+                        // update the index array
+                        idx2[i]=idx[i];
+                }
+                return det;
+        }
+
+        // The size of idx must be d.
         NT& determinant(const Index &idx){
                 if(idx.size()==1)
                         return _points[idx[0]][0];
@@ -105,18 +131,39 @@ class FastHashedDeterminant{
                 return _determinants[idx];
         }
 
-        // inlining this function is very important for efficiency reasons
-        inline NT compute_determinant(const Index &idx){
+        // This computes a determinant of size d+1, where the matrix
+        // _points is enlarged by adding on the bottom the vector r. The
+        // size of idx must be d+1.
+        NT& determinant(const Index &idx,const Row &r){
                 Index idx2;
                 size_t n=idx.size();
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
+                for(size_t i=0;i<n;++i)
+                        idx2.push_back(idx[i+1]);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
-                                det+=(_points[idx[i]][n-1]*determinant(idx2));
+                                det+=(r[idx[i]]*determinant(idx2));
                         else
-                                det-=(_points[idx[i]][n-1]*determinant(idx2));
+                                det-=(r[idx[i]]*determinant(idx2));
+                        // update the index array
+                        idx2[i]=idx[i];
+                }
+                return det;
+        }
+
+        // This function is the same of determinant(idx,r), where r is a
+        // vector full of ones. The size of idx must be d+1.
+        NT& homogeneous_determinant(const Index &idx){
+                Index idx2;
+                size_t n=idx.size();
+                for(size_t i=0;i<n;++i)
+                        idx2.push_back(idx[i+1]);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det+=determinant(idx2);
+                        else
+                                det-=determinant(idx2);
                         // update the index array
                         idx2[i]=idx[i];
                 }
