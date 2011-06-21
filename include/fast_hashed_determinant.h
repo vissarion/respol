@@ -134,8 +134,8 @@ class FastHashedDeterminant{
         NT determinant(const Index &idx,const Row &r){
                 Index idx2;
                 size_t n=dim+1;
-                for(size_t i=0;i<n;++i)
-                        idx2.push_back(idx[i+1]);
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
@@ -153,8 +153,8 @@ class FastHashedDeterminant{
         NT homogeneous_determinant(const Index &idx){
                 Index idx2;
                 size_t n=dim+1;
-                for(size_t i=0;i<n;++i)
-                        idx2.push_back(idx[i+1]);
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
