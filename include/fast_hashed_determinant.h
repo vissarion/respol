@@ -179,7 +179,29 @@ class FastHashedDeterminant{
                 return det;
         }
 
-        // This function prints the matrix _points to an output stream.
+        // This function is the same homogeneous_determinant(idx), but
+        // adding the vector r between _points and the vector of ones. The
+        // size of idx must be dim+2.
+        NT homogeneous_determinant(const Index &idx,const Row &r){
+                assert(idx.size()==dim+2);
+                Index idx2;
+                size_t n=dim+2;
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
+                assert(idx2.size()==dim+1);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det+=determinant(idx2,r);
+                        else
+                                det-=determinant(idx2,r);
+                        // update the index array
+                        idx2[i]=idx[i];
+                }
+                return det;
+        }
+
+        // This function prints the full matrix to an output stream.
         std::ostream& print_matrix(std::ostream &o)const{
                 for(size_t i=0;i<_points.size();++i){
                         o<<"[ ";
