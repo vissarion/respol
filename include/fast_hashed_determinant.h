@@ -37,6 +37,8 @@ class FastHashedDeterminant{
         number_of_determinant_calls(0),
         number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
+        number_of_hom_determinants(0),
+        number_of_computed_hom_determinants(0),
         determinant_time(0),
 #endif
         _points(columns,Column(dim)),
@@ -51,6 +53,8 @@ class FastHashedDeterminant{
         number_of_determinant_calls(0),
         number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
+        number_of_hom_determinants(0),
+        number_of_computed_hom_determinants(0),
         determinant_time(0),
 #endif
         _points(),
@@ -82,7 +86,9 @@ class FastHashedDeterminant{
                 number_of_collisions<<
                 " (in "<<bad_buckets<<" buckets)\ndeterminant time: "<<
                 (double)determinant_time/CLOCKS_PER_SEC<<
-                " seconds"<<std::endl;
+                " seconds\nhomogeneous determinants: computed "<<
+                number_of_computed_hom_determinants<<
+                " out of "<<number_of_hom_determinants<<std::endl;
 #endif
         }
 
@@ -145,10 +151,16 @@ class FastHashedDeterminant{
         // dim+1.
         NT homogeneous_determinant(const Index &idx){
                 assert(idx.size()==dim+1);
+#ifdef HASH_STATISTICS
+                number_of_hom_determinants+=1;
+#endif
                 if(_homogeneous_determinants.count(idx)!=0){
                         assert(_homogeneous_determinants.count(idx)==1);
                         return _homogeneous_determinants[idx];
                 }
+#ifdef HASH_STATISTICS
+                number_of_computed_hom_determinants+=1;
+#endif
                 Index idx2;
                 size_t n=dim+1;
                 for(size_t i=1;i<n;++i)
@@ -303,6 +315,8 @@ class FastHashedDeterminant{
         unsigned number_of_determinant_calls;
         unsigned number_of_hashed_determinants;
         unsigned number_of_computed_determinants;
+        unsigned number_of_hom_determinants;
+        unsigned number_of_computed_hom_determinants;
         clock_t determinant_time;
 #endif
 };
