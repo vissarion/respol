@@ -4,6 +4,7 @@
 #include <vector>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
+#include <cassert>
 #ifdef HASH_STATISTICS
 #include <ostream>
 #include <ctime>
@@ -50,8 +51,10 @@ class FastHashedDeterminant{
         determinant_time(0),
 #endif
         _points(),_determinants(){
-                for(Iterator i=begin;i!=end;++i)
+                for(Iterator i=begin;i!=end;++i){
+                        assert(i->size()==dim);
                         _points.push_back(*i);
+                }
         }
 
         ~FastHashedDeterminant(){
@@ -83,6 +86,8 @@ class FastHashedDeterminant{
         // invalidate the determinants which are hashed. The column i must
         // exist in the matrix.
         void set_column(size_t i,const Column &c){
+                assert((i>=0)&&(i<_points.size()));
+                assert(c.size()==dim);
                 _points[i]=c;
         }
 
@@ -90,6 +95,7 @@ class FastHashedDeterminant{
         // of this inserted element. In contrast with set_column, this
         // function will not invalidate hashed values.
         size_t add_column(const Column &c){
+                assert(c.size()==dim);
                 _points.push_back(c);
                 return _points.size()-1;
         }
@@ -100,6 +106,7 @@ class FastHashedDeterminant{
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called. The size of idx must be dim.
         NT& determinant(const Index &idx){
+                assert(idx.size()<=dim);
                 if(idx.size()==1)
                         return _points[idx[0]][0];
 #ifdef HASH_STATISTICS
@@ -132,10 +139,13 @@ class FastHashedDeterminant{
         // _points is enlarged by adding at the bottom the vector r. The
         // size of idx must be dim+1.
         NT determinant(const Index &idx,const Row &r){
+                assert(idx.size()==dim+1);
+                assert(r.size()==dim+1);
                 Index idx2;
                 size_t n=dim+1;
                 for(size_t i=1;i<n;++i)
                         idx2.push_back(idx[i]);
+                assert(idx2.size()==dim);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
@@ -151,10 +161,12 @@ class FastHashedDeterminant{
         // This function is the same of determinant(idx,r), where r is a
         // vector full of ones. The size of idx must be dim+1.
         NT homogeneous_determinant(const Index &idx){
+                assert(idx.size()==dim+1);
                 Index idx2;
                 size_t n=dim+1;
                 for(size_t i=1;i<n;++i)
                         idx2.push_back(idx[i]);
+                assert(idx2.size()==dim);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
@@ -200,10 +212,12 @@ class FastHashedDeterminant{
         // class. Inlining this function is very important for efficiency
         // reasons!
         inline NT compute_determinant(const Index &idx){
+                assert(idx.size()<=dim);
                 Index idx2;
                 size_t n=idx.size();
                 for(size_t i=1;i<n;++i)
                         idx2.push_back(idx[i]);
+                assert(idx2.size()==idx.size()-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
                         if((i+n)%2)
