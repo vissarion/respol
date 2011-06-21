@@ -28,6 +28,7 @@ class FastHashedDeterminant{
         typedef std::vector<Column>                     Matrix;
         typedef std::vector<size_t>                     Index;
         typedef boost::unordered_map<Index,NT>          Determinants;
+        typedef boost::unordered_map<Index,NT>          HDeterminants;
 
         public:
         FastHashedDeterminant(size_t columns):
@@ -38,7 +39,9 @@ class FastHashedDeterminant{
         number_of_computed_determinants(0),
         determinant_time(0),
 #endif
-        _points(columns,Column(dim)),_determinants()
+        _points(columns,Column(dim)),
+        _determinants(),
+        _homogeneous_determinants()
         {};
 
         template <class Iterator>
@@ -50,7 +53,9 @@ class FastHashedDeterminant{
         number_of_computed_determinants(0),
         determinant_time(0),
 #endif
-        _points(),_determinants(){
+        _points(),
+        _determinants(),
+        _homogeneous_determinants(){
                 for(Iterator i=begin;i!=end;++i){
                         assert(i->size()==dim);
                         _points.push_back(*i);
@@ -140,6 +145,10 @@ class FastHashedDeterminant{
         // dim+1.
         NT homogeneous_determinant(const Index &idx){
                 assert(idx.size()==dim+1);
+                if(_homogeneous_determinants.count(idx)!=0){
+                        assert(_homogeneous_determinants.count(idx)==1);
+                        return _homogeneous_determinants[idx];
+                }
                 Index idx2;
                 size_t n=dim+1;
                 for(size_t i=1;i<n;++i)
@@ -160,7 +169,7 @@ class FastHashedDeterminant{
         // This function is the same homogeneous_determinant(idx), but
         // adding the vector r between the submatrix and the vector of
         // ones. The size of idx must be dim+2.
-        NT homogeneous_determinant(const Index &idx,const Row &r){
+        NT old_homogeneous_determinant(const Index &idx,const Row &r){
                 assert(idx.size()==dim+2);
                 assert(r.size()==dim+2);
                 Index idx2,idxr;
@@ -184,6 +193,26 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                         idxr[i]=i;
+                }
+                return det;
+        }
+
+        NT homogeneous_determinant(const Index &idx,const Row &r){
+                assert(idx.size()==dim+2);
+                assert(r.size()==dim+2);
+                Index idx2;
+                size_t n=dim+2;
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
+                assert(idx2.size()==dim+1);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det-=r[i]*homogeneous_determinant(idx2);
+                        else
+                                det+=r[i]*homogeneous_determinant(idx2);
+                        // update the index array
+                        idx2[i]=idx[i];
                 }
                 return det;
         }
@@ -267,6 +296,7 @@ class FastHashedDeterminant{
         private:
         Matrix _points;
         Determinants _determinants;
+        HDeterminants _homogeneous_determinants;
 #ifdef HASH_STATISTICS
         public:
         unsigned number_of_full_determinant_calls;
