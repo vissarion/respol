@@ -35,11 +35,10 @@ class FastHashedDeterminant{
 #ifdef HASH_STATISTICS
         number_of_full_determinant_calls(0),
         number_of_determinant_calls(0),
-        number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
         number_of_hom_determinants(0),
         number_of_computed_hom_determinants(0),
-        determinant_time(0),
+        full_determinant_time(0),
 #endif
         _points(columns,Column(dim)),
         _determinants(),
@@ -51,11 +50,10 @@ class FastHashedDeterminant{
 #ifdef HASH_STATISTICS
         number_of_full_determinant_calls(0),
         number_of_determinant_calls(0),
-        number_of_hashed_determinants(0),
         number_of_computed_determinants(0),
         number_of_hom_determinants(0),
         number_of_computed_hom_determinants(0),
-        determinant_time(0),
+        full_determinant_time(0),
 #endif
         _points(),
         _determinants(),
@@ -75,18 +73,19 @@ class FastHashedDeterminant{
                                 (_determinants.bucket_size(bucket)-1);
                         ++bad_buckets;
                 }
-        std::cerr<<"hash statistics:\nnumber of determinant calls: "<<
+        std::cerr<<
+                "hash statistics:"<<
+                "\nnon-hom hash: "<<
+                _determinants.bucket_count()<<" buckets, "<<
+                number_of_collisions<<" collisions in "<<bad_buckets<<
+                " buckets\nnon-hom full-dim determinant calls: "<<
+                number_of_full_determinant_calls<<
+                "\nnon-hom determinants: computed "<<
+                number_of_computed_determinants<<" out of "<<
                 number_of_determinant_calls<<
-                " ("<<number_of_full_determinant_calls<<
-                " full-dimension)\nnumber of hashed determinants: "<<
-                number_of_hashed_determinants<<
-                "\nnumber of computed determinants: "<<
-                number_of_computed_determinants<<
-                "\nnumber of collisions: "<<
-                number_of_collisions<<
-                " (in "<<bad_buckets<<" buckets)\ndeterminant time: "<<
-                (double)determinant_time/CLOCKS_PER_SEC<<
-                " seconds\nhomogeneous determinants: computed "<<
+                "\ntime in full-dim non-hom determinant computations: "<<
+                (double)full_determinant_time/CLOCKS_PER_SEC<<
+                " seconds\nhom determinants: computed "<<
                 number_of_computed_hom_determinants<<
                 " out of "<<number_of_hom_determinants<<std::endl;
 #endif
@@ -122,27 +121,22 @@ class FastHashedDeterminant{
                         return _points[idx[0]][0];
 #ifdef HASH_STATISTICS
                 ++number_of_determinant_calls;
-                clock_t start;
-                if(idx.size()==dim){
-                        start=clock();
-                        determinant_time+=(clock()-start);
+                if(idx.size()==dim)
                         ++number_of_full_determinant_calls;
-                }
 #endif
                 if(_determinants.count(idx)==0){
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
+                        clock_t start;
+                        if(idx.size()==dim)
+                                start=clock();
 #endif
                         _determinants[idx]=compute_determinant(idx);
 #ifdef HASH_STATISTICS
-                }else{
-                        ++number_of_hashed_determinants;
+                        if(idx.size()==dim)
+                                full_determinant_time+=(clock()-start);
 #endif
                 }
-#ifdef HASH_STATISTICS
-                if(idx.size()==dim)
-                        determinant_time+=(clock()-start);
-#endif
                 return _determinants[idx];
         }
 
@@ -314,11 +308,10 @@ class FastHashedDeterminant{
         public:
         unsigned number_of_full_determinant_calls;
         unsigned number_of_determinant_calls;
-        unsigned number_of_hashed_determinants;
         unsigned number_of_computed_determinants;
         unsigned number_of_hom_determinants;
         unsigned number_of_computed_hom_determinants;
-        clock_t determinant_time;
+        clock_t full_determinant_time;
 #endif
 };
 
