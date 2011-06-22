@@ -175,6 +175,7 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                 }
+                _homogeneous_determinants[idx]=det;
                 return det;
         }
 
