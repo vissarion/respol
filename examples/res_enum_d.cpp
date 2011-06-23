@@ -9,8 +9,8 @@ const int CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
 const int PD = D+1;				// this is the dimension of the projection
 
 #define PRINT_INFO
-#include <../include/cgal_chd.h>
-//#include <../include/cgal_chd_hornus.h>
+//#include <../include/cgal_chd.h>
+#include <../include/cgal_chd_hornus.h>
 
 //////////////////////////////////////////////////////////////////
 // main
@@ -34,13 +34,11 @@ int main(const int argc, const char** argv) {
  	cayley_trick(pointset, points_index, mi, m);
 	
 	// compute the big matrix
-	// BUT first homogenize the pointset, dirty way..
-	vector<vector<Field> > homo_pointset;
-	homogenize(pointset,homo_pointset);
-	std::cout << homo_pointset << std::endl;
-  HD dets(homo_pointset.begin(),homo_pointset.end());
+	// you don't have to homogenize!
+  HD dets(pointset.begin(),pointset.end());
 	
-	//define the projection
+	// define the projection
+	// attention! proj SHOULD BE SORTED
 	vector<int> proj = proj_first_coord(PD,m,mi);
 	
 	// the data structure to hold the res polytope
@@ -48,8 +46,8 @@ int main(const int argc, const char** argv) {
 	Triangulation CH(PD);
 	
 	//compute the res polytope
-	compute_res(pointset,points_index,m,mi,proj,dets,numof_triangs, numof_init_Res_vertices,CH);
-	//compute_res_fast(pointset,points_index,m,mi,proj,dets,numof_triangs, numof_init_Res_vertices,CH);
+	//compute_res(pointset,points_index,m,mi,proj,dets,numof_triangs, numof_init_Res_vertices,CH);
+	compute_res_faster(pointset,points_index,m,mi,proj,dets,numof_triangs, numof_init_Res_vertices,CH);
 	
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;

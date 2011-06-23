@@ -20,6 +20,7 @@ if ( CGAL_FOUND )
 
   include( CGAL_CreateSingleSourceCGALProgram )
 
+  include_directories (BEFORE ../../../Kernel_d/include/)
   include_directories (BEFORE ../include)
   include_directories (BEFORE /home/vissarion/src/LinBox/include)
   include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
@@ -31,27 +32,11 @@ if ( CGAL_FOUND )
   link_libraries("lapack")
   link_libraries("givaro")
     
-  #create_single_source_cgal_program( "res_enum_2.cpp" )
-  #create_single_source_cgal_program( "res_enum_3_fast.cpp" )
   create_single_source_cgal_program( "res_enum_d.cpp" )
-  #create_single_source_cgal_program( "res_enum_d_horn.cpp" )
-  #create_single_source_cgal_program( "sec_enum_3_fast.cpp" )
-  #create_single_source_cgal_program( "my_quickhull_3.cpp" )
-  #create_single_source_cgal_program( "my_quickhull_d.cpp" )
-  #create_single_source_cgal_program( "ch_topcom_data.cpp" )
-
-	#target_link_libraries(res_enum_2 "/usr/local/lib/libTOPCOM.a" )
-	#target_link_libraries(res_enum_3_fast "/usr/local/lib/libTOPCOM.a" )
-	#target_link_libraries(res_enum_d_slow "/usr/local/lib/libTOPCOM.a" )
-	#target_link_libraries(res_enum_d_horn "/usr/local/lib/libTOPCOM.a" )
-	#target_link_libraries(sec_enum_3_fast "/usr/local/lib/libTOPCOM.a" )
-	#target_link_libraries(ch_topcom_data "/usr/local/lib/libTOPCOM.a" )
-	
-	#target_link_libraries(res_enum_2 "/usr/local/lib/libCHECKREG.a" )
 	
 else()
   
-    message(STATUS "This program requires the CGAL library, and will not be compiled.")
+  message(STATUS "This program requires the CGAL library, and will not be compiled.")
   
 endif()
 
