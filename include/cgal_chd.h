@@ -335,42 +335,6 @@ Field linbox_det(vector<vector<Field> >& simplex,int d){
 //////////////////////////////////////////////////////////////////
 // basic functions for the algorithm
 
-vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets){
-	double top1, top2;
-	vector<Field> r(m,0);
-	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
-		vector<vector<Field> > simplex;
-		vector<size_t> simplex_vec;
-	  vector<vector<int> > sets(d);
-	  int current_set=0, current_m=mi[0];
-	  for (set<int>::const_iterator it2=it->begin(); it2!=it->end(); it2++){
-			if (*it2 >= current_m)
-				current_m += mi[++current_set];
-			sets[current_set].push_back(*it2);
-			vector<Field> point = points[*it2];
-			point.push_back(1);
-	    simplex.push_back(point);
-	    simplex_vec.push_back(points_index[points[*it2]]);
-	  } 
-	  //Field volume = abs(det(simplex));
-	  //Field volume = abs(linbox_det(simplex,CD));
-	  //std::cout << simplex_vec << std::endl;
-	  //Field volume = abs(dets.determinant(simplex_vec));
-	  
-	  vector<int> mixed_vertices;
-	  for (int i=0; i<d; i++){
-	  	if (sets[i].size() == 1){
-	  	  mixed_vertices.push_back(i);
-	  	}
-	  }
-	  if (mixed_vertices.size() == 1){
-	  	Field volume = abs(dets.determinant(simplex_vec));
-	  	r[sets[mixed_vertices[0]][0]] += volume;
-	  }  
-	}
-	std::cout << r << std::endl;
-	return r;
-}
 
 vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets, vector<int> proj){
 	double top1, top2;
@@ -680,6 +644,44 @@ void compute_res_fast(std::vector<std::vector<Field> >& pointset, map<std::vecto
 
 //////////////////////////////////////////////////////////////////
 // misc
+
+vector<Field> compute_r_fast(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets){
+	double top1, top2;
+	vector<Field> r(m,0);
+	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
+		vector<vector<Field> > simplex;
+		vector<size_t> simplex_vec;
+	  vector<vector<int> > sets(d);
+	  int current_set=0, current_m=mi[0];
+	  for (set<int>::const_iterator it2=it->begin(); it2!=it->end(); it2++){
+			if (*it2 >= current_m)
+				current_m += mi[++current_set];
+			sets[current_set].push_back(*it2);
+			vector<Field> point = points[*it2];
+			point.push_back(1);
+	    simplex.push_back(point);
+	    simplex_vec.push_back(points_index[points[*it2]]);
+	  } 
+	  //Field volume = abs(det(simplex));
+	  //Field volume = abs(linbox_det(simplex,CD));
+	  //std::cout << simplex_vec << std::endl;
+	  //Field volume = abs(dets.determinant(simplex_vec));
+	  
+	  vector<int> mixed_vertices;
+	  for (int i=0; i<d; i++){
+	  	if (sets[i].size() == 1){
+	  	  mixed_vertices.push_back(i);
+	  	}
+	  }
+	  if (mixed_vertices.size() == 1){
+	  	Field volume = abs(dets.determinant(simplex_vec));
+	  	r[sets[mixed_vertices[0]][0]] += volume;
+	  }  
+	}
+	std::cout << r << std::endl;
+	return r;
+}
+
 
 //NOT WORKING !!!!!!! 
 void insert_new_Rvertex_old(Triangulation& CH, std::vector<Direction_d>& normal_list_d, Point_d new_point){
