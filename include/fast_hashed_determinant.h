@@ -21,12 +21,13 @@
 
 template <class _NT,size_t dim>
 class FastHashedDeterminant{
-        private:
+        public:
         typedef _NT                                     NT;
         typedef std::vector<NT>                         Column;
         typedef std::vector<NT>                         Row;
-        typedef std::vector<Column>                     Matrix;
         typedef std::vector<size_t>                     Index;
+        private:
+        typedef std::vector<Column>                     Matrix;
         typedef boost::unordered_map<Index,NT>          Determinants;
         typedef boost::unordered_map<Index,NT>          HDeterminants;
 
@@ -108,6 +109,12 @@ class FastHashedDeterminant{
                 assert(c.size()==dim);
                 _points.push_back(c);
                 return _points.size()-1;
+        }
+
+        // This function returns the dimension of the points stored in the
+        // matrix (the template parameter dim).
+        inline size_t dimension()const{
+                return dim;
         }
 
         // This function returns the determinant of a submatrix of _points.
