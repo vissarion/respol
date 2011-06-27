@@ -76,7 +76,7 @@ typedef vector<set<int> > 										TriangSet;
 typedef vector<vector<Field> >								VertexSet;
 
 // big matrix determinants typedefs
-typedef FastHashedDeterminant<Field,CD>         HD;
+typedef FastHashedDeterminant<Field>            HD;
 
 /////////////////////////////////////////////////////////////////////
 // implimentations

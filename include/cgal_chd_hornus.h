@@ -66,7 +66,7 @@ typedef vector<SRvertex> 	Resvertex;
 typedef set<SRvertex> 		Polytope;
 
 // big matrix determinants typedefs
-typedef FastHashedDeterminant<Field,CD-1>        	HD;
+typedef FastHashedDeterminant<Field>                    HD;
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
