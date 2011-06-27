@@ -94,7 +94,7 @@ public:
         return _hash;
   }
 
-  void set_hash(const FHD *h){
+  void set_hash(FHD *h){
         _hash=h;
   }
 

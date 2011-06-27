@@ -17,10 +17,9 @@ find_package(CGAL QUIET COMPONENTS Core )
 if ( CGAL_FOUND )
 
   include( ${CGAL_USE_FILE} )
-
+	
   include( CGAL_CreateSingleSourceCGALProgram )
 
-  include_directories (BEFORE ../../../Kernel_d/include/)
   include_directories (BEFORE ../include)
   include_directories (BEFORE /home/vissarion/src/LinBox/include)
   include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)

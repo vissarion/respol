@@ -31,6 +31,22 @@ class FastHashedDeterminant{
         typedef boost::unordered_map<Index,NT>          HDeterminants;
 
         public:
+        // constructor for incremental det table
+        // (for the space of the projection of the Resultant i.e. PD)
+        FastHashedDeterminant():
+#ifdef HASH_STATISTICS
+        number_of_determinant_calls(0),
+        number_of_computed_determinants(0),
+        number_of_hom_determinants(0),
+        number_of_computed_hom_determinants(0),
+        full_determinant_time(0),
+#endif
+        _points(),
+        _determinants(),
+        _homogeneous_determinants()
+        {};
+        
+        //
         FastHashedDeterminant(size_t columns):
 #ifdef HASH_STATISTICS
         number_of_determinant_calls(0),
@@ -43,7 +59,9 @@ class FastHashedDeterminant{
         _determinants(),
         _homogeneous_determinants()
         {};
-
+				
+				// constructor for static det table 
+        // (for the space of the lifted Cayley pointset i.e. CD)
         template <class Iterator>
         FastHashedDeterminant(Iterator begin,Iterator end):
 #ifdef HASH_STATISTICS
@@ -71,6 +89,8 @@ class FastHashedDeterminant{
                 }
         std::cerr<<
                 "hash statistics:"<<
+                "\nnum of hashed points:"<<
+                _points.size()<<
                 "\nnon-hom hash: "<<
                 _determinants.bucket_count()<<" buckets, "<<
                 number_of_collisions<<" collisions in "<<bad_buckets<<
@@ -101,7 +121,15 @@ class FastHashedDeterminant{
                 _points.push_back(c);
                 return _points.size()-1;
         }
-
+				
+				int find(const Column &c){
+								typename Matrix::iterator result;
+								result = std::find(_points.begin(),_points.end(),c);
+								if (result == _points.end())
+									return -1;
+								else 
+									return result - _points.begin();
+				}
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in

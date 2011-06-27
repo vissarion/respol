@@ -8,7 +8,7 @@ const int D = 3;      	 	// this is the dimension of the supports
 const int CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
 const int PD = D+1;				// this is the dimension of the projection
 
-#define PRINT_INFO
+//#define PRINT_INFO
 //#include <../include/cgal_chd.h>
 #include <../include/cgal_chd_hornus.h>
 
@@ -36,6 +36,8 @@ int main(const int argc, const char** argv) {
 	// compute the big matrix
 	// you don't have to homogenize!
   HD dets(pointset.begin(),pointset.end());
+	//
+	HD Pdets;
 	
 	// define the projection
 	// attention! proj SHOULD BE SORTED
@@ -47,7 +49,7 @@ int main(const int argc, const char** argv) {
 	
 	//compute the res polytope
 	//compute_res(pointset,points_index,m,mi,proj,dets,numof_triangs, numof_init_Res_vertices,CH);
-	compute_res_faster(pointset,points_index,m,mi,proj,dets,numof_triangs, numof_init_Res_vertices,CH);
+	compute_res_faster(pointset,points_index,m,mi,proj,dets,Pdets,numof_triangs, numof_init_Res_vertices,CH);
 	
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
