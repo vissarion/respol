@@ -122,6 +122,7 @@ class FastHashedDeterminant{
                 return _points.size()-1;
         }
 				
+				// a linear search to Matrix to see if the Column c exists
 				int find(const Column &c){
 								typename Matrix::iterator result;
 								result = std::find(_points.begin(),_points.end(),c);

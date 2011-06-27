@@ -494,6 +494,7 @@ void update_normal_list(Triangulation& ppc, NV_ds& normal_list,
 	
 }
 
+// TODO: des todo pio katw
 void insert_new_Rvertex(Triangulation& ppc, 
 												NV_ds& normal_list, 
 												SRvertex& new_vertex,
@@ -504,34 +505,22 @@ void insert_new_Rvertex(Triangulation& ppc,
 	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
 	new_point.set_index(ppc.number_of_vertices());
 	new_point.set_hash(&Pdets); 
-	//print 
-	//print_res_vertices(ppc);
-	//Pdets.print_matrix(std::cout);
-	// insert the point to the triangulation
-	PLocate_type loc_type;
-  PFace f(PD);
-	PFacet ft;
-  ppc.locate(new_point,loc_type,f,ft); 
-  if (loc_type==4 || loc_type==5){ //replace with OUTSIDE_AFFINE_HULL OUTSIDE_CONVEX_HULL
-  	#ifdef PRINT_INFO  
-  	  std::cout << "one new R-vertex found !!! loc_type="<< loc_type << std::endl; 
-		#endif
-		PVertex_handle new_vert = ppc.insert(new_point);
-		//update normal_list
-		typedef std::vector<PSimplex_d> Simplices;
-		Simplices inf_simplices;
-	  std::back_insert_iterator<Simplices> out(inf_simplices);
-	  //TODO:make it more efficient
-	  // find only the simplices indident to the edge (new_vert,inf_vert)
-		ppc.incident_full_cells(new_vert, out);
-		for(Simplices::iterator sit = inf_simplices.begin(); 
-	                         sit != inf_simplices.end(); ++sit ){
-			if (ppc.is_infinite((*sit)->vertex(0))){
-				update_normal_list(ppc, normal_list, sit);
-			}
+ 	#ifdef PRINT_INFO  
+		std::cout << "one new R-vertex found !!! "<< std::endl; 
+	#endif
+	PVertex_handle new_vert = ppc.insert(new_point);
+	//update normal_list
+	typedef std::vector<PSimplex_d> Simplices;
+	Simplices inf_simplices;
+  std::back_insert_iterator<Simplices> out(inf_simplices);
+  // TODO:make it more efficient
+  // find only the simplices incident to the edge (new_vert,inf_vert)
+	ppc.incident_full_cells(new_vert, out);
+	for(Simplices::iterator sit = inf_simplices.begin(); 
+                         sit != inf_simplices.end(); ++sit ){
+		if (ppc.is_infinite((*sit)->vertex(0))){
+			update_normal_list(ppc, normal_list, sit);
 		}
- 	}else{
-		;//cout << "no new R-vertex found"<< endl; 
 	}
 }
 
@@ -757,6 +746,49 @@ int num_of_simplices(CTriangulation& ppc,map<vector<Field>, int>& points_index){
 void insert_new_Rvertex(Triangulation& ppc, 
 												NV_ds& normal_list, 
 												PPoint_d& new_point){
+	PLocate_type loc_type;
+  PFace f(PD);
+	PFacet ft;
+  ppc.locate(new_point,loc_type,f,ft); 
+  if (loc_type==4 || loc_type==5){ //replace with OUTSIDE_AFFINE_HULL OUTSIDE_CONVEX_HULL
+  	#ifdef PRINT_INFO  
+  	  std::cout << "one new R-vertex found !!! loc_type="<< loc_type << std::endl; 
+		#endif
+		PVertex_handle new_vert = ppc.insert(new_point);
+		//update normal_list
+		typedef std::vector<PSimplex_d> Simplices;
+		Simplices inf_simplices;
+	  std::back_insert_iterator<Simplices> out(inf_simplices);
+	  //TODO:make it more efficient
+	  // find only the simplices indident to the edge (new_vert,inf_vert)
+		ppc.incident_full_cells(new_vert, out);
+		for(Simplices::iterator sit = inf_simplices.begin(); 
+	                         sit != inf_simplices.end(); ++sit ){
+			if (ppc.is_infinite((*sit)->vertex(0))){
+				update_normal_list(ppc, normal_list, sit);
+			}
+		}
+ 	}else{
+		;//cout << "no new R-vertex found"<< endl; 
+	}
+}
+* 
+* 
+* 
+void insert_new_Rvertex(Triangulation& ppc, 
+												NV_ds& normal_list, 
+												SRvertex& new_vertex,
+												HD& Pdets){	
+	// insert the coordinates of the point as a column to the HashDeterminants matrix
+	Pdets.add_column(new_vertex);
+	// construct the new point 
+	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
+	new_point.set_index(ppc.number_of_vertices());
+	new_point.set_hash(&Pdets); 
+	//print 
+	//print_res_vertices(ppc);
+	//Pdets.print_matrix(std::cout);
+	// insert the point to the triangulation
 	PLocate_type loc_type;
   PFace f(PD);
 	PFacet ft;
