@@ -35,6 +35,8 @@ class FastHashedDeterminant{
         // (for the space of the projection of the Resultant i.e. PD)
         FastHashedDeterminant():
 #ifdef HASH_STATISTICS
+        dimension(0),
+        number_of_max_dimension_calls(0),
         number_of_determinant_calls(0),
         number_of_computed_determinants(0),
         number_of_hom_determinants(0),
@@ -45,10 +47,12 @@ class FastHashedDeterminant{
         _determinants(),
         _homogeneous_determinants()
         {};
-        
+
         //
         FastHashedDeterminant(size_t columns):
 #ifdef HASH_STATISTICS
+        dimension(0),
+        number_of_max_dimension_calls(0),
         number_of_determinant_calls(0),
         number_of_computed_determinants(0),
         number_of_hom_determinants(0),
@@ -59,12 +63,14 @@ class FastHashedDeterminant{
         _determinants(),
         _homogeneous_determinants()
         {};
-				
-				// constructor for static det table 
+
+        // constructor for static det table
         // (for the space of the lifted Cayley pointset i.e. CD)
         template <class Iterator>
         FastHashedDeterminant(Iterator begin,Iterator end):
 #ifdef HASH_STATISTICS
+        dimension(0),
+        number_of_max_dimension_calls(0),
         number_of_determinant_calls(0),
         number_of_computed_determinants(0),
         number_of_hom_determinants(0),
@@ -74,8 +80,13 @@ class FastHashedDeterminant{
         _points(),
         _determinants(),
         _homogeneous_determinants(){
-                for(Iterator i=begin;i!=end;++i)
+                for(Iterator i=begin;i!=end;++i){
+#ifdef HASH_STATISTICS
+                if(i->size()>dimension)
+                        dimension=i->size();
+#endif
                         _points.push_back(*i);
+                }
         }
 
         ~FastHashedDeterminant(){
@@ -88,16 +99,15 @@ class FastHashedDeterminant{
                         ++bad_buckets;
                 }
         std::cerr<<
-                "hash statistics:"<<
-                "\nnum of hashed points:"<<
-                _points.size()<<
+                "hash statistics:\n"<<
+                _points.size()<<" hashed points, of max dim "<<dimension<<
                 "\nnon-hom hash: "<<
                 _determinants.bucket_count()<<" buckets, "<<
                 number_of_collisions<<" collisions in "<<bad_buckets<<
                 " buckets\nnon-hom determinants: computed "<<
                 number_of_computed_determinants<<" out of "<<
                 number_of_determinant_calls<<
-                "\ntime in non-hom determinant computations: "<<
+                "\ntime in non-hom full-dim determinant computations: "<<
                 (double)full_determinant_time/CLOCKS_PER_SEC<<
                 " seconds\nhom determinants: computed "<<
                 number_of_computed_hom_determinants<<
@@ -111,6 +121,10 @@ class FastHashedDeterminant{
         // exist in the matrix.
         void set_column(size_t i,const Column &c){
                 assert((i>=0)&&(i<_points.size()));
+#ifdef HASH_STATISTICS
+                if(c.size()>dimension)
+                        dimension=c.size();
+#endif
                 _points[i]=c;
         }
 
@@ -118,19 +132,21 @@ class FastHashedDeterminant{
         // of this inserted element. In contrast with set_column, this
         // function will not invalidate hashed values.
         size_t add_column(const Column &c){
+#ifdef HASH_STATISTICS
+                if(c.size()>dimension)
+                        dimension=c.size();
+#endif
                 _points.push_back(c);
                 return _points.size()-1;
         }
-				
-				// a linear search to Matrix to see if the Column c exists
-				int find(const Column &c){
-								typename Matrix::iterator result;
-								result = std::find(_points.begin(),_points.end(),c);
-								if (result == _points.end())
-									return -1;
-								else 
-									return result - _points.begin();
-				}
+
+        // a linear search to Matrix to see if the Column c exists
+        int find(const Column &c)const{
+                typename Matrix::const_iterator result;
+                result=std::find(_points.begin(),_points.end(),c);
+                return (result==_points.end()?-1:result-_points.begin());
+        }
+
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
@@ -140,17 +156,22 @@ class FastHashedDeterminant{
                 if(idx.size()==1)
                         return _points[idx[0]][0];
 #ifdef HASH_STATISTICS
+                clock_t start;
+                if(idx.size()==dimension)
+                        ++number_of_max_dimension_calls;
                 ++number_of_determinant_calls;
 #endif
                 if(_determinants.count(idx)==0){
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
-                        clock_t start;
-                        start=clock();
+                        if(idx.size()==dimension){
+                                start=clock();
+                        }
 #endif
                         _determinants[idx]=compute_determinant(idx);
 #ifdef HASH_STATISTICS
-                        full_determinant_time+=(clock()-start);
+                        if(idx.size()==dimension)
+                                full_determinant_time+=(clock()-start);
 #endif
                 }
                 return _determinants[idx];
@@ -249,8 +270,8 @@ class FastHashedDeterminant{
 
         // This function prints a submatrix, formed by the columns whose
         // indices are in idx, to an output stream.
-        /*std::ostream& print_submatrix(const Index &idx,std::ostream &o)const{
-                for(size_t row=0;row<dim;++row){
+        std::ostream& print_submatrix(const Index &idx,std::ostream &o)const{
+                for(size_t row=0;row<dimension;++row){
                         o<<"[ ";
                         for(Index::const_iterator i=idx.begin();
                             i!=idx.end();
@@ -259,7 +280,7 @@ class FastHashedDeterminant{
                         o<<"]\n";
                 }
                 return o;
-        }*/
+        }
 
         private:
         // This function computes the determinant of a submatrix of
@@ -316,6 +337,8 @@ class FastHashedDeterminant{
         HDeterminants _homogeneous_determinants;
 #ifdef HASH_STATISTICS
         public:
+        unsigned dimension;
+        unsigned number_of_max_dimension_calls;
         unsigned number_of_determinant_calls;
         unsigned number_of_computed_determinants;
         unsigned number_of_hom_determinants;
