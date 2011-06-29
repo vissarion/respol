@@ -229,32 +229,18 @@ public:
     }
 };
 
+// This is our hack: instead of computing the determinant of a matrix
+// formed by the points, we use the index and the hash tables stored in the
+// points. This way, we gain a bit by avoiding coordinates copy and a lot
+// by computing only d multiplication and d additions instead of computing
+// the determinant of a matrix of size d.
 template <class R>
-class OrientationCd
-{
-    /*typedef typename R::Point_d     Point;
-    typedef typename R::LA          LA;
-    typedef typename R::Orientation Orientation;*/
+class OrientationCd{
 public:
-    typedef Orientation result_type;
-
     template <class ForwardIterator>
-    result_type operator()(ForwardIterator first, ForwardIterator last) const
-    {
-        TUPLE_DIM_CHECK(first, last, Orientation_d);
-        /*
-        int d = static_cast<int>(std::distance(first,last)) - 1;
-        // range contains d+1 points of dimension d
-        CGAL_assertion_msg(first->dimension() == d,
-                "Orientation_d: needs first->dimension() + 1 many points.");
-        typename LA::Matrix M(d);
-        ForwardIterator s = first;
-        ++s;
-        for( int j = 0; j < d; ++s, ++j )
-            for( int i = 0; i < d; ++i )
-                M(i,j) = s->cartesian(i) - first->cartesian(i);
-        return result_type(LA::sign_of_determinant(M));
-        */
+    Orientation operator()(ForwardIterator first, ForwardIterator last)const{
+        // don't know what's this, but it was like that in the original file
+        TUPLE_DIM_CHECK(first,last,Orientation_d);
         typedef typename std::iterator_traits<ForwardIterator>::value_type
                                                                 PointD;
         typedef typename PointD::R                              R;
