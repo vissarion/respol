@@ -307,12 +307,12 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
     for (int i=1; i<=pc.current_dimension(); i++){
 			CPoint_d p((*sit)->vertex(i)->point());
 			facet_points.push_back(p);
-			std::vector<Field> ppoi;
-			for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
-				ppoi.push_back(p[j]);
+			//std::vector<Field> ppoi;
+			//for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
+			//	ppoi.push_back(p[j]);
 				//std::cout << *vit << ",";
 			lifting.push_back(p[dim-1]);
-			det_indices.push_back(points_index[ppoi]);
+			det_indices.push_back(p.index());
 		}
 		
 		// compute the last coordinate of the cross product 
@@ -329,11 +329,11 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
     // note that here we have to compute a determinant 
     // of one dimension higher
     if (det!=0){
-	    std::vector<Field> ppoi;
-			for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
-				ppoi.push_back(opposite_point[j]);
+	    //std::vector<Field> ppoi;
+			//for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
+			//	ppoi.push_back(opposite_point[j]);
 			lifting.push_back(opposite_point[dim-1]);
-			det_indices.push_back(points_index[ppoi]);
+			det_indices.push_back(opposite_point.index());
 	    //std::cout << "\n"<<det_indices.size()<<" "<<lifting.size()<<std::endl;
 	    Field det2 = dets.homogeneous_determinant(det_indices,lifting);
 			//std::cout << " det2=" << det2;
@@ -377,6 +377,7 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
 	}
   return rho;
 }
+
 
 void update_normal_list(Triangulation& ppc, NV_ds& normal_list, 
                         std::vector<PSimplex_d>::iterator sit){
