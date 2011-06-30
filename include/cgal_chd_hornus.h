@@ -275,115 +275,31 @@ vector<int> full_proj(const int d, int m, std::vector<int>& mi){
 	return proj;
 }
 
-vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets, vector<int> proj){
-	double top1, top2;
-	vector<Field> r(PD,0);
-	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
-		vector<vector<Field> > simplex;
-		vector<size_t> simplex_vec;
-	  vector<vector<int> > sets(d);
-	  int current_set=0, current_m=mi[0];
-	  for (set<int>::const_iterator it2=it->begin(); it2!=it->end(); it2++){
-			if (*it2 >= current_m)
-				current_m += mi[++current_set];
-			sets[current_set].push_back(*it2);
-			vector<Field> point = points[*it2];
-			point.push_back(1);
-	    simplex.push_back(point);
-	    simplex_vec.push_back(points_index[points[*it2]]); 
-	  } 
-	  vector<int> mixed_vertices;
-	  for (int i=0; i<d; i++){
-	  	if (sets[i].size() == 1){
-	  	  mixed_vertices.push_back(i);
-	  	}
-	  }
-	  if (mixed_vertices.size() == 1){
-	  	// find where is the mixed vertex in the vector of projection coordinates
-	  	vector<int>::iterator pit = find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
-	  	if (pit != proj.end()){
-	  		//std::cout << simplex_vec << std::endl;
-	  	  Field volume = abs(dets.homogeneous_determinant(simplex_vec));
-	  		r[pit-proj.begin()] += volume;
-			}
-	  }
-	}
-	//std::cout << r << std::endl;
-	return r;
-}
 
-// iterate through all facets and put all the points of upper (lower) hull facets to triang the upper hull is the default
-vector<set<int> > project_lower_upper_hull(CTriangulation& pc,
-                                           map<vector<Field>, int>& points_index,
-                                           int dcur, 
-                                           int dim, 
-                                           bool lower){
-	//std::cout << dim << "|" << pc.current_dimension() << std::endl;
-	//SimplicialComplex triang, triang2;
-	vector<set<int> > triang;
+// iterate through all facets determine the upper (i.e. compute determinants), 
+// project and compute the r_vector (i.e. compute other determinants)
+// TODO: the second determinants are minors of the first
+
+vector<Field> project_upper_hull_r(CTriangulation& pc,
+																	 map<vector<Field>, int>& points_index,
+																	 HD& dets,
+																	 int dcur, 
+																	 int dim,
+																	 std::vector<int>& mi,
+																	 vector<int> proj,
+																	 bool lower){
+	// the result vector
+	vector<Field> rho(PD,0);
+	// compute the infinite simplices
 	typedef std::vector<CSimplex_d> Simplices;
 	Simplices inf_simplices;
   std::back_insert_iterator<Simplices> out(inf_simplices);
   pc.incident_full_cells(pc.infinite_vertex(), out);
+  
 	//iterate through all infinite simplices
 	for( Simplices::iterator sit = inf_simplices.begin(); 
 	                         sit != inf_simplices.end(); ++sit ){
-    //put the points of the finite facet of the infinite cell to facet_points
-    std::vector<CPoint_d> facet_points;
-    for (int i=1; i<=pc.current_dimension(); i++){
-			facet_points.push_back((*sit)->vertex(i)->point());
-		}
-		
-		// compute a point of pc not on the facet
-		CPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
     
-    // compute a hyperplane which has in its negative side the opposite point
-    CHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
-        
-    CVector_d vec = hp.orthogonal_direction().vector();
-    //std::cout << "opp=" << hp.has_on_positive_side(vec+facet_points[0]);
-    bool is_upper = vec.cartesian(CD-1) > 0;
-    if (lower) is_upper=!is_upper;
-    
-    if (is_upper){
-			set<int> s;
-			for (std::vector<CPoint_d>::iterator vit=facet_points.begin();
-			      vit!=facet_points.end(); ++vit){
-				std::vector<Field> ppoi;
-				for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
-					ppoi.push_back((*vit)[j]);
-				//std::cout << *vit << ",";
-				s.insert(points_index[ppoi]);
-		  }
-			//if (s.card()==dim){
-			triang.push_back(s);
-			//}else{
-			//  #ifdef PRINT_INFO  
-			//  	std::cout << "found a low dimensional simplex. possible ERROR\n" << std::endl;
-			//	#endif
-			//}
-		}
-	}
-  return triang;
-}
-
-// iterate through all facets and put all the points of upper (lower) hull facets to triang the upper hull is the default
-vector<set<int> > project_lower_upper_hull_fast(CTriangulation& pc,
-                                           map<vector<Field>, int>& points_index,
-                                           HD& dets,
-                                           int dcur, 
-                                           int dim, 
-                                           bool lower){
-	//std::cout << dim << "|" << pc.current_dimension() << std::endl;
-	//SimplicialComplex triang, triang2;
-	vector<set<int> > triang;
-	typedef std::vector<CSimplex_d> Simplices;
-	Simplices inf_simplices;
-  std::back_insert_iterator<Simplices> out(inf_simplices);
-  pc.incident_full_cells(pc.infinite_vertex(), out);
-	//iterate through all infinite simplices
-	for( Simplices::iterator sit = inf_simplices.begin(); 
-	                         sit != inf_simplices.end(); ++sit ){
     //put the points of the finite facet of the infinite cell to facet_points
     std::vector<CPoint_d> facet_points;
     std::vector<size_t> det_indices;
@@ -398,10 +314,12 @@ vector<set<int> > project_lower_upper_hull_fast(CTriangulation& pc,
 			lifting.push_back(p[dim-1]);
 			det_indices.push_back(points_index[ppoi]);
 		}
+		
 		// compute the last coordinate of the cross product 
 		// i.e. the last coordinate of an orthogonal vector to the facet
+		// note that this is also the volume of the projection
 		Field det = dets.homogeneous_determinant(det_indices);
-		//std::cout << "det=" << det;
+		//std::cout << "det=" << det<<" ";
 		bool is_upper2 = det>0;
 		
 		// compute a point of pc not on the facet
@@ -424,55 +342,40 @@ vector<set<int> > project_lower_upper_hull_fast(CTriangulation& pc,
 		}	
     if (lower) is_upper2=!is_upper2;
     
-    // compute a hyperplane which has in its negative side the opposite point
-    //CHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
-              
-    //CVector_d vec = hp.orthogonal_direction().vector();
-    //std::cout << " vec=" << vec << std::endl;
-    //bool is_upper = vec.cartesian(CD-1) > 0;
-    //if (lower) is_upper=!is_upper;
-    
+    // if the facet is upper     
     if (is_upper2){
+			// take the indices, sorted!
 			set<int> s;
 			for (std::vector<CPoint_d>::iterator vit=facet_points.begin();
 			      vit!=facet_points.end(); ++vit){
-				std::vector<Field> ppoi;
-				for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
-					ppoi.push_back((*vit)[j]);
-				//std::cout << *vit << ",";
-				s.insert(points_index[ppoi]);
+				s.insert(vit->index());
 		  }
-			//if (s.card()==dim){
-			triang.push_back(s);
-			//}else{
-			//  #ifdef PRINT_INFO  
-			//  	std::cout << "found a low dimensional simplex. possible ERROR\n" << std::endl;
-			//	#endif
-			//}
+			// check if the projection of the facet (i.e. a Minkowski cell)
+			// is mixed (i.e. has exactly one vertex summand) 
+			int d = mi.size();
+		  vector<vector<int> > sets(d);
+		  int current_set=0, current_m=mi[0];
+		  for (set<int>::const_iterator it2=s.begin(); it2!=s.end(); it2++){
+				if (*it2 >= current_m)
+					current_m += mi[++current_set];
+				sets[current_set].push_back(*it2);
+		  } 
+		  vector<int> mixed_vertices;
+		  for (int i=0; i<d; i++){
+		  	if (sets[i].size() == 1){
+		  	  mixed_vertices.push_back(i);
+		  	}
+		  }
+		  if (mixed_vertices.size() == 1){
+		  	// find where is the mixed vertex in the vector of projection coordinates
+		  	vector<int>::iterator pit = find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
+		  	if (pit != proj.end()){
+		  		rho[pit-proj.begin()] += det;
+				}
+		  }
 		}
 	}
-  return triang;
-}
-
-void update_normal_list(Triangulation& ppc, std::vector<PVector_d>& normal_list, 
-                        std::vector<PSimplex_d>::iterator sit){
-	std::vector<PPoint_d> facet_points;
-	for (int i=1; i<=ppc.current_dimension(); i++){
-		facet_points.push_back((*sit)->vertex(i)->point());
-		//std::cout << (*sit)->vertex(i)->point() << " ";
-	}
-	//std::cout << std::endl;
-	PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
-	PHyperplane_d hp(facet_points.begin(),facet_points.end(),facet_points[0]);
-	//std::cout << opposite_point << "#" << hp.has_on_positive_side(opposite_point) << "!";
-	//std::cout << "dim=" << ppc.current_dimension() << " " << hp.orthogonal_direction()<< "\n";
-	PVector_d vec = hp.orthogonal_direction().vector();
-	if (hp.has_on_positive_side(opposite_point))
-		vec = -vec;
-	if (std::find(normal_list.begin(),normal_list.end(),vec) 
-			      == normal_list.end()){
-		normal_list.push_back(vec);
-	}
+  return rho;
 }
 
 void update_normal_list(Triangulation& ppc, NV_ds& normal_list, 
@@ -491,7 +394,6 @@ void update_normal_list(Triangulation& ppc, NV_ds& normal_list,
 	if (hp.has_on_positive_side(opposite_point))
 		vec = -vec;
 	normal_list.put(vec);
-	
 }
 
 // TODO: des todo pio katw
@@ -554,7 +456,8 @@ vector<pair<vector<Field>,size_t> > lift_to_zero(vector<vector<Field> >& points,
 }
 
 
-// compute the Triangulation of the static lifted points
+// compute the Triangulation of the static points (lifted to zero)
+// the points to be lifted will not be present here
 
 void StaticTriangulation(vector<vector<Field> >& points,  
 												 map<vector<Field>,int>& points_index,
@@ -603,16 +506,16 @@ vector<pair<vector<Field>,size_t> > lift_to_proj(vector<vector<Field> >& points,
 
 // compute lifting triangulation but not from scratch
 // use a copy of CT and add new lifted points there
-vector<set<int> > LiftingTriangulationDynamic(vector<vector<Field> >& points, 
-																			 PVector_d& nli, 
-																			 std::vector<int>& proj, 
-																			 map<vector<Field>,int>& points_index, 
-																			 CTriangulation& CT,
-																			 HD& dets,
-																			 bool lower){
-	// make a copy of CT
-	CTriangulation LCT(CT);
-  
+
+void LiftingTriangulationDynamic(vector<vector<Field> >& points, 
+																						 PVector_d& nli, 
+																						 std::vector<int>& proj, 
+																						 map<vector<Field>,int>& points_index, 
+																						 CTriangulation& CT,
+																						 CTriangulation& LCT,
+																						 HD& dets,
+																						 bool lower){	
+	  
   // lift the points to be projected
   vector<pair<vector<Field>,size_t> > P = lift_to_proj(points,nli,proj);
 
@@ -625,24 +528,10 @@ vector<set<int> > LiftingTriangulationDynamic(vector<vector<Field> >& points,
   	p.set_hash(&dets);
   	CVertex_handle v = LCT.insert(p);
   }
-    
-  // project LCT i.e. triangulation
-  int dcur = LCT.current_dimension();
-  vector<set<int> > t;
-  //t = project_lower_upper_hull(LCT,points_index,dcur,CD,lower);
-  t = project_lower_upper_hull_fast(LCT,points_index,dets,dcur,CD,lower);
-  
-  // TODO: destroy here!
-  LCT.clear();
-  
-  #ifdef PRINT_INFO  
-    std::cout << t << std::endl;
-  #endif
-	return t;
 }
 
 ////////////////////////////////////////////////////////////
-// a new (hopefully faster) algorithm
+// the new (hopefully faster) algorithm
 void compute_res_faster( std::vector<std::vector<Field> >& pointset, 
                  	 			 map<std::vector<Field>,int>& points_index, 
                   			 int m, 
@@ -657,11 +546,8 @@ void compute_res_faster( std::vector<std::vector<Field> >& pointset,
 	CTriangulation CT(CD);
 	StaticTriangulation(pointset,points_index,proj,CT,dets);
 												 
-  // make a stack (stl vector) with normals vectors
-  //std::vector<PVector_d> normal_list_d;
+  // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
-  // initialize with some normal vectors
-  //init_normal_list(T, normal_list_d);
   int init_size = normal_list_d.size();
     
   while(!normal_list_d.empty()){
@@ -669,23 +555,34 @@ void compute_res_faster( std::vector<std::vector<Field> >& pointset,
 		  std::cout << "dim=" << T.current_dimension() << std::endl;
 			normal_list_d.print();
 	  #endif
+	  
 	  // take the first(last more efficient with vectors??) normal and remove it from normals stack
 		PVector_d nli = *(normal_list_d.begin());
 		normal_list_d.erase(normal_list_d.begin());
+		//PVector_d nli = normal_list_d.back();
+		//normal_list_d.pop_back();
+		
+		// make a copy of CT
+		CTriangulation LCT(CT);
 		
 		// outer normal vector --> upper hull projection
-	  vector<set<int> > t = LiftingTriangulationDynamic(pointset,nli,proj,points_index,CT,dets,false); 
+	  LiftingTriangulationDynamic(pointset,nli,proj,points_index,CT,LCT,dets,false); 
 		
-	  if (t.size() != 0){//if t is indeed a triangulation!
-		  // compute the new Res vertex from t
-		  SRvertex new_vertex = compute_r_proj(t, pointset, m, mi, mi.size(),points_index,dets,proj);
-		  #ifdef PRINT_INFO  
-		    cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
-		  #endif
-		  // insert it in the complex T (if it is not already there) 
-		  if (Pdets.find(new_vertex) == -1)
-		  	insert_new_Rvertex(T,normal_list_d,new_vertex,Pdets);
-	  }
+		// project LCT i.e. triangulation
+	  int dcur = LCT.current_dimension();
+	  vector<Field> new_vertex = project_upper_hull_r(LCT,points_index,dets,dcur,CD,mi,proj,false);
+	  
+	  // TODO: destroy here!
+	  LCT.clear();
+	  
+	  #ifdef PRINT_INFO  
+		  cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		#endif
+		  
+	  // insert it in the complex T (if it is not already there) 
+	  if (Pdets.find(new_vertex) == -1)
+	  	insert_new_Rvertex(T,normal_list_d,new_vertex,Pdets);
+		
 		numof_triangs++;
 		if (numof_triangs == init_size)
 			numof_init_Res_vertices = T.number_of_vertices();
@@ -814,5 +711,201 @@ void insert_new_Rvertex(Triangulation& ppc,
  	}else{
 		;//cout << "no new R-vertex found"<< endl; 
 	}
+}
+* 
+* 
+
+// iterate through all facets and put all the points of upper (lower) hull facets to triang the upper hull is the default
+vector<set<int> > project_lower_upper_hull(CTriangulation& pc,
+                                           map<vector<Field>, int>& points_index,
+                                           int dcur, 
+                                           int dim, 
+                                           bool lower){
+	//std::cout << dim << "|" << pc.current_dimension() << std::endl;
+	//SimplicialComplex triang, triang2;
+	vector<set<int> > triang;
+	typedef std::vector<CSimplex_d> Simplices;
+	Simplices inf_simplices;
+  std::back_insert_iterator<Simplices> out(inf_simplices);
+  pc.incident_full_cells(pc.infinite_vertex(), out);
+	//iterate through all infinite simplices
+	for( Simplices::iterator sit = inf_simplices.begin(); 
+	                         sit != inf_simplices.end(); ++sit ){
+    //put the points of the finite facet of the infinite cell to facet_points
+    std::vector<CPoint_d> facet_points;
+    for (int i=1; i<=pc.current_dimension(); i++){
+			facet_points.push_back((*sit)->vertex(i)->point());
+		}
+		
+		// compute a point of pc not on the facet
+		CPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+    
+    // compute a hyperplane which has in its negative side the opposite point
+    CHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
+        
+    CVector_d vec = hp.orthogonal_direction().vector();
+    //std::cout << "opp=" << hp.has_on_positive_side(vec+facet_points[0]);
+    bool is_upper = vec.cartesian(CD-1) > 0;
+    if (lower) is_upper=!is_upper;
+    
+    if (is_upper){
+			set<int> s;
+			for (std::vector<CPoint_d>::iterator vit=facet_points.begin();
+			      vit!=facet_points.end(); ++vit){
+				std::vector<Field> ppoi;
+				for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
+					ppoi.push_back((*vit)[j]);
+				//std::cout << *vit << ",";
+				s.insert(points_index[ppoi]);
+		  }
+			//if (s.card()==dim){
+			triang.push_back(s);
+			//}else{
+			//  #ifdef PRINT_INFO  
+			//  	std::cout << "found a low dimensional simplex. possible ERROR\n" << std::endl;
+			//	#endif
+			//}
+		}
+	}
+  return triang;
+}
+* 
+* 
+* 
+void update_normal_list(Triangulation& ppc, std::vector<PVector_d>& normal_list, 
+                        std::vector<PSimplex_d>::iterator sit){
+	std::vector<PPoint_d> facet_points;
+	for (int i=1; i<=ppc.current_dimension(); i++){
+		facet_points.push_back((*sit)->vertex(i)->point());
+		//std::cout << (*sit)->vertex(i)->point() << " ";
+	}
+	//std::cout << std::endl;
+	PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+	PHyperplane_d hp(facet_points.begin(),facet_points.end(),facet_points[0]);
+	//std::cout << opposite_point << "#" << hp.has_on_positive_side(opposite_point) << "!";
+	//std::cout << "dim=" << ppc.current_dimension() << " " << hp.orthogonal_direction()<< "\n";
+	PVector_d vec = hp.orthogonal_direction().vector();
+	if (hp.has_on_positive_side(opposite_point))
+		vec = -vec;
+	if (std::find(normal_list.begin(),normal_list.end(),vec) 
+			      == normal_list.end()){
+		normal_list.push_back(vec);
+	}
+}
+* 
+* 
+* 
+vector<Field> compute_r_proj(const vector<set<int> >& triang, vector<vector<Field> >& points, int m, std::vector<int>& mi, int d, map<std::vector<Field>,int>& points_index,HD& dets, vector<int> proj){
+	double top1, top2;
+	vector<Field> r(PD,0);
+	for (vector<set<int> >::const_iterator it = triang.begin(); it != triang.end();it++){
+		//vector<vector<Field> > simplex;
+		vector<size_t> simplex_vec;
+	  vector<vector<int> > sets(d);
+	  int current_set=0, current_m=mi[0];
+	  for (set<int>::const_iterator it2=it->begin(); it2!=it->end(); it2++){
+			if (*it2 >= current_m)
+				current_m += mi[++current_set];
+			sets[current_set].push_back(*it2);
+			//vector<Field> point = points[*it2];
+			//point.push_back(1);
+	    //simplex.push_back(point);
+	    simplex_vec.push_back(*it2); 
+	  } 
+	  vector<int> mixed_vertices;
+	  for (int i=0; i<d; i++){
+	  	if (sets[i].size() == 1){
+	  	  mixed_vertices.push_back(i);
+	  	}
+	  }
+	  if (mixed_vertices.size() == 1){
+	  	// find where is the mixed vertex in the vector of projection coordinates
+	  	vector<int>::iterator pit = find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
+	  	if (pit != proj.end()){
+	  		//std::cout << simplex_vec << std::endl;
+	  	  Field volume = abs(dets.homogeneous_determinant(simplex_vec));
+	  		r[pit-proj.begin()] += volume;
+			}
+	  }
+	}
+	//std::cout << r << std::endl;
+	return r;
+}
+* 
+* 
+* 
+
+
+// iterate through all facets and put all the points of upper (lower) hull facets to triang the upper hull is the default
+vector<set<int> > project_lower_upper_hull_fast(CTriangulation& pc,
+                                           map<vector<Field>, int>& points_index,
+                                           HD& dets,
+                                           int dcur, 
+                                           int dim, 
+                                           bool lower){
+	//std::cout << dim << "|" << pc.current_dimension() << std::endl;
+	//SimplicialComplex triang, triang2;
+	vector<set<int> > triang;
+	typedef std::vector<CSimplex_d> Simplices;
+	Simplices inf_simplices;
+  std::back_insert_iterator<Simplices> out(inf_simplices);
+  pc.incident_full_cells(pc.infinite_vertex(), out);
+	//iterate through all infinite simplices
+	for( Simplices::iterator sit = inf_simplices.begin(); 
+	                         sit != inf_simplices.end(); ++sit ){
+    //put the points of the finite facet of the infinite cell to facet_points
+    std::vector<CPoint_d> facet_points;
+    std::vector<size_t> det_indices;
+    std::vector<Field> lifting;
+    for (int i=1; i<=pc.current_dimension(); i++){
+			CPoint_d p((*sit)->vertex(i)->point());
+			facet_points.push_back(p);
+			std::vector<Field> ppoi;
+			for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
+				ppoi.push_back(p[j]);
+				//std::cout << *vit << ",";
+			lifting.push_back(p[dim-1]);
+			det_indices.push_back(points_index[ppoi]);
+		}
+		// compute the last coordinate of the cross product 
+		// i.e. the last coordinate of an orthogonal vector to the facet
+		Field det = dets.homogeneous_determinant(det_indices);
+		//std::cout << "det=" << det;
+		bool is_upper2 = det>0;
+		
+		// compute a point of pc not on the facet
+		CPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+    
+    // distinguish between the two orthogonal vectors 
+    // note that here we have to compute a determinant 
+    // of one dimension higher
+    if (det!=0){
+	    std::vector<Field> ppoi;
+			for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
+				ppoi.push_back(opposite_point[j]);
+			lifting.push_back(opposite_point[dim-1]);
+			det_indices.push_back(points_index[ppoi]);
+	    //std::cout << "\n"<<det_indices.size()<<" "<<lifting.size()<<std::endl;
+	    Field det2 = dets.homogeneous_determinant(det_indices,lifting);
+			//std::cout << " det2=" << det2;
+			if (det2<0)
+				is_upper2=!is_upper2;
+		}	
+    if (lower) is_upper2=!is_upper2;
+     
+    if (is_upper2){
+			set<int> s;
+			for (std::vector<CPoint_d>::iterator vit=facet_points.begin();
+			      vit!=facet_points.end(); ++vit){
+				std::vector<Field> ppoi;
+				for (int j=0; j<dim-1; ++j) // d-1 cuts the last coordinate (the lifting)!!
+					ppoi.push_back((*vit)[j]);
+				//std::cout << *vit << ",";
+				s.insert(points_index[ppoi]);
+		  }
+			triang.push_back(s);
+		}
+	}
+  return triang;
 }
 */

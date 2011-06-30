@@ -35,7 +35,7 @@ public:
 	
 	//constructors
 	Normal_Vector_ds() : _normal_list() {
-		initialize();
+		simple_initialize();
 	}
 	
 	// initialization of ds
@@ -57,6 +57,28 @@ public:
 				put(lft);
 			}
 		}
+	}
+	
+		// initialization of ds
+	void simple_initialize(){
+		DT vec[]={-1,1};
+	  int base=sizeof(vec)/sizeof(DT);
+	   
+	  for (int i=0; i<pow(base,PD); ++i){
+	    vector<DT> extreme_point;
+	    vector<int> v=int2vectord(i,base,PD);
+	    //copy(v.begin(),v.end(),ostream_iterator<int>(std::cout," "));
+	    for (vector<int>::iterator it=v.begin(); it!=v.end(); it++){
+			  extreme_point.push_back(vec[*it]);
+			  //std::cout << vec[*it] << " ";
+		  }
+		  //std::cout << std::endl;
+	    if (!is_zero(extreme_point)){
+	      data lft(PD,extreme_point.begin(),extreme_point.end());
+				put(lft);
+			}
+		}
+		std::cout<<this->size()<<std::endl;
 	}
 		
 	//void put(data d){
