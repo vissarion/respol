@@ -62,6 +62,7 @@ typedef CGAL::Triangulation<PK> 									Triangulation;
 typedef PK::Vector_d															PVector_d;
 typedef PK::Hyperplane_d													PHyperplane_d;
 typedef Triangulation::Full_cell_handle						PSimplex_d;
+typedef Triangulation::Finite_full_cell_iterator	PSimplex_iterator;
 typedef Triangulation::Point_d 										PPoint_d;
 typedef Triangulation::Face 											PFace;
 typedef Triangulation::Facet 											PFacet;
@@ -83,6 +84,12 @@ typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 /////////////////////////////
 //functions implementations
 
+/////////////////////////////////////////////////////////////////
+// math
+Field factorial(Field n)
+{
+  return (n == Field(1) || n == Field(0)) ? Field(1) : factorial(n - 1) * n;
+}
 
 /////////////////////////////////////////////////////////////////
 // print functions
@@ -163,25 +170,41 @@ void print_res_vertices_with_index(Triangulation& T){
 
 void print_res_vertices(Triangulation& T){
   // print the vertices of the res polytope
-  std::cout << "[";
-	for (PVertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); vit++)
-		std::cout << vit->point() << "],[";
+  int number_of_vertices = 0;
+	for (PVertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); vit++){
+		int number_of_coordinates = 0;
+		std::cout << "[";
+		for (PPoint_d::Cartesian_const_iterator cit = vit->point().cartesian_begin(); cit != 			vit->point().cartesian_end(); cit++){
+			std::cout << *cit;
+			if (number_of_coordinates++ != T.current_dimension()-1)
+				std::cout << ",";
+		}
+		std::cout << "]";
+		if (number_of_vertices++ != T.number_of_vertices())
+			std::cout << ",";
+	}
 	std::cout << std::endl;
 }
 
 
-void print_statistics(int numoftriangs, int numofinitvertices, int numofvertices, double timeall){
+void print_statistics(int numoftriangs, 
+											int numofinitvertices, 
+											int numofvertices, 
+											double timeall,
+											Field volume){
 	std::cout << std::endl;
 	std::cout << "Number of triangs enumerated \t" << numoftriangs << std::endl;
 	std::cout << "Projected Res vertices (INIT)\t" << numofinitvertices << std::endl;
 	std::cout << "Projected Res vertices \t\t" << numofvertices << std::endl;
 	std::cout << "Time overall   \t\t\t" << timeall << std::endl;
+	std::cout << "Volume   \t\t\t" << volume 
+						<< " ~ " <<  CGAL::to_double(volume) << std::endl;
 }
 
 ///////////////////////////////////////////////////////////
 // input functions
 
-int cayley_trick(std::vector<std::vector<Field> >& pointset, map<std::vector<Field>,int>& points_index, std::vector<int>& mi, int& m){
+int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& mi, int& m){
 	int d;
 	std::cin >> d;
 	if (d != D){
@@ -242,7 +265,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, map<std::vector<Fie
 	vector<vector<Field> >::iterator cit=cayley_vec.begin();
 	for (vector<vector<Field> >::iterator vit=pointset.begin(); vit!=pointset.end(); vit++,cit++){
 		vit->insert(vit->end(),cit->begin(),cit->end());
-		points_index[*vit] = p_index++;
+		//points_index[*vit] = p_index++;
 		//std::cout << *vit << "-->" << points_index[*vit] << std::endl;
 	}
 	// write the poinset to file for topcom test
@@ -281,7 +304,6 @@ vector<int> full_proj(const int d, int m, std::vector<int>& mi){
 // TODO: the second determinants are minors of the first
 
 vector<Field> project_upper_hull_r(CTriangulation& pc,
-																	 map<vector<Field>, int>& points_index,
 																	 HD& dets,
 																	 int dcur, 
 																	 int dim,
@@ -375,6 +397,10 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
 		  }
 		}
 	}
+	// to compute the real volume we have to divide by d!
+	for (vector<Field>::iterator vit=rho.begin();vit!=rho.end();vit++){
+		*vit=*vit/factorial(pc.current_dimension()-1);
+	}
   return rho;
 }
 
@@ -461,7 +487,6 @@ vector<pair<vector<Field>,size_t> > lift_to_zero(vector<vector<Field> >& points,
 // the points to be lifted will not be present here
 
 void StaticTriangulation(vector<vector<Field> >& points,  
-												 map<vector<Field>,int>& points_index,
 												 std::vector<int>& proj, 
 												 CTriangulation& CT,
 												 HD& dets){
@@ -511,7 +536,6 @@ vector<pair<vector<Field>,size_t> > lift_to_proj(vector<vector<Field> >& points,
 void LiftingTriangulationDynamic(vector<vector<Field> >& points, 
 																						 PVector_d& nli, 
 																						 std::vector<int>& proj, 
-																						 map<vector<Field>,int>& points_index, 
 																						 CTriangulation& CT,
 																						 CTriangulation& LCT,
 																						 HD& dets,
@@ -524,9 +548,9 @@ void LiftingTriangulationDynamic(vector<vector<Field> >& points,
   for (vector<pair<vector<Field>,size_t> >::iterator vit=P.begin();
        vit!=P.end(); vit++){
 		CPoint_d p(CD,vit->first.begin(),vit->first.end());
-		//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
   	p.set_index(vit->second);
   	p.set_hash(&dets);
+  	//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
   	CVertex_handle v = LCT.insert(p);
   }
 }
@@ -534,7 +558,6 @@ void LiftingTriangulationDynamic(vector<vector<Field> >& points,
 ////////////////////////////////////////////////////////////
 // the new (hopefully faster) algorithm
 void compute_res_faster( std::vector<std::vector<Field> >& pointset, 
-                 	 			 map<std::vector<Field>,int>& points_index, 
                   			 int m, 
 				                 std::vector<int>& mi, 
 				                 vector<int>& proj,
@@ -545,7 +568,7 @@ void compute_res_faster( std::vector<std::vector<Field> >& pointset,
 				                 Triangulation& T){
 	
 	CTriangulation CT(CD);
-	StaticTriangulation(pointset,points_index,proj,CT,dets);
+	StaticTriangulation(pointset,proj,CT,dets);
 												 
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
@@ -567,11 +590,11 @@ void compute_res_faster( std::vector<std::vector<Field> >& pointset,
 		CTriangulation LCT(CT);
 		
 		// outer normal vector --> upper hull projection
-	  LiftingTriangulationDynamic(pointset,nli,proj,points_index,CT,LCT,dets,false); 
+	  LiftingTriangulationDynamic(pointset,nli,proj,CT,LCT,dets,false); 
 		
 		// project LCT i.e. triangulation
 	  int dcur = LCT.current_dimension();
-	  vector<Field> new_vertex = project_upper_hull_r(LCT,points_index,dets,dcur,CD,mi,proj,false);
+	  vector<Field> new_vertex = project_upper_hull_r(LCT,dets,dcur,CD,mi,proj,false);
 	  
 	  // TODO: destroy here!
 	  LCT.clear();
@@ -588,12 +611,27 @@ void compute_res_faster( std::vector<std::vector<Field> >& pointset,
 		if (numof_triangs == init_size)
 			numof_init_Res_vertices = T.number_of_vertices();
 	}
-	print_res_vertices(T);
 }
 
 
 ////////////////////////////////////////////////////////////
 // misc
+
+Field volume(Triangulation& T, HD& Pdets){
+	Field vol=0;
+	for (PSimplex_iterator cit=T.finite_full_cells_begin(); cit!=T.finite_full_cells_end(); cit++){
+		std::vector<size_t> simplex_points_indices;
+		for (int i=0; i<=T.current_dimension(); i++){
+			simplex_points_indices.push_back(cit->vertex(i)->point().index());
+		}
+		//std::cout<<simplex_points_indices<<" --> "<<
+		//abs(Pdets.homogeneous_determinant(simplex_points_indices))
+		//<<std::endl;
+		vol+=abs(Pdets.homogeneous_determinant(simplex_points_indices));
+	}
+	vol*=(1/factorial(T.current_dimension()));
+	return vol;
+}
 
 
 int num_of_vertices(CTriangulation& ppc){	
@@ -627,10 +665,10 @@ int num_of_simplices(CTriangulation& ppc,map<vector<Field>, int>& points_index){
 		for (int i=0; i<=ppc.current_dimension(); i++){
 			CPoint_d p = fit->vertex(i)->point();
 			simplex_points.push_back(p);
-			std::vector<Field> ppoi;
-			for (int j=0; j<ppc.current_dimension()-1; ++j) // d-1 cuts the last coordinate!!
-				ppoi.push_back(p[j]);
-			std::cout << points_index[ppoi] << ",";				
+			//std::vector<Field> ppoi;
+			//for (int j=0; j<ppc.current_dimension()-1; ++j) // d-1 cuts the last coordinate!!
+			//	ppoi.push_back(p[j]);
+			std::cout << p.index() << ",";				
 		}
 		std::cout << "},{";
 	}
