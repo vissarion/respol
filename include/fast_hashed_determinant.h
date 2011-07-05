@@ -211,7 +211,7 @@ class FastHashedDeterminant{
         // This function is the same homogeneous_determinant(idx), but
         // adding the vector r between the submatrix and the vector of
         // ones.
-        NT old_homogeneous_determinant(const Index &idx,const Row &r){
+        /*NT old_homogeneous_determinant(const Index &idx,const Row &r){
                 assert(idx.size()==r.size());
                 Index idx2,idxr;
                 size_t n=idx.size();
@@ -236,7 +236,7 @@ class FastHashedDeterminant{
                         idxr[i]=i;
                 }
                 return det;
-        }
+        }*/
 
         NT homogeneous_determinant(const Index &idx,const Row &r){
                 assert(idx.size()==r.size());
@@ -247,10 +247,12 @@ class FastHashedDeterminant{
                 assert(idx2.size()==n-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det-=r[i]*homogeneous_determinant(idx2);
-                        else
-                                det+=r[i]*homogeneous_determinant(idx2);
+                        if(r[i]!=0){
+                                if((i+n)%2)
+                                        det-=r[i]*homogeneous_determinant(idx2);
+                                else
+                                        det+=r[i]*homogeneous_determinant(idx2);
+                        }
                         // update the index array
                         idx2[i]=idx[i];
                 }
@@ -321,10 +323,12 @@ class FastHashedDeterminant{
                 assert(idx2.size()==n-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=(r[idxr[i]]*determinant(idx2));
-                        else
-                                det-=(r[idxr[i]]*determinant(idx2));
+                        if(r[idxr[i]]!=0){
+                                if((i+n)%2)
+                                        det+=(r[idxr[i]]*determinant(idx2));
+                                else
+                                        det-=(r[idxr[i]]*determinant(idx2));
+                        }
                         // update the index array
                         idx2[i]=idx[i];
                 }
