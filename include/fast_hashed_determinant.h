@@ -45,7 +45,7 @@ class FastHashedDeterminant{
 #endif
         _points(),
         _determinants(),
-        _homogeneous_determinants()
+        _h_determinants()
         {};
 
         //
@@ -61,7 +61,7 @@ class FastHashedDeterminant{
 #endif
         _points(columns),
         _determinants(),
-        _homogeneous_determinants()
+        _h_determinants()
         {};
 
         // constructor for static det table
@@ -79,7 +79,7 @@ class FastHashedDeterminant{
 #endif
         _points(),
         _determinants(),
-        _homogeneous_determinants(){
+        _h_determinants(){
                 for(Iterator i=begin;i!=end;++i){
 #ifdef HASH_STATISTICS
                 if(i->size()>dimension)
@@ -91,25 +91,45 @@ class FastHashedDeterminant{
 
         ~FastHashedDeterminant(){
 #ifdef HASH_STATISTICS
-        size_t number_of_collisions=0,bad_buckets=0;
+        // collect non-homogeneous hash statistics
+        size_t nh_collisions=0,nh_bad_buckets=0,nh_biggest_bucket=0;
         for(size_t bucket=0;bucket!=_determinants.bucket_count();++bucket)
                 if(_determinants.bucket_size(bucket)>1){
-                        number_of_collisions+=
-                                (_determinants.bucket_size(bucket)-1);
-                        ++bad_buckets;
+                        nh_collisions+=(_determinants.bucket_size(bucket)-1);
+                        if(_determinants.bucket_size(bucket)>nh_biggest_bucket)
+                                nh_biggest_bucket=
+                                        _determinants.bucket_size(bucket);
+                        ++nh_bad_buckets;
+                }
+        // collect homogeneous hash statistics
+        size_t h_collisions=0,h_bad_buckets=0,h_biggest_bucket=0;
+        for(size_t bucket=0;
+            bucket!=_h_determinants.bucket_count();
+            ++bucket)
+                if(_h_determinants.bucket_size(bucket)>1){
+                        h_collisions+=(_h_determinants.bucket_size(bucket)-1);
+                        if(_h_determinants.bucket_size(bucket)>h_biggest_bucket)
+                                h_biggest_bucket=
+                                        _h_determinants.bucket_size(bucket);
+                        ++h_bad_buckets;
                 }
         std::cerr<<
                 "hash statistics:\n"<<
                 _points.size()<<" hashed points, of max dim "<<dimension<<
                 "\nnon-hom hash: "<<
                 _determinants.bucket_count()<<" buckets, "<<
-                number_of_collisions<<" collisions in "<<bad_buckets<<
-                " buckets\nnon-hom determinants: computed "<<
+                nh_collisions<<" collisions in "<<nh_bad_buckets<<
+                " buckets of max size "<<nh_biggest_bucket<<
+                "\nnon-hom determinants: computed "<<
                 number_of_computed_determinants<<" out of "<<
                 number_of_determinant_calls<<
                 "\ntime in non-hom full-dim determinant computations: "<<
                 (double)full_determinant_time/CLOCKS_PER_SEC<<
-                " seconds\nhom determinants: computed "<<
+                " seconds\nhom hash: "<<
+                _h_determinants.bucket_count()<<" buckets, "<<
+                h_collisions<<" collisions in "<<h_bad_buckets<<
+                " buckets of max size "<<h_biggest_bucket<<
+                "\nhom determinants: computed "<<
                 number_of_computed_hom_determinants<<
                 " out of "<<number_of_hom_determinants<<std::endl;
 #endif
@@ -183,9 +203,9 @@ class FastHashedDeterminant{
 #ifdef HASH_STATISTICS
                 number_of_hom_determinants+=1;
 #endif
-                if(_homogeneous_determinants.count(idx)!=0){
-                        assert(_homogeneous_determinants.count(idx)==1);
-                        return _homogeneous_determinants[idx];
+                if(_h_determinants.count(idx)!=0){
+                        assert(_h_determinants.count(idx)==1);
+                        return _h_determinants[idx];
                 }
 #ifdef HASH_STATISTICS
                 number_of_computed_hom_determinants+=1;
@@ -204,39 +224,9 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                 }
-                _homogeneous_determinants[idx]=det;
+                _h_determinants[idx]=det;
                 return det;
         }
-
-        // This function is the same homogeneous_determinant(idx), but
-        // adding the vector r between the submatrix and the vector of
-        // ones.
-        /*NT old_homogeneous_determinant(const Index &idx,const Row &r){
-                assert(idx.size()==r.size());
-                Index idx2,idxr;
-                size_t n=idx.size();
-                for(size_t i=1;i<n;++i){
-                        idx2.push_back(idx[i]);
-                        idxr.push_back(i);
-                }
-                assert(idx2.size()==n-1);
-                assert(idxr.size()==n-1);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=enlarged_homogeneous_determinant(idx2,
-                                                                      r,
-                                                                      idxr);
-                        else
-                                det-=enlarged_homogeneous_determinant(idx2,
-                                                                      r,
-                                                                      idxr);
-                        // update the index array
-                        idx2[i]=idx[i];
-                        idxr[i]=i;
-                }
-                return det;
-        }*/
 
         NT homogeneous_determinant(const Index &idx,const Row &r){
                 assert(idx.size()==r.size());
@@ -338,7 +328,7 @@ class FastHashedDeterminant{
         private:
         Matrix _points;
         Determinants _determinants;
-        HDeterminants _homogeneous_determinants;
+        HDeterminants _h_determinants;
 #ifdef HASH_STATISTICS
         public:
         unsigned dimension;
