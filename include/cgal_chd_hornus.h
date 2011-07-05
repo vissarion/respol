@@ -31,15 +31,17 @@ using namespace std;
 // the kernel
 #include <gmpxx.h>
 typedef mpq_class Field;
+//#include <CGAL/Gmpq.h>
+//typedef CGAL::Gmpq Field;
 
 // Cayley space kernel for the CH of the lifted points
 typedef CGAL::Cartesian_d<Field> 									CK;
 //typedef Indexed_Cartesian_d<Field> 							CK;
 //typedef CK::IndexedPoint_d											IndexedPoint_d;
 
-//typedef CGAL::Triangulation_vertex<CK,size_t>			tv;
-//typedef CGAL::Triangulation_full_cell<CK>					tc;
-//typedef CGAL::Triangulation_data_structure<CGAL::Dimension_tag<CD>,tv,tc > tds;
+typedef CGAL::Triangulation_vertex<CK>						tv;
+typedef CGAL::Triangulation_full_cell<CK,bool>		tc;
+typedef CGAL::Triangulation_data_structure<CGAL::Dimension_tag<PD>,tv,tc > tds;
 // not working if we'll not pas all the parameters explicitly
 //e.g. CGAL::Triangulation_data_structure<CGAL::Dimension_tag<CD> > tds; gives error
 //typedef CGAL::Triangulation<CK,tds> 							CTriangulation;
@@ -58,7 +60,8 @@ typedef CTriangulation::Locate_type 							CLocate_type;
 
 // projection kernel 
 typedef CGAL::Cartesian_d<Field>									PK;
-typedef CGAL::Triangulation<PK> 									Triangulation;
+//typedef CGAL::Triangulation<PK> 								Triangulation;
+typedef CGAL::Triangulation<PK,tds> 							Triangulation;
 typedef PK::Vector_d															PVector_d;
 typedef PK::Hyperplane_d													PHyperplane_d;
 typedef Triangulation::Full_cell_handle						PSimplex_d;
@@ -66,6 +69,7 @@ typedef Triangulation::Finite_full_cell_iterator	PSimplex_iterator;
 typedef Triangulation::Point_d 										PPoint_d;
 typedef Triangulation::Face 											PFace;
 typedef Triangulation::Facet 											PFacet;
+typedef Triangulation::Facet_iterator							PFacet_iterator;
 typedef Triangulation::Locate_type 								PLocate_type;
 typedef Triangulation::Vertex_handle							PVertex_handle;
 typedef Triangulation::Vertex_iterator						PVertex_iterator;
@@ -86,10 +90,16 @@ typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
 /////////////////////////////////////////////////////////////////
 // math
+//Field factorial(Field n)
+//{
+//  return (n == Field(1) || n == Field(0)) ? Field(1) : factorial(n - 1) * n;
+//}
+
 Field factorial(Field n)
 {
-  return (n == Field(1) || n == Field(0)) ? Field(1) : factorial(n - 1) * n;
+  return 1;
 }
+
 
 /////////////////////////////////////////////////////////////////
 // print functions
@@ -138,7 +148,8 @@ std::ostream& operator<<(std::ostream& ost, const Resvertex& P) {
   return ost;
 }
 
-void print_vertices(vector<vector<Field> >& Poly, std::ofstream& ofs){
+// for input topcom file construction
+void print_vertices_hom(vector<vector<Field> >& Poly, std::ofstream& ofs){
 	ofs << "[";
 	for (vector<vector<Field> >::const_iterator Polyit=Poly.begin(); Polyit!=Poly.end(); Polyit++){
 		ofs << "[";
@@ -150,6 +161,7 @@ void print_vertices(vector<vector<Field> >& Poly, std::ofstream& ofs){
 				ofs << *it;
 			}
 		}
+		ofs << ",1";
 	  if (Polyit!=Poly.end()-1){
 			ofs << "],";
 		} else{
@@ -160,27 +172,29 @@ void print_vertices(vector<vector<Field> >& Poly, std::ofstream& ofs){
 }
 
 
-void print_res_vertices_with_index(Triangulation& T){
+void print_res_vertices_with_index(Triangulation& Res){
   // print the vertices of the res polytope
   std::cout << "[";
-	for (PVertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); vit++)
+	for (PVertex_iterator vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++)
 		std::cout << vit->point() << " | " << vit->point().index() << "],[";
 	std::cout << std::endl;
 }
 
-void print_res_vertices(Triangulation& T){
+void print_res_vertices(Triangulation& Res){
   // print the vertices of the res polytope
   int number_of_vertices = 0;
-	for (PVertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); vit++){
-		int number_of_coordinates = 0;
+	std::cout << "dim=" << Res.current_dimension() << std::endl;
+	for (PVertex_iterator vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
 		std::cout << "[";
-		for (PPoint_d::Cartesian_const_iterator cit = vit->point().cartesian_begin(); cit != 			vit->point().cartesian_end(); cit++){
+		for (PPoint_d::Cartesian_const_iterator cit = vit->point().cartesian_begin(); 
+						cit != vit->point().cartesian_end(); cit++){
 			std::cout << *cit;
-			if (number_of_coordinates++ != T.current_dimension()-1)
+			if (cit - vit->point().cartesian_begin() != vit->point().dimension()-1)
 				std::cout << ",";
 		}
+		//std::cout << "|" << vit->point().index();
 		std::cout << "]";
-		if (number_of_vertices++ != T.number_of_vertices())
+		if (number_of_vertices++ != Res.number_of_vertices())
 			std::cout << ",";
 	}
 	std::cout << std::endl;
@@ -188,16 +202,18 @@ void print_res_vertices(Triangulation& T){
 
 
 void print_statistics(int numoftriangs, 
-											int numofinitvertices, 
+											int numoftriangs2, 
 											int numofvertices, 
 											double timeall,
 											Field volume){
 	std::cout << std::endl;
-	std::cout << "Number of triangs enumerated \t" << numoftriangs << std::endl;
-	std::cout << "Projected Res vertices (INIT)\t" << numofinitvertices << std::endl;
-	std::cout << "Projected Res vertices \t\t" << numofvertices << std::endl;
-	std::cout << "Time overall   \t\t\t" << timeall << std::endl;
-	std::cout << "Volume   \t\t\t" << volume 
+	std::cout << "Num of triangs enumed (init+augment)\t" 
+						<< numoftriangs+numoftriangs2 << " ("
+						<< numoftriangs << "+" << numoftriangs2 
+						<< ")" << std::endl;
+	std::cout << "Projected Res vertices \t\t\t" << numofvertices << std::endl;
+	std::cout << "Time overall   \t\t\t\t" << timeall << std::endl;
+	std::cout << "Volume   \t\t\t\t" << volume 
 						<< " ~ " <<  CGAL::to_double(volume) << std::endl;
 }
 
@@ -219,6 +235,11 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 		m += mi_temp;
 		mi.push_back(mi_temp);
 	}
+	if (mi.size() != d+1){
+		std::cout << "mi.size() != d+1. The number of polynomials must me one more than the dimansion!" << std::endl;
+		exit(-1);
+	}
+	std::cout<<mi<<std::endl;
 	// compute cayley vector to augment pointset
 	if (mi.size() != d+1){
 		std::cout << "Input error" << std::endl;
@@ -237,14 +258,19 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 		}
 		j++;
 	}
+	//std::cout<<cayley_vec<<std::endl;
 	string point;
   while(!std::getline(cin, point, ']').eof())
 	{
 		vector<Field> ipoint;
+		//std::cout<<point<<std::endl;
+		point.erase( std::remove( point.begin(), point.end(), ' ' ), point.end() );
 	  point.erase( std::remove( point.begin(), point.end(), '[' ), point.end() );
+	  //std::cout<<point<<std::endl;
 	  string coord;
     if (point[0]==',')
     	point.erase(0,1);
+    //std::cout<<point<<std::endl;
     stringstream stream(point);
     if (!point.empty()){
 			while( getline(stream, coord, ',') ){
@@ -253,6 +279,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
  			buffer >> temp;
  			ipoint.push_back(temp);
 	 		}
+	 		//std::cout << ipoint << std::endl;
 		  pointset.push_back(ipoint);
 		}	  
 	}
@@ -268,12 +295,14 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 		//points_index[*vit] = p_index++;
 		//std::cout << *vit << "-->" << points_index[*vit] << std::endl;
 	}
-	// write the poinset to file for topcom test
+	// write the (homogenized) poinset to file for topcom test
 	ofstream outfile;
   outfile.open("topcom_cayley.txt");
-	print_vertices(pointset,outfile);
+	print_vertices_hom(pointset,outfile);
   return 0;
 }
+
+//////////////// projections
 
 vector<int> proj_first_coord(const int d, int m, std::vector<int>& mi){
 	//project at the first coordinate of each mi	
@@ -296,6 +325,110 @@ vector<int> full_proj(const int d, int m, std::vector<int>& mi){
 		proj[i]=i;
 	}
 	return proj;
+}
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+// functions for new algorithm
+
+
+// lift to zero the points that are not to be projected
+// there indices are not into vector<int>& proj
+
+vector<pair<vector<Field>,size_t> > lift_to_zero(vector<vector<Field> >& points,
+													  										 vector<int>& proj){
+															
+  vector<pair<vector<Field>,size_t> > lifted_points;
+  vector<int>::iterator lpit=proj.begin();
+  for (vector<vector<Field> >::iterator pit=points.begin(); pit!=points.end(); pit++){
+  	int point_index = pit-points.begin();
+  	if (point_index == *lpit){
+  		lpit++;
+  	} else {
+	  	vector<Field> lifted_point = *pit;
+	  	lifted_point.push_back(Field(0));
+	  	pair<vector<Field>,size_t> lifted_point_with_index(lifted_point,point_index);
+	  	lifted_points.push_back(lifted_point_with_index);
+	  }
+  }
+  //std::cout << lifted_points << std::endl;
+  return lifted_points;
+}
+
+
+// compute the Triangulation of the static points (lifted to zero)
+// the points to be lifted will not be present here
+
+void StaticTriangulation(vector<vector<Field> >& points,  
+												 std::vector<int>& proj, 
+												 CTriangulation& T,
+												 HD& dets){
+	// lift the "static" points Cayley pointset 
+	// (i.e. the points that are not going to be projected)
+  vector<pair<vector<Field>,size_t> > P = lift_to_zero(points,proj);
+
+  //std::cout << "lifted points:(dim=" << dim << "\n" << P << std::endl;
+  for (vector<pair<vector<Field>,size_t> >::iterator vit=P.begin();
+       vit!=P.end(); vit++){
+		CPoint_d p(CD,vit->first.begin(),vit->first.end());
+		//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
+  	p.set_index(vit->second);
+  	p.set_hash(&dets);
+  	CVertex_handle v = T.insert(p);
+  }
+}
+
+
+// lift the points that are going to be projected using nli
+
+vector<pair<vector<Field>,size_t> > lift_to_proj(vector<vector<Field> >& points, 
+																					       PVector_d nli, 
+																					       std::vector<int> proj){
+																			
+  vector<pair<vector<Field>,size_t> > lifted_points;
+  //int i=0;
+  std::vector<int>::iterator proj_it=proj.begin();
+  for (vector<vector<Field> >::iterator vit=points.begin(); 
+              vit!=points.end() && proj_it!=proj.end(); vit++){
+  	vector<Field> lifted_point = *vit;
+  	int pindex=vit-points.begin();
+  	//std::cout << vit-points.begin() << "," << proj_it-proj.begin() << std::endl;
+  	if (*proj_it == pindex){
+			//std::cout << nli << "|"<<proj<<std::endl;
+  		lifted_point.push_back(nli[proj_it-proj.begin()]);
+  		pair<vector<Field>,size_t> lifted_point_with_index(lifted_point,pindex);
+	  	lifted_points.push_back(lifted_point_with_index);
+	  	proj_it++;
+  	}
+  }
+  //std::cout << lifted_points << std::endl;
+  return lifted_points;
+}
+
+
+// compute lifting triangulation but not from scratch
+// use a copy of T and add new lifted points there
+
+void LiftingTriangulationDynamic(vector<vector<Field> >& points, 
+																						 PVector_d& nli, 
+																						 std::vector<int>& proj, 
+																						 CTriangulation& T,
+																						 CTriangulation& Tl,
+																						 HD& dets,
+																						 bool lower){	
+	  
+  // lift the points to be projected
+  vector<pair<vector<Field>,size_t> > P = lift_to_proj(points,nli,proj);
+
+  // add the new lifted points to the copy (Tl) 
+  for (vector<pair<vector<Field>,size_t> >::iterator vit=P.begin();
+       vit!=P.end(); vit++){
+		CPoint_d p(CD,vit->first.begin(),vit->first.end());
+  	p.set_index(vit->second);
+  	p.set_hash(&dets);
+  	//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
+  	CVertex_handle v = Tl.insert(p);
+  }
 }
 
 
@@ -372,6 +505,14 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
 			      vit!=facet_points.end(); ++vit){
 				s.insert(vit->index());
 		  }
+		 // std::cout<<s<<std::endl;
+		  // if there are not full dimensional cells
+		  if (s.size() < CD){
+				std::cout << "NOT a triangulation. Abort current computation..." << std::endl;
+				vector<Field> rho_empty;
+				exit(-1);
+				return rho_empty;
+			}
 			// check if the projection of the facet (i.e. a Minkowski cell)
 			// is mixed (i.e. has exactly one vertex summand) 
 			int d = mi.size();
@@ -404,27 +545,41 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
   return rho;
 }
 
+//////////////////////////////////////////////////////////////
+// insert vertices in triangulation that holds the Resultant
+// polytope
 
-void update_normal_list(Triangulation& ppc, NV_ds& normal_list, 
-                        std::vector<PSimplex_d>::iterator sit){
-	std::vector<PPoint_d> facet_points;
-	for (int i=1; i<=ppc.current_dimension(); i++){
-		facet_points.push_back((*sit)->vertex(i)->point());
-		//std::cout << (*sit)->vertex(i)->point() << " ";
+void update_normal_list(Triangulation& Res, 
+												NV_ds& normal_list, 
+                        std::vector<PSimplex_d> inf_simplices){
+	typedef std::vector<PSimplex_d> Simplices;
+	for(Simplices::iterator sit = inf_simplices.begin(); 
+													sit != inf_simplices.end(); ++sit ){
+		if (Res.is_infinite(*sit)){
+			std::vector<PPoint_d> facet_points;
+			for (int i=1; i<=Res.current_dimension(); i++){
+				facet_points.push_back((*sit)->vertex(i)->point());
+				//std::cout << (*sit)->vertex(i)->point() << " ";
+			}
+			//std::cout << std::endl;
+			PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+			// compute a hyperplane which has in its negative side the opposite point
+	    PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
+	        
+	    //PHyperplane_d hp(facet_points.begin(),facet_points.end(),facet_points[0]);
+			//std::cout << opposite_point << "#" << hp.has_on_positive_side(opposite_point) << "!";
+			//std::cout << "dim=" << Res.current_dimension() << " " << hp.orthogonal_direction()<< "\n";
+			PVector_d vec = hp.orthogonal_direction().vector();
+			//if (hp.has_on_positive_side(opposite_point))
+			//	vec = -vec;
+			//std::cout << vec << std::endl;
+			normal_list.put(vec);
+		}
 	}
-	//std::cout << std::endl;
-	PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
-	PHyperplane_d hp(facet_points.begin(),facet_points.end(),facet_points[0]);
-	//std::cout << opposite_point << "#" << hp.has_on_positive_side(opposite_point) << "!";
-	//std::cout << "dim=" << ppc.current_dimension() << " " << hp.orthogonal_direction()<< "\n";
-	PVector_d vec = hp.orthogonal_direction().vector();
-	if (hp.has_on_positive_side(opposite_point))
-		vec = -vec;
-	normal_list.put(vec);
 }
 
 // TODO: des todo pio katw
-void insert_new_Rvertex(Triangulation& ppc, 
+void insert_new_Rvertex(Triangulation& Res, 
 												NV_ds& normal_list, 
 												SRvertex& new_vertex,
 												HD& Pdets){	
@@ -432,196 +587,237 @@ void insert_new_Rvertex(Triangulation& ppc,
 	Pdets.add_column(new_vertex);
 	// construct the new point 
 	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
-	new_point.set_index(ppc.number_of_vertices());
+	new_point.set_index(Res.number_of_vertices());
 	new_point.set_hash(&Pdets); 
  	#ifdef PRINT_INFO  
 		std::cout << "one new R-vertex found !!! "<< std::endl; 
 	#endif
-	PVertex_handle new_vert = ppc.insert(new_point);
-	//update normal_list
-	typedef std::vector<PSimplex_d> Simplices;
-	Simplices inf_simplices;
-  std::back_insert_iterator<Simplices> out(inf_simplices);
-  // TODO:make it more efficient
-  // find only the simplices incident to the edge (new_vert,inf_vert)
-	ppc.incident_full_cells(new_vert, out);
-	for(Simplices::iterator sit = inf_simplices.begin(); 
-                         sit != inf_simplices.end(); ++sit ){
-		if (ppc.is_infinite((*sit)->vertex(0))){
-			update_normal_list(ppc, normal_list, sit);
-		}
+	
+	int prev_dim = Res.current_dimension();
+	//insert it to the triangulation
+	PVertex_handle new_vert = Res.insert(new_point);
+	int cur_dim = Res.current_dimension();
+	
+	if (cur_dim != prev_dim && cur_dim>2){
+		 //update normal_list
+		typedef std::vector<PSimplex_d> Simplices;
+		Simplices inf_simplices;
+		std::back_insert_iterator<Simplices> out(inf_simplices);
+
+		Res.incident_full_cells(Res.infinite_vertex(), out);
+		std::cout<<inf_simplices.size()<<std::endl;
+		update_normal_list(Res, normal_list, inf_simplices);
+		
+	} else {
+		//update normal_list
+		typedef std::vector<PSimplex_d> Simplices;
+		Simplices inf_simplices;
+		std::back_insert_iterator<Simplices> out(inf_simplices);
+		// TODO:make it more efficient
+		// find only the simplices incident to the edge (new_vert,inf_vert)
+		Res.incident_full_cells(new_vert, out);
+		std::cout<<inf_simplices.size()<<std::endl;
+		update_normal_list(Res, normal_list, inf_simplices);
 	}
 }
 
 
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-// functions for new aglorithm
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+// TODO: des todo pio katw
+void insert_new_Rvertex2(Triangulation& Res, 
+												NV_ds& normal_list, 
+												SRvertex& new_vertex,
+												HD& Pdets){	
+	// insert the coordinates of the point as a column to the HashDeterminants matrix
+	Pdets.add_column(new_vertex);
+	// construct the new point 
+	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
+	new_point.set_index(Res.number_of_vertices());
+	new_point.set_hash(&Pdets); 
+ 	#ifdef PRINT_INFO  
+		std::cout << "one new R-vertex found !!! "<< std::endl; 
+	#endif
+	
+	int prev_dim = Res.current_dimension();
+	//insert it to the triangulation
+	PVertex_handle new_vert = Res.insert(new_point);
+	int cur_dim = Res.current_dimension();
+	
+	normal_list.clear();
+	//update normal_list
+	typedef std::vector<PSimplex_d> Simplices;
+	Simplices inf_simplices;
+	std::back_insert_iterator<Simplices> out(inf_simplices);
 
-
-// lift to zero the points that are not to be projected
-// there indices are not into vector<int>& proj
-
-vector<pair<vector<Field>,size_t> > lift_to_zero(vector<vector<Field> >& points,
-													  										 vector<int>& proj){
-															
-  vector<pair<vector<Field>,size_t> > lifted_points;
-  vector<int>::iterator lpit=proj.begin();
-  for (vector<vector<Field> >::iterator pit=points.begin(); pit!=points.end(); pit++){
-  	int point_index = pit-points.begin();
-  	if (point_index == *lpit){
-  		lpit++;
-  	} else {
-	  	vector<Field> lifted_point = *pit;
-	  	lifted_point.push_back(0);
-	  	pair<vector<Field>,size_t> lifted_point_with_index(lifted_point,point_index);
-	  	lifted_points.push_back(lifted_point_with_index);
-	  }
-  }
-  //std::cout << lifted_points << std::endl;
-  return lifted_points;
+	Res.incident_full_cells(Res.infinite_vertex(), out);
+	std::cout<<inf_simplices.size()<<std::endl;
+	update_normal_list(Res, normal_list, inf_simplices);
+	
 }
 
 
-// compute the Triangulation of the static points (lifted to zero)
-// the points to be lifted will not be present here
+// compute a Res vertex by constructing a lifting triangulation 
+// project and compute the volumes of some cells 
 
-void StaticTriangulation(vector<vector<Field> >& points,  
-												 std::vector<int>& proj, 
-												 CTriangulation& CT,
-												 HD& dets){
-	// lift the "static" points Cayley pointset 
-	// (i.e. the points that are not going to be projected)
-  vector<pair<vector<Field>,size_t> > P = lift_to_zero(points,proj);
-
-  //std::cout << "lifted points:(dim=" << dim << "\n" << P << std::endl;
-  for (vector<pair<vector<Field>,size_t> >::iterator vit=P.begin();
-       vit!=P.end(); vit++){
-		CPoint_d p(CD,vit->first.begin(),vit->first.end());
-		//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
-  	p.set_index(vit->second);
-  	p.set_hash(&dets);
-  	CVertex_handle v = CT.insert(p);
-  }
-}
-
-
-// lift the points that are going to be projected using nli
-
-vector<pair<vector<Field>,size_t> > lift_to_proj(vector<vector<Field> >& points, 
-																					       PVector_d nli, 
-																					       std::vector<int> proj){
-																			
-  vector<pair<vector<Field>,size_t> > lifted_points;
-  int i=0,j=0;
-  for (vector<vector<Field> >::iterator vit=points.begin(); vit!=points.end(); vit++){
-  	vector<Field> lifted_point = *vit;
-  	if (proj[j] == i){
-			//std::cout << nli << "|"<<proj<<std::endl;
-  		lifted_point.push_back(nli[j]);
-  		pair<vector<Field>,size_t> lifted_point_with_index(lifted_point,i);
-	  	lifted_points.push_back(lifted_point_with_index);
-  		j++;
-  	}
-  	i++;
-  }
-  //std::cout << lifted_points << std::endl;
-  return lifted_points;
-}
-
-
-// compute lifting triangulation but not from scratch
-// use a copy of CT and add new lifted points there
-
-void LiftingTriangulationDynamic(vector<vector<Field> >& points, 
-																						 PVector_d& nli, 
-																						 std::vector<int>& proj, 
-																						 CTriangulation& CT,
-																						 CTriangulation& LCT,
-																						 HD& dets,
-																						 bool lower){	
+vector<Field> compute_res_vertex(std::vector<std::vector<Field> >& pointset, 
+				                 std::vector<int>& mi, 
+				                 int RD,
+				                 vector<int>& proj,
+				                 HD& dets, 
+				                 HD& Pdets,
+				                 Triangulation& Res,
+				                 CTriangulation& T,
+				                 NV_ds& normal_list_d){
+													 
+	// take the first(last more efficient with vectors??) normal and remove it from normals stack
+	//PVector_d nli = *(normal_list_d.begin());
+	//normal_list_d.erase(normal_list_d.begin());
+	PVector_d nli = normal_list_d.back();
+	normal_list_d.pop_back();
+	//std::cout << "normal vector:" << nli << std::endl;
+	
+	// make a copy of T
+	CTriangulation Tl(T);
+	
+	// outer normal vector --> upper hull projection
+  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false); 
+	//print_res_vertices(Tl);
+	
+	// project Tl i.e. triangulation
+  int dcur = Tl.current_dimension();
+  vector<Field> new_vertex = project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
+  
+  // TODO: destroy here!
+  Tl.clear();
+  
+  #ifdef PRINT_INFO  
+	  cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+	#endif
 	  
-  // lift the points to be projected
-  vector<pair<vector<Field>,size_t> > P = lift_to_proj(points,nli,proj);
+  return new_vertex;
+}
 
-  // add the new lifted points to the copy (LCT) 
-  for (vector<pair<vector<Field>,size_t> >::iterator vit=P.begin();
-       vit!=P.end(); vit++){
-		CPoint_d p(CD,vit->first.begin(),vit->first.end());
-  	p.set_index(vit->second);
-  	p.set_hash(&dets);
-  	//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
-  	CVertex_handle v = LCT.insert(p);
-  }
+
+// compute Res vertices until it builts a simplex
+
+int initialize_Res(std::vector<std::vector<Field> >& pointset, 
+								 std::vector<int>& mi, 
+								 int RD,
+								 vector<int>& proj,
+								 HD& dets, 
+								 HD& Pdets,
+								 Triangulation& Res,
+								 CTriangulation& T){
+	
+	int num_of_triangs=0;								
+	#ifdef PRINT_INFO
+	  std::cout << "dim=" << Res.current_dimension() << std::endl;
+  #endif
+  // make a stack (stl vector) with normals vectors and initialize
+  NV_ds normal_list_d;
+  normal_list_d.simple_initialize();
+  
+  // compute trinagulations using normals as liftings until we compute a simplex
+  // or run out of normal vectors
+  int minD = (PD>RD)?RD:PD;  
+  while(Res.current_dimension()<minD && !normal_list_d.empty()){
+		vector<Field> new_vertex = compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
+		// insert it in the complex Res (if it is not already there) 
+  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
+  		insert_new_Rvertex(Res,normal_list_d,new_vertex,Pdets);
+		num_of_triangs++;
+		#ifdef PRINT_INFO
+			normal_list_d.print();
+			std::cout<<"current number of Res vertices: "
+							 <<Res.number_of_vertices()
+							 <<" dim=" << Res.current_dimension()<<std::endl;
+		#endif
+	}
+	return num_of_triangs;
+}
+
+
+// compute all Res vertices left
+
+int augment_Res(std::vector<std::vector<Field> >& pointset, 
+								 std::vector<int>& mi, 
+								 int RD,
+								 vector<int>& proj,
+								 HD& dets, 
+								 HD& Pdets,
+								 Triangulation& Res,
+								 CTriangulation& T){
+									
+	int num_of_triangs=0;
+	#ifdef PRINT_INFO
+		std::cout << "\n\nAUGMENTING RESULTANT POLYTOPE" << std::endl;
+		//print_res_vertices(Res);
+	  std::cout << "dim=" << Res.current_dimension() << std::endl;
+  #endif
+  // make a stack (stl vector) with normals vectors and initialize
+  NV_ds normal_list_d;
+  // initialize normal_list
+  typedef std::vector<PSimplex_d> Simplices;
+	Simplices inf_simplices;
+	std::back_insert_iterator<Simplices> out(inf_simplices);
+
+	Res.incident_full_cells(Res.infinite_vertex(), out);
+	//std::cout<<inf_simplices.size()<<std::endl;
+	update_normal_list(Res, normal_list_d, inf_simplices);
+  
+  while(!normal_list_d.empty()){
+		vector<Field> new_vertex = compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
+		// insert it in the complex Res (if it is not already there) 
+  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
+  		insert_new_Rvertex(Res,normal_list_d,new_vertex,Pdets);
+		#ifdef PRINT_INFO
+			normal_list_d.print();
+			std::cout<<"current number of Res vertices: "<<Res.number_of_vertices()<<std::endl;
+		#endif
+		num_of_triangs++;
+	}
+	return num_of_triangs;
 }
 
 ////////////////////////////////////////////////////////////
 // the new (hopefully faster) algorithm
-void compute_res_faster( std::vector<std::vector<Field> >& pointset, 
-                  			 int m, 
-				                 std::vector<int>& mi, 
-				                 vector<int>& proj,
-				                 HD& dets, 
-				                 HD& Pdets,
-				                 int& numof_triangs, 
-				                 int& numof_init_Res_vertices, 
-				                 Triangulation& T){
+pair<int,int> compute_res_faster( std::vector<std::vector<Field> >& pointset, 
+				                  			 int m, 
+								                 std::vector<int>& mi, 
+								                 int RD,
+								                 vector<int>& proj,
+								                 HD& dets, 
+								                 HD& Pdets,
+								                 Triangulation& Res){
 	
-	CTriangulation CT(CD);
-	StaticTriangulation(pointset,proj,CT,dets);
+	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl; 
+	
+	// construct an initial triangulation of the points that will not be projected
+	CTriangulation T(CD);
+	StaticTriangulation(pointset,proj,T,dets);
+	std::cout << "static dim:" << T.current_dimension() << std::endl; 
 												 
-  // make a stack (stl vector) with normals vectors and initialize
-  NV_ds normal_list_d;
-  int init_size = normal_list_d.size();
-    
-  while(!normal_list_d.empty()){
-		#ifdef PRINT_INFO
-		  std::cout << "dim=" << T.current_dimension() << std::endl;
-			normal_list_d.print();
-	  #endif
-	  
-	  // take the first(last more efficient with vectors??) normal and remove it from normals stack
-		PVector_d nli = *(normal_list_d.begin());
-		normal_list_d.erase(normal_list_d.begin());
-		//PVector_d nli = normal_list_d.back();
-		//normal_list_d.pop_back();
-		
-		// make a copy of CT
-		CTriangulation LCT(CT);
-		
-		// outer normal vector --> upper hull projection
-	  LiftingTriangulationDynamic(pointset,nli,proj,CT,LCT,dets,false); 
-		
-		// project LCT i.e. triangulation
-	  int dcur = LCT.current_dimension();
-	  vector<Field> new_vertex = project_upper_hull_r(LCT,dets,dcur,CD,mi,proj,false);
-	  
-	  // TODO: destroy here!
-	  LCT.clear();
-	  
-	  #ifdef PRINT_INFO  
-		  cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
-		#endif
-		  
-	  // insert it in the complex T (if it is not already there) 
-	  if (Pdets.find(new_vertex) == -1)
-	  	insert_new_Rvertex(T,normal_list_d,new_vertex,Pdets);
-		
-		numof_triangs++;
-		if (numof_triangs == init_size)
-			numof_init_Res_vertices = T.number_of_vertices();
-	}
+  // start by computing a simplex
+  int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  
+  // augment simplex to compute the Res polytope
+  int augment_triangs = augment_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  
+  // number of triangulations computed
+  pair<int,int> num_of_triangs(start_triangs,augment_triangs);
+  
+  return num_of_triangs;
 }
 
 
 ////////////////////////////////////////////////////////////
 // misc
 
-Field volume(Triangulation& T, HD& Pdets){
+Field volume(Triangulation& Res, HD& Pdets){
 	Field vol=0;
-	for (PSimplex_iterator cit=T.finite_full_cells_begin(); cit!=T.finite_full_cells_end(); cit++){
+	for (PSimplex_iterator cit=Res.finite_full_cells_begin(); cit!=Res.finite_full_cells_end(); cit++){
 		std::vector<size_t> simplex_points_indices;
-		for (int i=0; i<=T.current_dimension(); i++){
+		for (int i=0; i<=Res.current_dimension(); i++){
 			simplex_points_indices.push_back(cit->vertex(i)->point().index());
 		}
 		//std::cout<<simplex_points_indices<<" --> "<<
@@ -629,17 +825,17 @@ Field volume(Triangulation& T, HD& Pdets){
 		//<<std::endl;
 		vol+=abs(Pdets.homogeneous_determinant(simplex_points_indices));
 	}
-	vol*=(1/factorial(T.current_dimension()));
+	vol*=(1/factorial(Res.current_dimension()));
 	return vol;
 }
 
 
-int num_of_vertices(CTriangulation& ppc){	
+int num_of_vertices(CTriangulation& T){	
 	//PFace f;	
 	typedef std::vector<CFace> Faces;
 	Faces edges;
 	std::back_insert_iterator<Faces> out(edges);
-	ppc.incident_faces(ppc.infinite_vertex(), 1, out);
+	T.incident_faces(T.infinite_vertex(), 1, out);
 	// Count the number of points on the convex hull
 	std::cout << "[";	
 	for (Faces::iterator fit=edges.begin(); fit!=edges.end(); fit++){
@@ -652,27 +848,27 @@ int num_of_vertices(CTriangulation& ppc){
 		}
 		std::cout << "],[";
 	}
-	std::cout << ppc.empty() << std::endl;
+	std::cout << T.empty() << std::endl;
 	return edges.size();
 }
 
-int num_of_simplices(CTriangulation& ppc,map<vector<Field>, int>& points_index){	
+int num_of_simplices(CTriangulation& T,map<vector<Field>, int>& points_index){	
 	
 	// Count the number of points on the convex hull
 	std::cout << "{";	
-	for (CSimplex_iterator fit=ppc.full_cells_begin(); fit!=ppc.full_cells_end(); fit++){
+	for (CSimplex_iterator fit=T.full_cells_begin(); fit!=T.full_cells_end(); fit++){
 		std::vector<CPoint_d> simplex_points;
-		for (int i=0; i<=ppc.current_dimension(); i++){
+		for (int i=0; i<=T.current_dimension(); i++){
 			CPoint_d p = fit->vertex(i)->point();
 			simplex_points.push_back(p);
 			//std::vector<Field> ppoi;
-			//for (int j=0; j<ppc.current_dimension()-1; ++j) // d-1 cuts the last coordinate!!
+			//for (int j=0; j<T.current_dimension()-1; ++j) // d-1 cuts the last coordinate!!
 			//	ppoi.push_back(p[j]);
 			std::cout << p.index() << ",";				
 		}
 		std::cout << "},{";
 	}
-	std::cout << ppc.empty() << std::endl;
+	std::cout << T.empty() << std::endl;
 	return 1;
 }
 

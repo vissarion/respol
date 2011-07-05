@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <set>
+#include <CGAL/Random.h>
 
 using namespace std;
 
@@ -35,7 +36,6 @@ public:
 	
 	//constructors
 	Normal_Vector_ds() : _normal_list() {
-		simple_initialize();
 	}
 	
 	// initialization of ds
@@ -57,6 +57,19 @@ public:
 				put(lft);
 			}
 		}
+	}
+	
+	void random_initialize(){
+			// Instanciate a random point generator
+	    //CGAL::Random rng;
+	    //typedef CGAL::Random_points_in_cube_d<V> Random_points_iterator;
+	    //Random_points_iterator rand_it(PD, 1.0, rng);
+	
+	    // Generate 1 random point
+	    //std::vector<V> points;
+	    //CGAL::copy_n(rand_it, 1, std::back_inserter(points));
+			//put(V(*(points.begin())));
+			;	    
 	}
 	
 	// initialization of ds
@@ -93,7 +106,7 @@ public:
 	}	
 	
 	void print_all() const{
-		std::cout<<"current normal data structure: "<<this->size();
+		std::cout<<"current normal data structure: "<<this->size()<<std::endl;
 		for (base_const_iterator it=this->begin(); it!=this->end(); it++)
 			std::cout<<*it<<" ";
 		std:cout<<std::endl;

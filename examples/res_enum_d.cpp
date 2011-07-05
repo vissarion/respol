@@ -6,8 +6,9 @@
 
 const int D = 3;      	 	// this is the dimension of the supports
 const int CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
-const int PD = D+3;				//this is the dimension of the projection
-//const int PD = 12;
+const int PD = D+1;				//this is the dimension of the projection
+//int vec[]={0,1,2,3,4,5,6,7,8,9,10};
+//const int PD = sizeof(vec) / sizeof(int);				
 
 #define PRINT_INFO
 //#include <../include/cgal_chd.h>
@@ -23,19 +24,20 @@ int main(const int argc, const char** argv) {
 	tstartall = (double)clock()/(double)CLOCKS_PER_SEC;
 	
 	// mi will be the cardinalities of the support sets
+	// n is sum{mi}
+ 	// construct an empty pointset
 	std::vector<int> mi;
- 	
- 	// m is sum{mi}
- 	int m;
- 	
- 	// construct an empty pointset and an index
+ 	int n;
  	std::vector<std::vector<Field> > pointset;
- 	//map<std::vector<Field>,int> points_index;
 
- 	//read input (points, mi, m), apply cayley trick 
- 	// (now you have the pointset), make the index
- 	cayley_trick(pointset, mi, m);
-	
+	// initialize all the above
+ 	// read input (pointset, mi, n), apply cayley trick 
+ 	// (now you have the pointset)
+ 	cayley_trick(pointset, mi, n);
+	std::cout << pointset << std::endl;
+	// this is the dimension of the resultant (and secondary) polytope 
+ 	int RD = n - 2*D -1;
+ 		
 	// compute the big matrix
 	// you don't have to homogenize!
   HD dets(pointset.begin(),pointset.end());
@@ -46,17 +48,16 @@ int main(const int argc, const char** argv) {
 
 	// define the projection
 	// attention! proj SHOULD BE SORTED
-	//vector<int> proj = proj_first_coord(PD,m,mi);
-	int vec[]={0,1,3,6,7,9};
-	vector<int> proj (vec, vec + sizeof(vec) / sizeof(int) );
-	//vector<int> proj = full_proj(PD,m,mi);
-
+	vector<int> proj = proj_first_coord(PD,n,mi);
+	//vector<int> proj = full_proj(PD,n,mi);
+	//vector<int> proj (vec, vec + sizeof(vec) / sizeof(int) );
+	
 	// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;
 	Triangulation Res(PD);
 	
 	//compute the res polytope
-	compute_res_faster(pointset,m,mi,proj,dets,Pdets,numof_triangs, numof_init_Res_vertices,Res);
+	pair<int,int> num_of_triangs = compute_res_faster(pointset,n,mi,RD,proj,dets,Pdets,Res);
 	
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
@@ -65,11 +66,13 @@ int main(const int argc, const char** argv) {
 	print_res_vertices(Res);
 	
 	// print some statistics
-	print_statistics(numof_triangs, 
-	                 numof_init_Res_vertices, 
+	print_statistics(num_of_triangs.first, 
+	                 num_of_triangs.second,
 	                 Res.number_of_vertices(), 
 	                 tstopall-tstartall,
 	                 volume(Res,Pdets));
+	
+	//Pdets.print_matrix(cout);
 	
 	return 0;
 }
