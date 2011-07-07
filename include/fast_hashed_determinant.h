@@ -167,6 +167,7 @@ class FastHashedDeterminant{
                 return (result==_points.end()?-1:result-_points.begin());
         }
 
+
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
@@ -181,19 +182,25 @@ class FastHashedDeterminant{
                         ++number_of_max_dimension_calls;
                 ++number_of_determinant_calls;
 #endif
+#ifdef USE_HASHED_DETERMINANTS
                 if(_determinants.count(idx)==0){
+#endif
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
                         if(idx.size()==dimension){
                                 start=clock();
                         }
+#else
+												return
 #endif
-                        _determinants[idx]=compute_determinant(idx);
+                        (_determinants[idx]=compute_determinant(idx));
 #ifdef HASH_STATISTICS
                         if(idx.size()==dimension)
                                 full_determinant_time+=(clock()-start);
 #endif
+#ifdef USE_HASHED_DETERMINANTS
                 }
+#endif
                 return _determinants[idx];
         }
 
@@ -260,6 +267,7 @@ class FastHashedDeterminant{
                 return o;
         }
 
+#ifdef HASH_STATISTICS
         // This function prints a submatrix, formed by the columns whose
         // indices are in idx, to an output stream.
         std::ostream& print_submatrix(const Index &idx,std::ostream &o)const{
@@ -273,12 +281,13 @@ class FastHashedDeterminant{
                 }
                 return o;
         }
-
+#endif
         private:
         // This function computes the determinant of a submatrix of
         // _points. The parameter idx is a vector of indices of the indices
         // of the columns which will form the submatrix. Inlining this
         // function is very important for efficiency reasons!
+#ifdef USE_HASHED_DETERMINANTS 
         inline NT compute_determinant(const Index &idx){
                 Index idx2;
                 size_t n=idx.size();
@@ -296,7 +305,11 @@ class FastHashedDeterminant{
                 }
                 return det;
         }
-
+#else
+				inline NT compute_determinant(const Index &idx){
+								
+				}
+#endif
         // This function computes a determinant of size dim+1, where the
         // matrix is enlarged by adding at the bottom the vector r. There
         // is also a vector of indices of r, idxr, which specifies the

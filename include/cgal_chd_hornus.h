@@ -21,6 +21,8 @@ std::ostream& operator<<(std::ostream& ost, const std::vector<size_t>& V);
 
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
+
+// data structure to keep normal vectors
 #include <../include/normal_vector_ds.h>
 
 // for indexed points
@@ -39,15 +41,15 @@ typedef CGAL::Cartesian_d<Field> 									CK;
 //typedef Indexed_Cartesian_d<Field> 							CK;
 //typedef CK::IndexedPoint_d											IndexedPoint_d;
 
-typedef CGAL::Triangulation_vertex<CK>						tv;
-typedef CGAL::Triangulation_full_cell<CK,bool>		tc;
-typedef CGAL::Triangulation_data_structure<CGAL::Dimension_tag<PD>,tv,tc > tds;
+//typedef CGAL::Triangulation_vertex<CK,size_t>			tv;
+//typedef CGAL::Triangulation_full_cell<CK>					tc;
+//typedef CGAL::Triangulation_data_structure<CGAL::Dimension_tag<CD>,tv,tc > tds;
 // not working if we'll not pas all the parameters explicitly
 //e.g. CGAL::Triangulation_data_structure<CGAL::Dimension_tag<CD> > tds; gives error
 //typedef CGAL::Triangulation<CK,tds> 							CTriangulation;
 typedef CGAL::Triangulation<CK>			 							CTriangulation;
 typedef CTriangulation::Point_d 									CPoint_d;
-typedef CK::Hyperplane_d													CHyperplane_d;
+typedef CK::Hyperplane_d										 			CHyperplane_d;
 typedef CK::Vector_d															CVector_d;
 typedef CTriangulation::Vertex_iterator						CVertex_iterator;
 typedef CTriangulation::Vertex_handle							CVertex_handle;
@@ -60,8 +62,7 @@ typedef CTriangulation::Locate_type 							CLocate_type;
 
 // projection kernel 
 typedef CGAL::Cartesian_d<Field>									PK;
-//typedef CGAL::Triangulation<PK> 								Triangulation;
-typedef CGAL::Triangulation<PK,tds> 							Triangulation;
+typedef CGAL::Triangulation<PK> 									Triangulation;
 typedef PK::Vector_d															PVector_d;
 typedef PK::Hyperplane_d													PHyperplane_d;
 typedef Triangulation::Full_cell_handle						PSimplex_d;
@@ -529,11 +530,14 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
 		  	  mixed_vertices.push_back(i);
 		  	}
 		  }
+		  // the det we have computed before as the last coordinate of the 
+		  // normal vector is the same as the volume of the projection of
+		  // the facet (think of it a little...) USE abs() because now it is a volume 
 		  if (mixed_vertices.size() == 1){
 		  	// find where is the mixed vertex in the vector of projection coordinates
 		  	vector<int>::iterator pit = find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
 		  	if (pit != proj.end()){
-		  		rho[pit-proj.begin()] += det;
+		  		rho[pit-proj.begin()] += abs(det);
 				}
 		  }
 		}
@@ -622,40 +626,6 @@ void insert_new_Rvertex(Triangulation& Res,
 }
 
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-// TODO: des todo pio katw
-void insert_new_Rvertex2(Triangulation& Res, 
-												NV_ds& normal_list, 
-												SRvertex& new_vertex,
-												HD& Pdets){	
-	// insert the coordinates of the point as a column to the HashDeterminants matrix
-	Pdets.add_column(new_vertex);
-	// construct the new point 
-	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
-	new_point.set_index(Res.number_of_vertices());
-	new_point.set_hash(&Pdets); 
- 	#ifdef PRINT_INFO  
-		std::cout << "one new R-vertex found !!! "<< std::endl; 
-	#endif
-	
-	int prev_dim = Res.current_dimension();
-	//insert it to the triangulation
-	PVertex_handle new_vert = Res.insert(new_point);
-	int cur_dim = Res.current_dimension();
-	
-	normal_list.clear();
-	//update normal_list
-	typedef std::vector<PSimplex_d> Simplices;
-	Simplices inf_simplices;
-	std::back_insert_iterator<Simplices> out(inf_simplices);
-
-	Res.incident_full_cells(Res.infinite_vertex(), out);
-	std::cout<<inf_simplices.size()<<std::endl;
-	update_normal_list(Res, normal_list, inf_simplices);
-	
-}
-
-
 // compute a Res vertex by constructing a lifting triangulation 
 // project and compute the volumes of some cells 
 
@@ -666,7 +636,7 @@ vector<Field> compute_res_vertex(std::vector<std::vector<Field> >& pointset,
 				                 HD& dets, 
 				                 HD& Pdets,
 				                 Triangulation& Res,
-				                 CTriangulation& T,
+				                 Triangulation& T,
 				                 NV_ds& normal_list_d){
 													 
 	// take the first(last more efficient with vectors??) normal and remove it from normals stack
@@ -707,7 +677,7 @@ int initialize_Res(std::vector<std::vector<Field> >& pointset,
 								 HD& dets, 
 								 HD& Pdets,
 								 Triangulation& Res,
-								 CTriangulation& T){
+								 Triangulation& T){
 	
 	int num_of_triangs=0;								
 	#ifdef PRINT_INFO
@@ -746,7 +716,7 @@ int augment_Res(std::vector<std::vector<Field> >& pointset,
 								 HD& dets, 
 								 HD& Pdets,
 								 Triangulation& Res,
-								 CTriangulation& T){
+								 Triangulation& T){
 									
 	int num_of_triangs=0;
 	#ifdef PRINT_INFO

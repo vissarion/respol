@@ -7,12 +7,13 @@
 const int D = 3;      	 	// this is the dimension of the supports
 const int CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
 const int PD = D+1;				//this is the dimension of the projection
-//int vec[]={0,1,2,3,4,5,6,7,8,9,10};
+//int vec[]={0,7,13};
 //const int PD = sizeof(vec) / sizeof(int);				
 
 #define PRINT_INFO
 //#include <../include/cgal_chd.h>
 #include <../include/cgal_chd_hornus.h>
+//#include <../include/cgal_chd_hornus_with_cgal_det.h>
 
 //////////////////////////////////////////////////////////////////
 // main
