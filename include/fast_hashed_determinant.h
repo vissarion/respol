@@ -9,6 +9,11 @@
 #include <ostream>
 #include <ctime>
 #endif
+#ifndef USE_HASHED_DETERMINANTS
+#include <CGAL/LinBox/mpq_class_field.h>
+#include <CGAL/LinBox/dense_matrix.h>
+#include <linbox/solutions/det.h>
+#endif
 
 // FastHashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
@@ -306,9 +311,22 @@ class FastHashedDeterminant{
                 return det;
         }
 #else
-				inline NT compute_determinant(const Index &idx){
-								
-				}
+        inline NT compute_determinant(const Index &idx){
+                typedef CGAL::Linbox_rational_field<NT>         Field;
+                typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
+                // TODO: check that the constructed matrix is correct!
+                size_t d=m[0].size();
+                LBMatrix M((int)d,(int)d);
+                for(size_t row=0;row<d;++row)
+                        for(size_t column=0;column<d;++column)
+                                M.setEntry(row,column,m[idx[column]][row]);
+                NT det(0);
+                LinBox::det(det,
+                              M,
+                              LinBox::RingCategories::RationalTag(),
+                              LinBox::Method::Elimination());
+                return det;
+        }
 #endif
         // This function computes a determinant of size dim+1, where the
         // matrix is enlarged by adding at the bottom the vector r. There
