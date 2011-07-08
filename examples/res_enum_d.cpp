@@ -4,16 +4,19 @@
 #include <cassert>
 #include <ctime>
 
-const int D = 3;      	 	// this is the dimension of the supports
-const int CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
-const int PD = D+1;				//this is the dimension of the projection
+// these have no meaning;  cayley_trick function will change them
+// according to the input
+int D;      	 	// this is the dimension of the supports
+int CD;	   	// this is the Cayley space + 1 for lifting
+int PD;				//this is the dimension of the projection
 //int vec[]={0,7,13};
 //const int PD = sizeof(vec) / sizeof(int);				
 
-#define PRINT_INFO
+//#define PRINT_INFO
 //#include <../include/cgal_chd.h>
 #include <../include/cgal_chd_hornus.h>
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>
+//#include <../include/cgal_chd_hornus_cellinfo.h>
 
 //////////////////////////////////////////////////////////////////
 // main
@@ -33,9 +36,8 @@ int main(const int argc, const char** argv) {
 
 	// initialize all the above
  	// read input (pointset, mi, n), apply cayley trick 
- 	// (now you have the pointset)
  	cayley_trick(pointset, mi, n);
-	std::cout << pointset << std::endl;
+	
 	// this is the dimension of the resultant (and secondary) polytope 
  	int RD = n - 2*D -1;
  		
@@ -64,14 +66,21 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 	
 	// print the result i.e. the proj of the Resultant polytope 
-	print_res_vertices(Res);
+	//print_res_vertices(Res);
 	
 	// print some statistics
-	print_statistics(num_of_triangs.first, 
-	                 num_of_triangs.second,
-	                 Res.number_of_vertices(), 
-	                 tstopall-tstartall,
-	                 volume(Res,Pdets));
+	//print_statistics(num_of_triangs.first, 
+	//                 num_of_triangs.second,
+	//                 Res.number_of_vertices(), 
+	//                tstopall-tstartall,
+	//                 volume(Res,Pdets));
+	
+	print_statistics_small(CD-1, 
+												 PD,
+												 pointset.size(),
+												 Res.number_of_vertices(), 
+												 tstopall-tstartall,
+												 volume(Res,Pdets));
 	
 	//Pdets.print_matrix(cout);
 	

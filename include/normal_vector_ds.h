@@ -80,14 +80,14 @@ public:
 				vector<int> extreme_point(PD,0);
 				extreme_point[i]=vec[j];
 				for (int i=0; i<PD; i++){
-					std::cout<<extreme_point[i]<<" ";
+					//std::cout<<extreme_point[i]<<" ";
 				}
-				std::cout<<std::endl;
+				//std::cout<<std::endl;
 				data lft(PD,extreme_point.begin(),extreme_point.end());
 				put(lft);
 			}
 		} 	
-		std::cout<<this->size()<<std::endl;
+		//std::cout<<this->size()<<std::endl;
 	}
 		
 	//void put(data d){

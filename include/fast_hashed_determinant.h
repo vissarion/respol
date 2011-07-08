@@ -315,16 +315,16 @@ class FastHashedDeterminant{
                 typedef CGAL::Linbox_rational_field<NT>         Field;
                 typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
                 // TODO: check that the constructed matrix is correct!
-                size_t d=m[0].size();
+                size_t d=_points[0].size();
                 LBMatrix M((int)d,(int)d);
                 for(size_t row=0;row<d;++row)
                         for(size_t column=0;column<d;++column)
-                                M.setEntry(row,column,m[idx[column]][row]);
+                                M.setEntry(row,column,_points[idx[column]][row]);
                 NT det(0);
                 LinBox::det(det,
                               M,
                               LinBox::RingCategories::RationalTag(),
-                              LinBox::Method::Elimination());
+                              LinBox::Method::Hybrid());
                 return det;
         }
 #endif
