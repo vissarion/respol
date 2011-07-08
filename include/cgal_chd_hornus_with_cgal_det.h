@@ -217,6 +217,21 @@ void print_statistics(int numoftriangs,
 						<< " ~ " <<  CGAL::to_double(volume) << std::endl;
 }
 
+void print_statistics_small(int Cdim,
+														int Pdim, 
+														int num_of_input_points, 
+														int numofvertices, 
+														double timeall,
+														Field volume){
+	std::cout << Cdim << " "
+						<< Pdim << " "
+						<< num_of_input_points << " "
+						<< numofvertices  << " "
+						<< timeall << " "
+					  << volume  << " "
+						<< std::endl;
+}
+
 ///////////////////////////////////////////////////////////
 // input functions
 
