@@ -12,11 +12,11 @@ int PD;				//this is the dimension of the projection
 //int vec[]={0,7,13};
 //const int PD = sizeof(vec) / sizeof(int);				
 
-//#define PRINT_INFO
+#define PRINT_INFO
 //#include <../include/cgal_chd.h>
-#include <../include/cgal_chd_hornus.h>
+//#include <../include/cgal_chd_hornus.h>
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>
-//#include <../include/cgal_chd_hornus_cellinfo.h>
+#include <../include/cgal_chd_hornus_cellinfo.h>
 
 //////////////////////////////////////////////////////////////////
 // main
@@ -66,7 +66,9 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 	
 	// print the result i.e. the proj of the Resultant polytope 
-	//print_res_vertices(Res);
+	print_res_vertices(Res);
+	
+	//print_res_facets_number(Res);
 	
 	// print some statistics
 	//print_statistics(num_of_triangs.first, 

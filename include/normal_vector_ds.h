@@ -95,9 +95,13 @@ public:
 	//}
 	
 	// insert data
-	void put(data d){
-		if (find(this->begin(),this->end(),d) == this->end())
+	int put(data d){
+		if (find(this->begin(),this->end(),d) == this->end()){
 		  this->push_back(d);
+			return 1;
+		}
+		else
+			return 0;
 	}
 	
 	// print data
