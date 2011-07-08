@@ -220,12 +220,14 @@ void print_statistics(int numoftriangs,
 void print_statistics_small(int Cdim,
 														int Pdim, 
 														int num_of_input_points, 
+														int numoftriangs, 
 														int numofvertices, 
 														double timeall,
 														Field volume){
 	std::cout << Cdim << " "
 						<< Pdim << " "
 						<< num_of_input_points << " "
+						<< numoftriangs  << " "
 						<< numofvertices  << " "
 						<< timeall << " "
 					  << volume  << " "

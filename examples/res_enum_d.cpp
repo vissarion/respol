@@ -78,6 +78,7 @@ int main(const int argc, const char** argv) {
 	print_statistics_small(CD-1, 
 												 PD,
 												 pointset.size(),
+												 num_of_triangs.first+num_of_triangs.second,
 												 Res.number_of_vertices(), 
 												 tstopall-tstartall,
 												 volume(Res,Pdets));
