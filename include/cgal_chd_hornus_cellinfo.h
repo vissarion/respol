@@ -75,6 +75,7 @@ typedef PK::Direction_d															PVector_d;
 typedef PK::Hyperplane_d													PHyperplane_d;
 typedef Triangulation::Full_cell_handle						PSimplex_d;
 typedef Triangulation::Finite_full_cell_iterator	PSimplex_finite_iterator;
+typedef Triangulation::Finite_full_cell_const_iterator  PSimplex_finite_const_iterator;
 typedef Triangulation::Full_cell_iterator					PSimplex_iterator;
 typedef Triangulation::Point_d 										PPoint_d;
 typedef Triangulation::Face 											PFace;
@@ -235,7 +236,7 @@ void print_statistics_small(int Cdim,
 														int numoftriangs, 
 														int numofvertices, 
 														double timeall,
-														Field volume){
+														const Field &volume){
 	std::cout << Cdim << " "
 						<< Pdim << " "
 						<< num_of_input_points << " "
@@ -255,7 +256,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 	//TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 	D=d;
 	CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
-  PD = D+1;				//this is the dimension of the projection
+  //PD = D+1;				//this is the dimension of the projection
 	if (d != D){
 		std::cout << "Not matching dimensions of input and compiled program!" << std::endl;
 		exit(-1);
@@ -351,6 +352,22 @@ vector<int> proj_first_coord(const int d, int m, std::vector<int>& mi){
 	return proj;
 }
 
+vector<int> proj_more_coord(const int d, int m, std::vector<int>& mi){
+	//project at the first coordinate of each mi	
+	vector<int> proj(d);
+	proj[0]=0;
+	proj[1]=1;
+        int k=2;
+	for (int i=1; i<3; i++){
+		int mm=0;
+		for (int j=0; j<i; j++)
+			mm+=mi[j];
+		proj[k++]=mm;
+		proj[k++]=mm+1;
+		//std::cout << mm << " ";
+	}
+	return proj;
+}
 vector<int> full_proj(const int d, int m, std::vector<int>& mi){
 	vector<int> proj(d);
 	proj[0]=0;
@@ -901,9 +918,11 @@ pair<int,int> compute_res_faster( std::vector<std::vector<Field> >& pointset,
 ////////////////////////////////////////////////////////////
 // misc
 
-Field volume(Triangulation& Res, HD& Pdets){
+Field volume(const Triangulation& Res, HD& Pdets){
 	Field vol=0;
-	for (PSimplex_finite_iterator cit=Res.finite_full_cells_begin(); cit!=Res.finite_full_cells_end(); cit++){
+	for (PSimplex_finite_const_iterator cit=Res.finite_full_cells_begin();
+             cit!=Res.finite_full_cells_end();
+             cit++){
 		std::vector<size_t> simplex_points_indices;
 		for (int i=0; i<=Res.current_dimension(); i++){
 			simplex_points_indices.push_back(cit->vertex(i)->point().index());

@@ -8,9 +8,9 @@
 // according to the input
 int D;      	 	// this is the dimension of the supports
 int CD;	   	// this is the Cayley space + 1 for lifting
-int PD;				//this is the dimension of the projection
-//int vec[]={0,7,13};
-//const int PD = sizeof(vec) / sizeof(int);				
+//int PD;				//this is the dimension of the projection
+//int vec[]={0,1,2,10,11,};
+int PD = 6;//sizeof(vec) / sizeof(int);				
 
 #define PRINT_INFO
 //#include <../include/cgal_chd.h>
@@ -51,7 +51,9 @@ int main(const int argc, const char** argv) {
 
 	// define the projection
 	// attention! proj SHOULD BE SORTED
-	vector<int> proj = proj_first_coord(PD,n,mi);
+//	vector<int> proj = proj_first_coord(PD,n,mi);
+	vector<int> proj = proj_more_coord(PD,n,mi);
+  std::cout << proj << std::endl;
 	//vector<int> proj = full_proj(PD,n,mi);
 	//vector<int> proj (vec, vec + sizeof(vec) / sizeof(int) );
 	
@@ -66,7 +68,7 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 	
 	// print the result i.e. the proj of the Resultant polytope 
-	print_res_vertices(Res);
+	//print_res_vertices(Res);
 	
 	//print_res_facets_number(Res);
 	
@@ -83,8 +85,8 @@ int main(const int argc, const char** argv) {
 												 num_of_triangs.first+num_of_triangs.second,
 												 Res.number_of_vertices(), 
 												 tstopall-tstartall,
-												 volume(Res,Pdets));
-	
+	//											 volume(Res,Pdets));
+	         0);
 	//Pdets.print_matrix(cout);
 	
 	return 0;

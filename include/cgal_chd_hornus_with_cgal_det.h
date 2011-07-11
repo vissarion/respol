@@ -260,7 +260,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 		std::cout << "mi.size() != d+1. The number of polynomials must me one more than the dimansion!" << std::endl;
 		exit(-1);
 	}
-	std::cout<<mi<<std::endl;
+	//std::cout<<mi<<std::endl;
 	// compute cayley vector to augment pointset
 	if (mi.size() != d+1){
 		std::cout << "Input error" << std::endl;
@@ -669,7 +669,7 @@ void insert_new_Rvertex(Triangulation& Res,
 		std::back_insert_iterator<Simplices> out(inf_simplices);
 
 		Res.incident_full_cells(Res.infinite_vertex(), out);
-		std::cout<<inf_simplices.size()<<std::endl;
+		//std::cout<<inf_simplices.size()<<std::endl;
 		update_normal_list(Res, normal_list, inf_simplices);
 		
 	} else {
@@ -680,7 +680,7 @@ void insert_new_Rvertex(Triangulation& Res,
 		// TODO:make it more efficient
 		// find only the simplices incident to the edge (new_vert,inf_vert)
 		Res.incident_full_cells(new_vert, out);
-		std::cout<<inf_simplices.size()<<std::endl;
+		//std::cout<<inf_simplices.size()<<std::endl;
 		update_normal_list(Res, normal_list, inf_simplices);
 	}
 }
@@ -825,7 +825,7 @@ pair<int,int> compute_res_faster( std::vector<std::vector<Field> >& pointset,
 	// construct an initial triangulation of the points that will not be projected
 	CTriangulation T(CD);
 	StaticTriangulation(pointset,proj,T,dets);
-	std::cout << "static dim:" << T.current_dimension() << std::endl; 
+	//std::cout << "static dim:" << T.current_dimension() << std::endl; 
 												 
   // start by computing a simplex
   int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);

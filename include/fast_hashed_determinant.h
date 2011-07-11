@@ -9,7 +9,7 @@
 #include <ostream>
 #include <ctime>
 #endif
-#ifndef USE_HASHED_DETERMINANTS
+#ifdef USE_LINBOX_DET
 #include <CGAL/LinBox/mpq_class_field.h>
 #include <CGAL/LinBox/dense_matrix.h>
 #include <linbox/solutions/det.h>
@@ -50,7 +50,8 @@ class FastHashedDeterminant{
 #endif
         _points(),
         _determinants(),
-        _h_determinants()
+        _h_determinants(),
+        number_of_hashed_determinants(0)
         {};
 
         //
@@ -66,7 +67,8 @@ class FastHashedDeterminant{
 #endif
         _points(columns),
         _determinants(),
-        _h_determinants()
+        _h_determinants(),
+        number_of_hashed_determinants(0)
         {};
 
         // constructor for static det table
@@ -84,7 +86,8 @@ class FastHashedDeterminant{
 #endif
         _points(),
         _determinants(),
-        _h_determinants(){
+        _h_determinants(),
+        number_of_hashed_determinants(0){
                 for(Iterator i=begin;i!=end;++i){
 #ifdef HASH_STATISTICS
                 if(i->size()>dimension)
@@ -179,6 +182,11 @@ class FastHashedDeterminant{
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called.
         NT& determinant(const Index &idx){
+                /*if(number_of_hashed_determinants==10000000){
+                        std::cout<<"CLEAR HASH!"<<std::endl;
+                        number_of_hashed_determinants=0;
+                        _determinants.clear();
+                }*/
                 if(idx.size()==1)
                         return _points[idx[0]][0];
 #ifdef HASH_STATISTICS
@@ -188,7 +196,9 @@ class FastHashedDeterminant{
                 ++number_of_determinant_calls;
 #endif
 #ifdef USE_HASHED_DETERMINANTS
+                //if(_points[0].size()>idx.size()-2){
                 if(_determinants.count(idx)==0){
+                        ++number_of_hashed_determinants;
 #endif
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
@@ -196,7 +206,7 @@ class FastHashedDeterminant{
                                 start=clock();
                         }
 #else
-												return
+                        return
 #endif
                         (_determinants[idx]=compute_determinant(idx));
 #ifdef HASH_STATISTICS
@@ -205,6 +215,10 @@ class FastHashedDeterminant{
 #endif
 #ifdef USE_HASHED_DETERMINANTS
                 }
+                /*}else{
+                        NT *retvalue=new NT(compute_determinant(idx));
+                        return *retvalue;
+                }*/
 #endif
                 return _determinants[idx];
         }
@@ -294,6 +308,23 @@ class FastHashedDeterminant{
         // function is very important for efficiency reasons!
 #ifdef USE_HASHED_DETERMINANTS 
         inline NT compute_determinant(const Index &idx){
+#ifdef USE_LINBOX_DET
+                typedef CGAL::Linbox_rational_field<NT>         Field;
+                typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
+                        size_t d=_points[0].size();
+                        LBMatrix M((int)d,(int)d);
+                        for(size_t row=0;row<d;++row)
+                                for(size_t column=0;column<d;++column)
+                                        M.setEntry(row,
+                                                   column,
+                                                   _points[idx[column]][row]);
+                        NT det(0);
+                        LinBox::det(det,
+                                      M,
+                                      LinBox::RingCategories::RationalTag(),
+                                      LinBox::Method::Hybrid());
+                        return det;
+#else
                 Index idx2;
                 size_t n=idx.size();
                 for(size_t i=1;i<n;++i)
@@ -309,25 +340,15 @@ class FastHashedDeterminant{
                         idx2[i]=idx[i];
                 }
                 return det;
+#endif
         }
 #else
         inline NT compute_determinant(const Index &idx){
-                typedef CGAL::Linbox_rational_field<NT>         Field;
-                typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
-                // TODO: check that the constructed matrix is correct!
-                size_t d=_points[0].size();
-                LBMatrix M((int)d,(int)d);
-                for(size_t row=0;row<d;++row)
-                        for(size_t column=0;column<d;++column)
-                                M.setEntry(row,column,_points[idx[column]][row]);
-                NT det(0);
-                LinBox::det(det,
-                              M,
-                              LinBox::RingCategories::RationalTag(),
-                              LinBox::Method::Hybrid());
-                return det;
+                CGAL_error("not implemented");
+                return NT(0);
         }
 #endif
+
         // This function computes a determinant of size dim+1, where the
         // matrix is enlarged by adding at the bottom the vector r. There
         // is also a vector of indices of r, idxr, which specifies the
@@ -360,6 +381,7 @@ class FastHashedDeterminant{
         Matrix _points;
         Determinants _determinants;
         HDeterminants _h_determinants;
+        unsigned long number_of_hashed_determinants;
 #ifdef HASH_STATISTICS
         public:
         unsigned dimension;
