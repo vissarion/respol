@@ -9,6 +9,7 @@
 /////////////////////////////////////////////////////////////////
 // overload of << operators for various types
 
+#ifndef __FFLAFLAS_print_utils_H
 // this will be enough for SRvertex and Resvertex, which are respectively
 // vector<Field> and vector<SRvertex>
 template <class T>
@@ -17,6 +18,7 @@ std::ostream& operator<<(std::ostream& ost, const std::vector<T> &V) {
     ost << *it << ",";
   return ost;
 }
+#endif
 
 // this will be enough for Polytope, which is set<SRvertex>
 template <class T>
