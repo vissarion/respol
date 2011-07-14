@@ -17,7 +17,7 @@
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/algorithm.h>
 
-std::ostream& operator<<(std::ostream& ost, const std::vector<size_t>& V);
+#include <print_functions.h>
 
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
@@ -113,139 +113,6 @@ Field factorial(Field n)
   return 1;
 }
 
-
-/////////////////////////////////////////////////////////////////
-// print functions
-// TODO:make them generic with template(?!)
-
-std::ostream& operator<<(std::ostream& ost, const vector<size_t>& V) {
-  for (vector<size_t>::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << ",";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const vector<int>& V) {
-  for (vector<int>::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << ",";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const set<int>& V) {
-  for (set<int>::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << ",";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const vector<set<int> >& V) {
-  for (vector<set<int> >::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << "},{";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const SRvertex& V) {
-  for (SRvertex::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << " ";
-  return ost;
-}
-
-
-std::ostream& operator<<(std::ostream& ost, const Polytope& P) {
-  for (Polytope::const_iterator it=P.begin(); it!=P.end(); it++)
-		ost << *it << std::endl;
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const Resvertex& P) {
-  for (Resvertex::const_iterator it=P.begin(); it!=P.end(); it++)
-		ost << *it << std::endl;
-  return ost;
-}
-
-// for input topcom file construction
-void print_vertices_hom(vector<vector<Field> >& Poly, std::ofstream& ofs){
-	ofs << "[";
-	for (vector<vector<Field> >::const_iterator Polyit=Poly.begin(); Polyit!=Poly.end(); Polyit++){
-		ofs << "[";
-		
-	  for (vector<Field>::const_iterator it=Polyit->begin(); it!=Polyit->end(); it++){
-		  if (it!=Polyit->end()-1){
-		    ofs << *it << ",";
-		  }else{
-				ofs << *it;
-			}
-		}
-		ofs << ",1";
-	  if (Polyit!=Poly.end()-1){
-			ofs << "],";
-		} else{
-			ofs << "]";
-		}
-	}
-	ofs << "]" << std::endl;
-}
-
-
-void print_res_vertices_with_index(Triangulation& Res){
-  // print the vertices of the res polytope
-  std::cout << "[";
-	for (PVertex_iterator vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++)
-		std::cout << vit->point() << " | " << vit->point().index() << "],[";
-	std::cout << std::endl;
-}
-
-void print_res_vertices(Triangulation& Res){
-  // print the vertices of the res polytope
-  int number_of_vertices = 0;
-	//std::cout << "dim=" << Res.current_dimension() << std::endl;
-	for (PVertex_iterator vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
-		std::cout << "[";
-		for (PPoint_d::Cartesian_const_iterator cit = vit->point().cartesian_begin(); 
-						cit != vit->point().cartesian_end(); cit++){
-			std::cout << *cit;
-			if (cit - vit->point().cartesian_begin() != vit->point().dimension()-1)
-				std::cout << ",";
-		}
-		//std::cout << "|" << vit->point().index();
-		std::cout << "]";
-		if (number_of_vertices++ != Res.number_of_vertices())
-			std::cout << ",";
-	}
-	std::cout << std::endl;
-}
-
-
-void print_statistics(int numoftriangs, 
-											int numoftriangs2, 
-											int numofvertices, 
-											double timeall,
-											Field volume){
-	std::cout << std::endl;
-	std::cout << "Num of triangs enumed (init+augment)\t" 
-						<< numoftriangs+numoftriangs2 << " ("
-						<< numoftriangs << "+" << numoftriangs2 
-						<< ")" << std::endl;
-	std::cout << "Projected Res vertices \t\t\t" << numofvertices << std::endl;
-	std::cout << "Time overall   \t\t\t\t" << timeall << std::endl;
-	std::cout << "Volume   \t\t\t\t" << volume 
-						<< " ~ " <<  CGAL::to_double(volume) << std::endl;
-}
-
-void print_statistics_small(int Cdim,
-														int Pdim, 
-														int num_of_input_points, 
-														int numoftriangs, 
-														int numofvertices, 
-														double timeall,
-														const Field &volume){
-	std::cout << Cdim << " "
-						<< Pdim << " "
-						<< num_of_input_points << " "
-						<< numoftriangs  << " "
-						<< numofvertices  << " "
-						<< timeall << " "
-					  << volume  << " "
-						<< std::endl;
-}
 
 ///////////////////////////////////////////////////////////
 // input functions
@@ -669,20 +536,6 @@ void insert_new_Rvertex(Triangulation& Res,
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-void print_cells_data(Triangulation& Res){
-	typedef std::vector<PSimplex_d> Simplices;
-	
-	Simplices inf_simplices;
-	std::back_insert_iterator<Simplices> out(inf_simplices);
-	Res.incident_full_cells(Res.infinite_vertex(), out);
-	std::cout << "simplex data:";
-	for(Simplices::iterator sit = inf_simplices.begin(); 
-													sit != inf_simplices.end(); ++sit ){
-		std::cout << (*sit)->data();
-	}
-	std::cout << std::endl;	
-}
 
 void update_cell_data(Triangulation& Res,
 											PVertex_handle vert){

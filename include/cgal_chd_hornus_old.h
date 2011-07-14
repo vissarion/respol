@@ -14,7 +14,7 @@
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/algorithm.h>
 
-std::ostream& operator<<(std::ostream& ost, const std::vector<size_t>& V);
+#include <print_functions.h>
 
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
@@ -73,92 +73,6 @@ typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 /////////////////////////////
 //functions implementations
 
-
-/////////////////////////////////////////////////////////////////
-// print functions
-// TODO:make them generic with template(?!)
-
-std::ostream& operator<<(std::ostream& ost, const vector<size_t>& V) {
-  for (vector<size_t>::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << ",";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const vector<int>& V) {
-  for (vector<int>::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << ",";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const set<int>& V) {
-  for (set<int>::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << ",";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const vector<set<int> >& V) {
-  for (vector<set<int> >::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << "},{";
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const SRvertex& V) {
-  for (SRvertex::const_iterator it=V.begin(); it!=V.end(); it++)
-		ost << *it << " ";
-  return ost;
-}
-
-
-std::ostream& operator<<(std::ostream& ost, const Polytope& P) {
-  for (Polytope::const_iterator it=P.begin(); it!=P.end(); it++)
-		ost << *it << std::endl;
-  return ost;
-}
-
-std::ostream& operator<<(std::ostream& ost, const Resvertex& P) {
-  for (Resvertex::const_iterator it=P.begin(); it!=P.end(); it++)
-		ost << *it << std::endl;
-  return ost;
-}
-
-void print_vertices(vector<vector<Field> >& Poly, std::ofstream& ofs){
-	ofs << "[";
-	for (vector<vector<Field> >::const_iterator Polyit=Poly.begin(); Polyit!=Poly.end(); Polyit++){
-		ofs << "[";
-		
-	  for (vector<Field>::const_iterator it=Polyit->begin(); it!=Polyit->end(); it++){
-		  if (it!=Polyit->end()-1){
-		    ofs << *it << ",";
-		  }else{
-				ofs << *it;
-			}
-		}
-	  if (Polyit!=Poly.end()-1){
-			ofs << "],";
-		} else{
-			ofs << "]";
-		}
-	}
-	ofs << "]" << std::endl;
-}
-
-
-void print_res_vertices(Triangulation& T){
-  // print the vertices of the res polytope
-  std::cout << "[";
-	for (PVertex_iterator vit = T.vertices_begin(); vit != T.vertices_end(); vit++)
-		std::cout << vit->point() << "],[";
-	std::cout << std::endl;
-}
-
-
-void print_statistics(int numoftriangs, int numofinitvertices, int numofvertices, double timeall){
-	std::cout << std::endl;
-	std::cout << "Number of triangs enumerated \t" << numoftriangs << std::endl;
-	std::cout << "Projected Res vertices (INIT)\t" << numofinitvertices << std::endl;
-	std::cout << "Projected Res vertices \t\t" << numofvertices << std::endl;
-	std::cout << "Time overall   \t\t\t" << timeall << std::endl;
-}
 
 ///////////////////////////////////////////////////////////
 // input functions
