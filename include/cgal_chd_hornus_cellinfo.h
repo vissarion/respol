@@ -196,7 +196,7 @@ void print_res_vertices_with_index(Triangulation& Res){
 void print_res_vertices(Triangulation& Res){
   // print the vertices of the res polytope
   int number_of_vertices = 0;
-	std::cout << "dim=" << Res.current_dimension() << std::endl;
+	//std::cout << "dim=" << Res.current_dimension() << std::endl;
 	for (PVertex_iterator vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
 		std::cout << "[";
 		for (PPoint_d::Cartesian_const_iterator cit = vit->point().cartesian_begin(); 
@@ -273,7 +273,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 		std::cout << "mi.size() != d+1. The number of polynomials must me one more than the dimansion!" << std::endl;
 		exit(-1);
 	}
-	std::cout<<mi<<std::endl;
+	//std::cout<<mi<<std::endl;
 	// compute cayley vector to augment pointset
 	if (mi.size() != d+1){
 		std::cout << "Input error" << std::endl;
@@ -352,12 +352,49 @@ vector<int> proj_first_coord(const int d, int m, std::vector<int>& mi){
 	return proj;
 }
 
+vector<int> proj_all_from_last_support(const int d, int m, std::vector<int>& mi){
+	//project at all the coordinates of the last support	
+	vector<int> proj(d);
+	int mm=0;
+	for (std::vector<int>::iterator mit=mi.begin(); mit!=mi.end()-1; mit++)
+		mm+=*mit;
+	int j=0;
+	for (int i=mm; i<mm+*(mi.end()-1); i++){
+		proj[j++]=i;
+		//std::cout << mm << " ";
+	}
+	std::cout << proj << std::endl;
+	return proj;
+}
+
+
+vector<int> proj_more_coord(const int d, int m, std::vector<int>& mi){
+	//project at the first coordinate of each mi
+	int nplus1 = mi.size();
+	vector<int> proj_first = proj_first_coord(nplus1,m,mi);
+	vector<int> proj;
+	int a = (d/nplus1)-1;
+	int b = d%nplus1;
+	//std::cout << a << b;
+	for (vector<int>::iterator pit=proj_first.begin(); 
+			 pit!=proj_first.end(); pit++){
+		proj.push_back(*pit);
+		int i=0;
+		for(; i<a; i++)
+			proj.push_back((*pit)+i+1);
+		if (pit-proj_first.begin() < b)
+			proj.push_back((*pit)+i+1);
+	}
+	return proj;
+}
+
+/*
 vector<int> proj_more_coord(const int d, int m, std::vector<int>& mi){
 	//project at the first coordinate of each mi	
 	vector<int> proj(d);
 	proj[0]=0;
 	proj[1]=1;
-        int k=2;
+  int k=2;
 	for (int i=1; i<3; i++){
 		int mm=0;
 		for (int j=0; j<i; j++)
@@ -368,6 +405,8 @@ vector<int> proj_more_coord(const int d, int m, std::vector<int>& mi){
 	}
 	return proj;
 }
+*/
+
 vector<int> full_proj(const int d, int m, std::vector<int>& mi){
 	vector<int> proj(d);
 	proj[0]=0;
@@ -458,7 +497,10 @@ vector<pair<vector<Field>,size_t> > lift_to_proj(vector<vector<Field> >& points,
 
 // compute lifting triangulation but not from scratch
 // use a copy of T and add new lifted points there
-
+// TODO: not insert points with negative lift
+// they will not affect upper hull! be careful
+// if all points have neg lift then Tl will be
+// 2n dimensional so we have to project carefully  
 void LiftingTriangulationDynamic(vector<vector<Field> >& points, 
 																						 PVector_d& nli, 
 																						 std::vector<int>& proj, 
@@ -473,11 +515,13 @@ void LiftingTriangulationDynamic(vector<vector<Field> >& points,
   // add the new lifted points to the copy (Tl) 
   for (vector<pair<vector<Field>,size_t> >::iterator vit=P.begin();
        vit!=P.end(); vit++){
-		CPoint_d p(CD,vit->first.begin(),vit->first.end());
-  	p.set_index(vit->second);
-  	p.set_hash(&dets);
-  	//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
-  	CVertex_handle v = Tl.insert(p);
+		//if (*(vit->first.end()-1) >= 0){
+			CPoint_d p(CD,vit->first.begin(),vit->first.end());
+	  	p.set_index(vit->second);
+	  	p.set_hash(&dets);
+	  	//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
+	  	CVertex_handle v = Tl.insert(p);
+		//}
   }
 }
 
@@ -558,9 +602,11 @@ vector<Field> project_upper_hull_r(CTriangulation& pc,
 		 // std::cout<<s<<std::endl;
 		  // if there are not full dimensional cells
 		  if (s.size() < CD){
-				std::cout << "NOT a triangulation. Abort current computation..." << std::endl;
+				#ifdef PRINT_INFO
+					std::cout << "NOT a triangulation. Abort current computation..." << std::endl;
+				#endif
 				vector<Field> rho_empty;
-				exit(-1);
+				//exit(-1);
 				return rho_empty;
 			}
 			// check if the projection of the facet (i.e. a Minkowski cell)
@@ -689,8 +735,9 @@ int get_illegal_facet(Triangulation& Res,
 	//Res.incident_full_cells(Res.infinite_vertex(), out);
 	
 	PSimplex_iterator sit = Res.full_cells_begin();
+	//bool is_neg;
 	do{ 
-		// find an illigal facet
+		// find an illegal facet
 		for( ; sit != Res.full_cells_end(); ++sit ){
 			if (sit->data() == false && Res.is_infinite(sit)){
 				sit->data() = true;
@@ -708,12 +755,20 @@ int get_illegal_facet(Triangulation& Res,
 			PPoint_d opposite_point = sit->neighbor(0)->vertex(sit->mirror_index(0))->point();
 			// compute a hyperplane which has in its negative side the opposite point
 			PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
-					
+			//is_neg=true;		
 			current_vector = hp.orthogonal_direction();
+			//for (PVector_d::Delta_const_iterator dit=current_vector.deltas_begin(); 
+			//						dit!=current_vector.deltas_end(); dit++){
+			//	if (*dit >=0 ){
+			//		is_neg = false;
+			//		break;
+			//	}
+			//}
 			//std::cout << normal_list.put(current_vector) << std::endl;
 			//return 1;
 		}
-	} while(normal_list.put(current_vector) == 0 && sit != Res.full_cells_end());
+	} while(normal_list.put(current_vector) == 0 //|| is_neg==true) 
+					 && sit != Res.full_cells_end());
 	
 	// check if we run out of normals
 	if (sit != Res.full_cells_end())
@@ -900,7 +955,7 @@ pair<int,int> compute_res_faster( std::vector<std::vector<Field> >& pointset,
 	// construct an initial triangulation of the points that will not be projected
 	CTriangulation T(CD);
 	StaticTriangulation(pointset,proj,T,dets);
-	std::cout << "static dim:" << T.current_dimension() << std::endl; 
+	//std::cout << "static dim:" << T.current_dimension() << std::endl; 
 												 
   // start by computing a simplex
   int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
