@@ -1,6 +1,10 @@
 #ifndef FAST_HASHED_DETERMINANT_H
 #define FAST_HASHED_DETERMINANT_H
 
+#ifndef USE_HASHED_DETERMINANTS
+#undef HASH_STATISTICS
+#endif
+
 #include <vector>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
@@ -181,6 +185,7 @@ class FastHashedDeterminant{
         // idx. If this determinant was already computed (i.e., it is in
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called.
+#ifdef USE_HASHED_DETERMINANTS
         NT& determinant(const Index &idx){
                 /*if(number_of_hashed_determinants==10000000){
                         std::cout<<"CLEAR HASH!"<<std::endl;
@@ -195,11 +200,8 @@ class FastHashedDeterminant{
                         ++number_of_max_dimension_calls;
                 ++number_of_determinant_calls;
 #endif
-#ifdef USE_HASHED_DETERMINANTS
-                //if(_points[0].size()>idx.size()-2){
                 if(_determinants.count(idx)==0){
                         ++number_of_hashed_determinants;
-#endif
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
                         if(idx.size()==dimension){
@@ -213,15 +215,32 @@ class FastHashedDeterminant{
                         if(idx.size()==dimension)
                                 full_determinant_time+=(clock()-start);
 #endif
-#ifdef USE_HASHED_DETERMINANTS
                 }
-                /*}else{
-                        NT *retvalue=new NT(compute_determinant(idx));
-                        return *retvalue;
-                }*/
-#endif
                 return _determinants[idx];
         }
+#else // USE_HASHED_DETERMINANTS
+        // TODO: we can use here gaussian elimination or any O(n^3)
+        // factorization algorithm
+        NT determinant(const Index &idx)const{
+                size_t n=idx.size();
+                if(n==1)
+                        return _points[idx[0]][0];
+                Index idx2;
+                for(size_t i=1;i<n;++i)
+                        idx2.push_back(idx[i]);
+                assert(idx2.size()==idx.size()-1);
+                NT det(0);
+                for(size_t i=0;i<n;++i){
+                        if((i+n)%2)
+                                det+=(_points[idx[i]][n-1]*determinant(idx2));
+                        else
+                                det-=(_points[idx[i]][n-1]*determinant(idx2));
+                        // update the index array
+                        idx2[i]=idx[i];
+                }
+                return det;
+        }
+#endif // USE_HASHED_DETERMINANTS
 
         // This function computes the determinant of a submatrix, enlarged
         // with row at the bottom full of ones.
@@ -250,7 +269,9 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                 }
+#ifdef USE_HASHED_DETERMINANTS
                 _h_determinants[idx]=det;
+#endif
                 return det;
         }
 
@@ -306,9 +327,10 @@ class FastHashedDeterminant{
         // _points. The parameter idx is a vector of indices of the indices
         // of the columns which will form the submatrix. Inlining this
         // function is very important for efficiency reasons!
-#ifdef USE_HASHED_DETERMINANTS 
-        inline NT compute_determinant(const Index &idx){
 #ifdef USE_LINBOX_DET
+        // this function is extremely inefficient for small matrices, since
+        // there is a big overhead in constructing the LinBox matrix
+        inline NT compute_determinant(const Index &idx)const{
                 typedef CGAL::Linbox_rational_field<NT>         Field;
                 typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
                         size_t d=_points[0].size();
@@ -324,7 +346,13 @@ class FastHashedDeterminant{
                                       LinBox::RingCategories::RationalTag(),
                                       LinBox::Method::Hybrid());
                         return det;
+        }
 #else
+        inline NT compute_determinant(const Index &idx)
+        #ifndef USE_HASHED_DETERMINANTS
+        const
+        #endif
+        {
                 Index idx2;
                 size_t n=idx.size();
                 for(size_t i=1;i<n;++i)
@@ -340,12 +368,6 @@ class FastHashedDeterminant{
                         idx2[i]=idx[i];
                 }
                 return det;
-#endif
-        }
-#else
-        inline NT compute_determinant(const Index &idx){
-                CGAL_error("not implemented");
-                return NT(0);
         }
 #endif
 
