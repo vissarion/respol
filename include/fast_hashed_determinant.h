@@ -14,9 +14,9 @@
 #include <ctime>
 #endif
 #ifdef USE_LINBOX_DET
-#include <CGAL/LinBox/mpq_class_field.h>
-#include <CGAL/LinBox/dense_matrix.h>
-#include <linbox/solutions/det.h>
+//#include <CGAL/LinBox/mpq_class_field.h>
+//#include <CGAL/LinBox/dense_matrix.h>
+//#include <linbox/solutions/det.h>
 #endif
 
 // FastHashedDeterminant constructs a big matrix of columns and provides

@@ -1,6 +1,24 @@
 # some simple instructions
+# 
 
-To compile the sources we assume you have installed the CGAL library.
+1. To compile the sources you have installed first the feature 
+Triangulation of CGAL library. i.e.
+
+$ svn checkout --username YOURUSERNAME 
+https://scm.gforge.inria.fr/svn/cgal/branches/features/Triangulation-higher_dimensions-odevil_shornus
+
+and then 
+
+$ cmake .
+$ make 
+$ make install
+
+if you don't have access to scm.gforge.inria.fr contact us.
+
+2. Now you can get the sources for Resultant Polytope computation
+
+$ svn co https://respol.svn.sourceforge.net/svnroot/respol respol
+
 Then you can go to examples directory and run:
 
 $ cmake .
@@ -11,4 +29,4 @@ directory. For example you can run
 
 $ ./res_enum_d_notopcom < inputs/cayley4_small.tmp
 
-and wait ;)
+and wait for the result ;)

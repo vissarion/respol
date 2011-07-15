@@ -301,6 +301,7 @@ public:
  * TODO: store the axis-aligned subspace that was found in order to avoid
  * re-searching for it for subsequent calls to operator()
  */
+ 
 template <class R>
 class Coaffine_orientationCd
 { 
@@ -377,6 +378,7 @@ public:
         return COPLANAR;
     }
 };
+
 
 template <class R>
 class Side_of_oriented_sphereCd

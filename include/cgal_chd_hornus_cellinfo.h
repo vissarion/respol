@@ -123,7 +123,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset, std::vector<int>& m
 	//TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 	D=d;
 	CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
-  //PD = D+1;				//this is the dimension of the projection
+  PD = D+1;				//this is the dimension of the projection
 	if (d != D){
 		std::cout << "Not matching dimensions of input and compiled program!" << std::endl;
 		exit(-1);

@@ -23,20 +23,20 @@ if ( CGAL_FOUND )
 
 	# uncomment to use hacked kernel for hashed determinants
   include_directories (BEFORE ../include)
-  include_directories (BEFORE /home/vissarion/src/LinBox/include)
-  include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
-  include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
+  #include_directories (BEFORE /home/vissarion/src/LinBox/include)
+  #include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
+  #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
   
-  add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
 
-  link_libraries("lapack")
-  link_libraries("givaro")
+  #link_libraries("lapack")
+  #link_libraries("givaro")
     
-  create_single_source_cgal_program( "res_enum_d.cpp" )
+  create_single_source_cgal_program("res_enum_d.cpp" )
 	
 else()
   
