@@ -1,16 +1,16 @@
-# some simple instructions
-# 
+Some simple instructions
+---- ------ ------------
 
-1. To compile the sources you have installed first the feature 
+1. To compile the sources you have installed first the feature
 Triangulation of CGAL library. i.e.
 
-$ svn checkout --username YOURUSERNAME 
+$ svn checkout --username YOURUSERNAME
 https://scm.gforge.inria.fr/svn/cgal/branches/features/Triangulation-higher_dimensions-odevil_shornus
 
-and then 
+and then
 
 $ cmake .
-$ make 
+$ make
 $ make install
 
 if you don't have access to scm.gforge.inria.fr contact us.
@@ -22,11 +22,24 @@ $ svn co https://respol.svn.sourceforge.net/svnroot/respol respol
 Then you can go to examples directory and run:
 
 $ cmake .
-$ make 
+$ make
 
-Then you can test the code with some inputs from the examples/input 
-directory. For example you can run 
+Then you can test the code with some inputs from the examples/input
+directory. For example you can run
 
 $ ./res_enum_d_notopcom < inputs/cayley4_small.tmp
 
 and wait for the result ;)
+
+
+Useful compilation flags
+------ ----------- -----
+
+Compilation flags are set in CMakeLists.txt. They are:
+- USE_LINBOX_DET: use LinBox instead of the Laplace expansion algorithm for
+  computing determinants (unset by default),
+- HASH_STATISTICS: collect and print statistics on hashed determinants
+  (unset by default),
+- USE_HASHED_DETERMINANTS: no need to explain this (set by default),
+- USE_HACKED_KERNEL_ORIENTATION: this activates the hack to use hashed
+  determinants inside CGAL's Triangulation package (set by default).
