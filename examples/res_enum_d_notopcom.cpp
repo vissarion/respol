@@ -26,7 +26,6 @@ const int D = 3;      	 	// this is the dimension of the supports
 const int CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
 const int PD = D+1;				// this is the dimension of the projection
 
-#define PRINT_INFO
 #include <../include/cgal_chd_notopcom.h>
 
 

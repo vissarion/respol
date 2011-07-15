@@ -30,7 +30,6 @@ int PD;				//this is the dimension of the projection
 //int vec[]={0,1,2,10,11,};
 //int PD = 6;//sizeof(vec) / sizeof(int);				
 
-#define PRINT_INFO
 //#include <../include/cgal_chd.h>
 //#include <../include/cgal_chd_hornus.h>
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>

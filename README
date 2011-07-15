@@ -36,6 +36,8 @@ Useful compilation flags
 ------ ----------- -----
 
 Compilation flags are set in CMakeLists.txt. They are:
+- PRINT_INFO: print information about what the algorithm is doing (set by
+  default),
 - USE_LINBOX_DET: use LinBox instead of the Laplace expansion algorithm for
   computing determinants (unset by default),
 - HASH_STATISTICS: collect and print statistics on hashed determinants

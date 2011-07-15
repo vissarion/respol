@@ -28,6 +28,7 @@ if ( CGAL_FOUND )
   #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
   
   #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
