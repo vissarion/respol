@@ -32,9 +32,9 @@
 #include <ctime>
 #endif
 #ifdef USE_LINBOX_DET
-//#include <CGAL/LinBox/mpq_class_field.h>
-//#include <CGAL/LinBox/dense_matrix.h>
-//#include <linbox/solutions/det.h>
+#include <CGAL/LinBox/mpq_class_field.h>
+#include <CGAL/LinBox/dense_matrix.h>
+#include <linbox/solutions/det.h>
 #endif
 
 // FastHashedDeterminant constructs a big matrix of columns and provides
@@ -197,7 +197,6 @@ class FastHashedDeterminant{
                 return (result==_points.end()?-1:result-_points.begin());
         }
 
-
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
@@ -249,10 +248,14 @@ class FastHashedDeterminant{
                 assert(idx2.size()==idx.size()-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=(_points[idx[i]][n-1]*determinant(idx2));
-                        else
-                                det-=(_points[idx[i]][n-1]*determinant(idx2));
+                        if(_points[idx[i]][n-1]){
+                                if((i+n)%2)
+                                        det+=(_points[idx[i]][n-1]*
+                                              determinant(idx2));
+                                else
+                                        det-=(_points[idx[i]][n-1]*
+                                              determinant(idx2));
+                        }
                         // update the index array
                         idx2[i]=idx[i];
                 }
@@ -378,10 +381,14 @@ class FastHashedDeterminant{
                 assert(idx2.size()==idx.size()-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=(_points[idx[i]][n-1]*determinant(idx2));
-                        else
-                                det-=(_points[idx[i]][n-1]*determinant(idx2));
+                        if(_points[idx[i]][n-1]!=0){
+                                if((i+n)%2)
+                                        det+=(_points[idx[i]][n-1]*
+                                              determinant(idx2));
+                                else
+                                        det-=(_points[idx[i]][n-1]*
+                                              determinant(idx2));
+                        }
                         // update the index array
                         idx2[i]=idx[i];
                 }
