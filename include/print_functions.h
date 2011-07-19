@@ -115,29 +115,74 @@ void print_res_vertices_with_index(const Triang &Res){
 }
 
 template <class Triang>
-void print_res_vertices(const Triang &Res){
+void print_res_vertices(const Triang &Res,
+												std::ostream& os){
   // print the vertices of the res polytope
   int number_of_vertices = 0;
   typedef typename Triang::Vertex_const_iterator        VCI;
   typedef typename Triang::Point_d                      P;
   typedef typename P::Cartesian_const_iterator          PCCI;
-  //std::cout << "dim=" << Res.current_dimension() << std::endl;
+  //os << "dim=" << Res.current_dimension() << std::endl;
   for (VCI vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
-    std::cout << "[";
+    os << "[";
     for (PCCI cit=vit->point().cartesian_begin();
          cit != vit->point().cartesian_end();
          cit++){
-      std::cout << *cit;
+      os << *cit;
       if (cit - vit->point().cartesian_begin() != vit->point().dimension()-1)
-        std::cout << ",";
+        os << ",";
     }
-    //std::cout << "|" << vit->point().index();
-    std::cout << "]";
+    //os << "|" << vit->point().index();
+    os << "]";
     if (number_of_vertices++ != Res.number_of_vertices())
-      std::cout << ",";
+      os << ",";
   }
-  std::cout << std::endl;
+  os << std::endl;
 }
+
+// use maple to compute the number of extreme vertices of the 
+// Resultant polytope
+template <class Triang>
+int compute_extreme_res_vertices_maple(const Triang &Res){
+	// write a file with maple commands that compute the extreme vertices
+	std::ofstream outfile;
+  outfile.open("maple_ch.mpl");
+  outfile << "with(convex):" << std::endl;
+  outfile << "points:=";
+	print_res_vertices(Res,outfile);
+	outfile << ":" << std::endl;
+	outfile << "P1 := convhull(points);" << std::endl;
+	outfile << "nops(vertices(P1));" << std::endl;
+	outfile.close();
+	
+	// execute maple commands written in the previous file
+	// and redirect the result in a new file
+	std::cout << "Executing maple..." << std::endl;
+	if (std::system("/opt/maple13/bin/maple maple_ch.mpl > 			maple_ch_output.txt")){
+		std::cout << "Unable to execute command" << std::endl; 
+		exit(1);
+	}
+	// read the file of the results
+	std::ifstream infile;
+  infile.open("maple_ch_output.txt");
+  std::string line;
+  std::vector<std::string> lines;
+  if (infile.is_open())
+  {
+    while ( infile.good() )
+    {
+      std::getline(infile,line);
+      lines.push_back(line);
+    }
+    infile.close();
+  }
+  else std::cout << "Unable to open file" << std::endl; 
+	// the number of vertices is in the 5-th line from the end
+	int n = atoi(lines[lines.end()-lines.begin()-5].c_str());
+	
+	return n;
+}
+	
 
 template <class Triang>
 void print_res_facets_number(const Triang &Res){
@@ -193,6 +238,7 @@ template <class Vol>
 void print_statistics(int numoftriangs,
                       int numoftriangs2,
                       int numofvertices,
+                      int numofextremevertices,
                       double timeall,
                       const Vol &volume){
   std::cout << std::endl;
@@ -200,7 +246,10 @@ void print_statistics(int numoftriangs,
             << numoftriangs+numoftriangs2 << " ("
             << numoftriangs << "+" << numoftriangs2
             << ")" << std::endl;
-  std::cout << "Projected Res vertices \t\t\t" << numofvertices << std::endl;
+  std::cout << "Projected Res vertices (extreme) \t\t" 
+            << numofvertices 
+            << "(" << numofextremevertices << ")"
+            << std::endl;
   std::cout << "Time overall   \t\t\t\t" << timeall << std::endl;
   std::cout << "Volume   \t\t\t\t" << volume
             << " ~ " <<  CGAL::to_double(volume) << std::endl;
@@ -212,6 +261,7 @@ void print_statistics_small(int Cdim,
                             int num_of_input_points,
                             int numoftriangs,
                             int numofvertices,
+                            int numofextremevertices,
                             double timeall,
                             const Vol &volume){
   std::cout << Cdim << " "
@@ -219,6 +269,7 @@ void print_statistics_small(int Cdim,
             << num_of_input_points << " "
             << numoftriangs  << " "
             << numofvertices  << " "
+            << numofextremevertices << " "
             << timeall << " "
             << volume  << " "
             << std::endl;

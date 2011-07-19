@@ -84,25 +84,29 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 
 	// print the result i.e. the proj of the Resultant polytope
-	print_res_vertices(Res);
+	//print_res_vertices(Res,std::cout);
 
 	//print_res_facets_number(Res);
 
 	// print some statistics
-	//print_statistics(num_of_triangs.first,
-	//                 num_of_triangs.second,
-	//                 Res.number_of_vertices(),
-	//                 tstopall-tstartall,
-	//                 volume(Res,Pdets));
-
-	print_statistics_small(CD-1,
+	#ifdef PRINT_INFO
+	  print_statistics(num_of_triangs.first, 
+	                 num_of_triangs.second,
+	                 Res.number_of_vertices(), 
+	                 compute_extreme_res_vertices_maple(Res), 
+	                 tstopall-tstartall,
+	                 volume(Res,Pdets));
+	#else
+	  print_statistics_small(CD-1, 
 												 PD,
 												 pointset.size(),
 												 num_of_triangs.first+num_of_triangs.second,
 												 Res.number_of_vertices(),
+												 compute_extreme_res_vertices_maple(Res), 
 												 tstopall-tstartall,
-	//											 volume(Res,Pdets));
-	         0);
+	//										 volume(Res,Pdets));
+								         0);
+	#endif
 	//Pdets.print_matrix(cout);
 
 	return 0;
