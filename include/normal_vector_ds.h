@@ -20,10 +20,8 @@
 #define NORMAL_VECTOR_DS_H
 
 #include <vector>
-#include <set>
+//#include <set>
 #include <CGAL/Random.h>
-
-using namespace std;
 
 // comparison between data, needed to keep them sorted!
 template <class V>
@@ -39,15 +37,15 @@ struct lv_compare
 };
 
 template <class V, class DT>
-//class Normal_Vector_ds : public set<V,lv_compare<V> >
-class Normal_Vector_ds : public vector<V>
+//class Normal_Vector_ds : public std::set<V,lv_compare<V> >
+class Normal_Vector_ds : public std::vector<V>
 {
 private:
 
   // typedefs
   typedef V                                   data;
-  //typedef set<V,lv_compare<V> >             base;
-  typedef vector<V>                           base;
+  //typedef std::set<V,lv_compare<V> >          base;
+  typedef std::vector<V>                      base;
   typedef typename base::const_iterator       base_const_iterator;
 
 private:
@@ -65,10 +63,10 @@ public:
     int base=sizeof(vec)/sizeof(DT);
 
     for (int i=0; i<pow(base,PD); ++i){
-      vector<DT> extreme_point;
-      vector<int> v=int2vectord(i,base,PD);
+      std::vector<DT> extreme_point;
+      std::vector<int> v=int2vectord(i,base,PD);
       //copy(v.begin(),v.end(),ostream_iterator<int>(std::cout," "));
-      for (vector<int>::iterator it=v.begin(); it!=v.end(); it++){
+      for (std::vector<int>::iterator it=v.begin(); it!=v.end(); it++){
         extreme_point.push_back(vec[*it]);
         //std::cout << vec[*it] << " ";
       }
@@ -98,7 +96,7 @@ public:
     int vec[]={-1,1};
     for (int j=0; j<2; j++){
       for (int i=0; i<PD; i++){
-        vector<int> extreme_point(PD,0);
+        std::vector<int> extreme_point(PD,0);
         extreme_point[i]=vec[j];
         //for (int i=0; i<PD; i++){
         //  std::cout<<extreme_point[i]<<" ";
@@ -134,13 +132,13 @@ public:
     std::cout<<"current normal data structure: "<<this->size()<<std::endl;
     for (base_const_iterator it=this->begin(); it!=this->end(); it++)
       std::cout<<*it<<" ";
-    std:cout<<std::endl;
+    std::cout<<std::endl;
   }
 
 private:
 
-  static vector<int> int2vectord(int k, int vash, int d){
-    vector<int> b;
+  static std::vector<int> int2vectord(int k, int vash, int d){
+    std::vector<int> b;
     while (k!=0){
       b.insert(b.begin(),k%vash);
       k=k/vash;
@@ -150,8 +148,10 @@ private:
     return b;
   }
 
-  static bool is_zero(const vector<DT> &v){
-    for (typename vector<DT>::const_iterator it=v.begin()+1;it!=v.end();it++){
+  static bool is_zero(const std::vector<DT> &v){
+    for (typename std::vector<DT>::const_iterator it=v.begin()+1;
+         it!=v.end();
+         it++){
       if (*it != DT(0))
         return false;
     }
