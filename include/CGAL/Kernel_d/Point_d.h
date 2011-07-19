@@ -94,8 +94,8 @@ public:
         return _hash;
   }
 
-  void set_hash(FHD *h){
-        _hash=h;
+  void set_hash(const FHD *h){
+        _hash=(FHD*)h;
   }
 
   // TODO: for the moment, we don't care about _index and _hash when doing
