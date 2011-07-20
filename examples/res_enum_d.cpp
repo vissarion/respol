@@ -88,26 +88,31 @@ int main(const int argc, const char** argv) {
 
 	//print_res_facets_number(Res);
 
-	// print some statistics
-	#ifdef PRINT_INFO
-	  print_statistics(num_of_triangs.first, 
-	                 num_of_triangs.second,
-	                 Res.number_of_vertices(), 
-	                 compute_extreme_res_vertices_maple(Res), 
-	                 tstopall-tstartall,
-	                 volume(Res,Pdets));
-	#else
-	  print_statistics_small(CD-1, 
-												 PD,
-												 pointset.size(),
-												 num_of_triangs.first+num_of_triangs.second,
-												 Res.number_of_vertices(),
-												 compute_extreme_res_vertices_maple(Res), 
-												 tstopall-tstartall,
-	//										 volume(Res,Pdets));
-								         0);
-	#endif
-	//Pdets.print_matrix(cout);
+  // print some statistics
+  #ifdef PRINT_INFO
+  print_statistics(num_of_triangs.first, 
+                   num_of_triangs.second,
+                   Res.number_of_vertices(), 
+                   compute_extreme_res_vertices_maple(Res), 
+                   tstopall-tstartall, // overall time
+                   dets.get_determinant_time()+
+                     Pdets.get_determinant_time(), // determinant time
+                   volume(Res,Pdets));
+  #else
+  print_statistics_small(CD-1, 
+                         PD,
+                         pointset.size(),
+                         num_of_triangs.first+num_of_triangs.second,
+                         Res.number_of_vertices(),
+                         compute_extreme_res_vertices_maple(Res), 
+                         tstopall-tstartall, // overall time
+                         dets.get_determinant_time()+
+                           Pdets.get_determinant_time(), // determinant time
+                         //volume(Res,Pdets));
+                         0);
+  #endif
+  //Pdets.print_matrix(std::cout);
 
-	return 0;
+  return 0;
 }
+// vim: ts=2:expandtab

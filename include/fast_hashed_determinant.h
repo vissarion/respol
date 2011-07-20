@@ -61,6 +61,9 @@ class FastHashedDeterminant{
         // constructor for incremental det table
         // (for the space of the projection of the Resultant i.e. PD)
         FastHashedDeterminant():
+#ifdef LOG_DET_TIME
+        determinant_time(0),
+#endif
 #ifdef HASH_STATISTICS
         dimension(0),
         number_of_max_dimension_calls(0),
@@ -78,6 +81,9 @@ class FastHashedDeterminant{
 
         //
         FastHashedDeterminant(size_t columns):
+#ifdef LOG_DET_TIME
+        determinant_time(0),
+#endif
 #ifdef HASH_STATISTICS
         dimension(0),
         number_of_max_dimension_calls(0),
@@ -97,6 +103,9 @@ class FastHashedDeterminant{
         // (for the space of the lifted Cayley pointset i.e. CD)
         template <class Iterator>
         FastHashedDeterminant(Iterator begin,Iterator end):
+#ifdef LOG_DET_TIME
+        determinant_time(0),
+#endif
 #ifdef HASH_STATISTICS
         dimension(0),
         number_of_max_dimension_calls(0),
@@ -165,6 +174,15 @@ class FastHashedDeterminant{
 #endif
         }
 
+        // Returns the total time spent in determinant computations.
+        double get_determinant_time(){
+#ifdef LOG_DET_TIME
+                return (double)determinant_time/CLOCKS_PER_SEC;
+#else
+                return .0;
+#endif
+        }
+
         // This function sets a column of the matrix. This function must be
         // called before any determinant computation, since it will
         // invalidate the determinants which are hashed. The column i must
@@ -211,6 +229,11 @@ class FastHashedDeterminant{
                 }*/
                 if(idx.size()==1)
                         return _points[idx[0]][0];
+#ifdef LOG_DET_TIME
+                clock_t start_all;
+                if(idx.size()==_points[0].size())
+                        start_all=clock();
+#endif
 #ifdef HASH_STATISTICS
                 clock_t start;
                 if(idx.size()==dimension)
@@ -225,6 +248,10 @@ class FastHashedDeterminant{
                                 start=clock();
                         }
 #else
+#ifdef LOG_DET_TIME
+                        if(idx.size()==_points[0].size())
+                                determinant_time+=clock()-start_all;
+#endif
                         return
 #endif
                         (_determinants[idx]=compute_determinant(idx));
@@ -233,22 +260,35 @@ class FastHashedDeterminant{
                                 full_determinant_time+=(clock()-start);
 #endif
                 }
+#ifdef LOG_DET_TIME
+                if(idx.size()==_points[0].size())
+                        determinant_time+=clock()-start_all;
+#endif
                 return _determinants[idx];
         }
 #else // USE_HASHED_DETERMINANTS
         // TODO: we can use here gaussian elimination or any O(n^3)
         // factorization algorithm
-        NT determinant(const Index &idx)const{
+        NT determinant(const Index &idx)
+        #ifndef LOG_DET_TIME
+        const
+        #endif
+        {
                 size_t n=idx.size();
                 if(n==1)
                         return _points[idx[0]][0];
+#ifdef LOG_DET_TIME
+                clock_t start_all;
+                if(idx.size()==_points[0].size())
+                        start_all=clock();
+#endif
                 Index idx2;
                 for(size_t i=1;i<n;++i)
                         idx2.push_back(idx[i]);
                 assert(idx2.size()==idx.size()-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
-                        if(_points[idx[i]][n-1]){
+                        if(_points[idx[i]][n-1]!=0){
                                 if((i+n)%2)
                                         det+=(_points[idx[i]][n-1]*
                                               determinant(idx2));
@@ -259,6 +299,10 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                 }
+#ifdef LOG_DET_TIME
+                if(idx.size()==_points[0].size())
+                        determinant_time+=clock()-start_all;
+#endif
                 return det;
         }
 #endif // USE_HASHED_DETERMINANTS
@@ -269,6 +313,11 @@ class FastHashedDeterminant{
 #ifdef HASH_STATISTICS
                 number_of_hom_determinants+=1;
 #endif
+#ifdef LOG_DET_TIME
+                clock_t start_all,det_old;
+                start_all=clock();
+                det_old=determinant_time;
+#endif
                 if(_h_determinants.count(idx)!=0){
                         assert(_h_determinants.count(idx)==1);
                         return _h_determinants[idx];
@@ -278,8 +327,7 @@ class FastHashedDeterminant{
 #endif
                 Index idx2;
                 size_t n=idx.size();
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
+                for(size_t i=1;i<n;++i) idx2.push_back(idx[i]);
                 assert(idx2.size()==n-1);
                 NT det(0);
                 for(size_t i=0;i<n;++i){
@@ -293,11 +341,19 @@ class FastHashedDeterminant{
 #ifdef USE_HASHED_DETERMINANTS
                 _h_determinants[idx]=det;
 #endif
+#ifdef LOG_DET_TIME
+                determinant_time=det_old+(clock()-start_all);
+#endif
                 return det;
         }
 
         NT homogeneous_determinant(const Index &idx,const Row &r){
                 assert(idx.size()==r.size());
+#ifdef LOG_DET_TIME
+                clock_t start_all,det_old;
+                start_all=clock();
+                det_old=determinant_time;
+#endif
                 Index idx2;
                 size_t n=idx.size();
                 for(size_t i=1;i<n;++i)
@@ -314,25 +370,29 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                 }
+#ifdef LOG_DET_TIME
+                determinant_time=det_old+(clock()-start_all);
+#endif
                 return det;
         }
 
         // This function prints the full matrix to an output stream.
         std::ostream& print_matrix(std::ostream &o)const{
-                for(size_t i=0;i<_points.size();++i){
+                size_t s=_points[0].size();
+                for(size_t row=0;row<s;++row){
                         o<<"[ ";
-                        for(size_t j=0;j<_points[i].size();++j)
-                                o<<_points[i][j]<<' ';
+                        for(size_t i=0;i<_points.size();++i)
+                                o<<_points[i][row]<<' ';
                         o<<"]\n";
                 }
                 return o;
         }
 
-#ifdef HASH_STATISTICS
-        // This function prints a submatrix, formed by the columns whose
-        // indices are in idx, to an output stream.
+        // This function prints a square submatrix, formed by the first
+        // elements of the columns whose indices are in idx, to an output
+        // stream.
         std::ostream& print_submatrix(const Index &idx,std::ostream &o)const{
-                for(size_t row=0;row<dimension;++row){
+                for(size_t row=0;row<idx.size();++row){
                         o<<"[ ";
                         for(Index::const_iterator i=idx.begin();
                             i!=idx.end();
@@ -342,7 +402,7 @@ class FastHashedDeterminant{
                 }
                 return o;
         }
-#endif
+
         private:
         // This function computes the determinant of a submatrix of
         // _points. The parameter idx is a vector of indices of the indices
@@ -401,7 +461,7 @@ class FastHashedDeterminant{
         // is also a vector of indices of r, idxr, which specifies the
         // elements of r used to compute the determinant. The size of idx
         // and idxr must be dim+1.
-        NT enlarged_homogeneous_determinant(const Index &idx,
+        /*NT enlarged_homogeneous_determinant(const Index &idx,
                                             const Row &r,
                                             const Index &idxr){
                 assert(idx.size()==idxr.size());
@@ -422,13 +482,16 @@ class FastHashedDeterminant{
                         idx2[i]=idx[i];
                 }
                 return det;
-        }
+        }*/
 
         private:
         Matrix _points;
         Determinants _determinants;
         HDeterminants _h_determinants;
         unsigned long number_of_hashed_determinants;
+#ifdef LOG_DET_TIME
+        clock_t determinant_time;
+#endif
 #ifdef HASH_STATISTICS
         public:
         unsigned dimension;
