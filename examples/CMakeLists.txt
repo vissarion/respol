@@ -23,6 +23,7 @@ if ( CGAL_FOUND )
 
   # uncomment to use hacked kernel for hashed determinants
   include_directories (BEFORE ../include)
+  # uncomment when using linbox
   #include_directories (BEFORE /home/vissarion/src/LinBox/include)
   #include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
   #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
@@ -34,7 +35,12 @@ if ( CGAL_FOUND )
   add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
+  add_definitions(${CMAKE_CXX_FLAGS}
+                  "-DMAPLE_EXECUTABLE=/opt/maple13/bin/maple")
 
+  # uncomment when using linbox
+  #link_libraries("blas")
   #link_libraries("lapack")
   #link_libraries("givaro")
 

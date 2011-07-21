@@ -23,6 +23,7 @@
 #include <fstream>
 #include <vector>
 #include <set>
+#include <string>
 
 /////////////////////////////////////////////////////////////////
 // overload of << operators for various types
@@ -144,6 +145,7 @@ void print_res_vertices(const Triang &Res,
 // Resultant polytope
 template <class Triang>
 int compute_extreme_res_vertices_maple(const Triang &Res){
+#ifdef USE_MAPLE_CONVEX_HULL
   // write a file with maple commands that compute the extreme vertices
   std::ofstream outfile;
   outfile.open("maple_ch.mpl");
@@ -158,7 +160,13 @@ int compute_extreme_res_vertices_maple(const Triang &Res){
   // execute maple commands written in the previous file
   // and redirect the result in a new file
   std::cout << "Executing maple..." << std::endl;
-  if (std::system("/opt/maple13/bin/maple maple_ch.mpl >      maple_ch_output.txt")){
+  #define QUOTEME_(x) #x
+  #define QUOTEME(x) QUOTEME_(x)
+  std::string command=QUOTEME(MAPLE_EXECUTABLE);
+  command+=" maple_ch.mpl > maple_ch_output.txt";
+  #undef QUOTEME
+  #undef QUOTEME_
+  if (std::system(command.c_str())){
     std::cout << "Unable to execute command" << std::endl;
     exit(1);
   }
@@ -181,6 +189,9 @@ int compute_extreme_res_vertices_maple(const Triang &Res){
   int n = atoi(lines[lines.end()-lines.begin()-5].c_str());
 
   return n;
+#else
+  return -1;
+#endif
 }
 
 
