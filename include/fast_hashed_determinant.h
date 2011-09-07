@@ -19,6 +19,14 @@
 #ifndef FAST_HASHED_DETERMINANT_H
 #define FAST_HASHED_DETERMINANT_H
 
+// Check Boost version. We use boost::functional and boost::unordered,
+// which appeared in versions 1.16.0 and 1.36.0, respectively. We give an
+// error if Boost version is older than 1.36.0.
+#include <boost/version.hpp>
+#if BOOST_VERSION < 103600
+#error This needs Boost 1.36 or newer
+#endif
+
 #ifndef USE_HASHED_DETERMINANTS
 #undef HASH_STATISTICS
 #endif
