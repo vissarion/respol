@@ -120,29 +120,95 @@ typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
 /////////////////////////////////////////////////////////////////
 // math
-//Field factorial(Field n)
+//inline Field factorial(Field n)
 //{
 //  return (n == Field(1) || n == Field(0)) ? Field(1) : factorial(n - 1) * n;
 //}
 
-Field factorial(Field n)
+inline Field factorial(Field n)
 {
   return 1;
 }
 
+//////////////// default projections
+
+std::vector<int> proj_first_coord(const int d,
+                                  int m,
+                                  const std::vector<int>& mi){
+	//project at the first coordinate of each mi
+	std::vector<int> proj(d);
+	proj[0]=0;
+	for (int i=1; i<d; i++){
+		int mm=0;
+		for (int j=0; j<i; j++)
+			mm+=mi[j];
+		proj[i]=mm;
+		//std::cout << mm << " ";
+	}
+	return proj;
+}
+
+std::vector<int> proj_all_from_last_support(const int d,
+                                            int m,
+                                            const std::vector<int>& mi){
+	//project at all the coordinates of the last support
+	std::vector<int> proj(d);
+	int mm=0;
+	for (std::vector<int>::const_iterator mit=mi.begin();
+       mit!=mi.end()-1;
+       mit++)
+		mm+=*mit;
+	int j=0;
+	for (int i=mm; i<mm+*(mi.end()-1); i++){
+		proj[j++]=i;
+		//std::cout << mm << " ";
+	}
+	std::cout << proj << std::endl;
+	return proj;
+}
+
+std::vector<int> proj_more_coord(const int d,
+                                 int m,
+                                 const std::vector<int>& mi){
+	//project at the first coordinate of each mi
+	int nplus1 = mi.size();
+	std::vector<int> proj_first = proj_first_coord(nplus1,m,mi);
+	std::vector<int> proj;
+	int a = (d/nplus1)-1;
+	int b = d%nplus1;
+	//std::cout << a << b;
+	for (std::vector<int>::iterator pit=proj_first.begin();
+			 pit!=proj_first.end(); pit++){
+		proj.push_back(*pit);
+		int i=0;
+		for(; i<a; i++)
+			proj.push_back((*pit)+i+1);
+		if (pit-proj_first.begin() < b)
+			proj.push_back((*pit)+i+1);
+	}
+	return proj;
+}
+
+std::vector<int> proj_all(int m){
+	//project at all the coordinates 
+	std::vector<int> proj;
+	for (int i=0; i<m; i++)
+		proj.push_back(i);
+	return proj;
+}
 
 ///////////////////////////////////////////////////////////
 // input functions
 
 int cayley_trick(std::vector<std::vector<Field> >& pointset,
                  std::vector<int>& mi,
+                 std::vector<int>& proj,
                  int& m){
 	int d;
 	std::cin >> d;
 	//TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 	D=d;
 	CD = 2*D+1;	   	// this is the Cayley space + 1 for lifting
-  PD = D+1;				//this is the dimension of the projection
 	if (d != D){
 		std::cout << "Not matching dimensions of input and compiled program!" << std::endl;
 		exit(-1);
@@ -156,11 +222,54 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset,
 		mi.push_back(mi_temp);
 	}
 	if (mi.size() != d+1){
-		std::cout << "mi.size() != d+1. The number of polynomials must me one more than the dimansion!" << std::endl;
+		std::cout << "mi.size() != d+1. The number of polynomials must me one more than the dimension!" << std::endl;
 		exit(-1);
 	}
 	//std::cout<<mi<<std::endl;
-	// compute cayley vector to augment pointset
+	
+	char temp;
+	std::string num;
+	int numInt;
+	bool start=false;
+	//ignore the first blanks and search for '|'
+	// or '\n'
+	if (temp != ' '){
+		while(temp != '|' && temp != '\n'){
+		  temp = std::cin.get();
+		}
+	}
+	// the projection is given by the input file
+	if (temp == '|') {
+		do{
+			temp = std::cin.get();
+			// start collecting info in the first non-blank non-'\n' character
+			if (temp!=' ' && temp!='\n')
+				start=true;
+			if ((temp == ' ' || temp == '\n') && start){
+				std::stringstream numStream(num);
+				numStream >> numInt;
+				proj.push_back(numInt);
+				num.clear();
+				while(temp == ' '){
+				  temp = std::cin.get();
+			  }
+			}		
+			num.push_back(temp);
+		}while(temp != '\n');	
+		// if there is nothing after '|'
+		if (!start){
+			proj = proj_all(m);
+		}
+	} 
+	// use a default projection
+	else {
+		proj = proj_first_coord(D+1,m,mi);
+	}
+	std::cout<<proj<<std::endl;
+	PD = proj.size();				//this is the dimension of the projection
+	sort(proj.begin(),proj.end());
+	
+		// compute cayley vector to augment pointset
 	if (mi.size() != d+1){
 		std::cout << "Input error" << std::endl;
 		exit(-1);
@@ -224,64 +333,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset,
   return 0;
 }
 
-//////////////// projections
 
-std::vector<int> proj_first_coord(const int d,
-                                  int m,
-                                  const std::vector<int>& mi){
-	//project at the first coordinate of each mi
-	std::vector<int> proj(d);
-	proj[0]=0;
-	for (int i=1; i<d; i++){
-		int mm=0;
-		for (int j=0; j<i; j++)
-			mm+=mi[j];
-		proj[i]=mm;
-		//std::cout << mm << " ";
-	}
-	return proj;
-}
-
-std::vector<int> proj_all_from_last_support(const int d,
-                                            int m,
-                                            const std::vector<int>& mi){
-	//project at all the coordinates of the last support
-	std::vector<int> proj(d);
-	int mm=0;
-	for (std::vector<int>::const_iterator mit=mi.begin();
-       mit!=mi.end()-1;
-       mit++)
-		mm+=*mit;
-	int j=0;
-	for (int i=mm; i<mm+*(mi.end()-1); i++){
-		proj[j++]=i;
-		//std::cout << mm << " ";
-	}
-	std::cout << proj << std::endl;
-	return proj;
-}
-
-std::vector<int> proj_more_coord(const int d,
-                                 int m,
-                                 const std::vector<int>& mi){
-	//project at the first coordinate of each mi
-	int nplus1 = mi.size();
-	std::vector<int> proj_first = proj_first_coord(nplus1,m,mi);
-	std::vector<int> proj;
-	int a = (d/nplus1)-1;
-	int b = d%nplus1;
-	//std::cout << a << b;
-	for (std::vector<int>::iterator pit=proj_first.begin();
-			 pit!=proj_first.end(); pit++){
-		proj.push_back(*pit);
-		int i=0;
-		for(; i<a; i++)
-			proj.push_back((*pit)+i+1);
-		if (pit-proj_first.begin() < b)
-			proj.push_back((*pit)+i+1);
-	}
-	return proj;
-}
 
 /*
 std::vector<int> proj_more_coord(const int d,
@@ -701,26 +753,47 @@ std::vector<Field> compute_res_vertex(
 	normal_list_d.pop_back();
 	//std::cout << "normal vector:" << nli << std::endl;
 
-	// make a copy of T
-	CTriangulation Tl(T);
-
-	// outer normal vector --> upper hull projection
-  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false);
-	//print_res_vertices(Tl);
-
-	// project Tl i.e. triangulation
-  int dcur = Tl.current_dimension();
-  std::vector<Field> new_vertex =
-    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
-
-  // TODO: destroy here!
-  Tl.clear();
-
-  #ifdef PRINT_INFO
-	  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
-	#endif
-
-  return new_vertex;
+	if (pointset.size() == proj.size()){
+		// make a new T
+		CTriangulation Tl(CD);
+		// outer normal vector --> upper hull projection
+	  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false);
+		//print_res_vertices(Tl);
+	
+		// project Tl i.e. triangulation
+	  int dcur = Tl.current_dimension();
+	  std::vector<Field> new_vertex =
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
+	
+	  // TODO: destroy here!
+	  Tl.clear();
+	
+	  #ifdef PRINT_INFO
+		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		#endif
+	
+	  return new_vertex;	
+	} else {
+		// make a copy of T
+		CTriangulation Tl(T);
+		// outer normal vector --> upper hull projection
+	  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false);
+		//print_res_vertices(Tl);
+	
+		// project Tl i.e. triangulation
+	  int dcur = Tl.current_dimension();
+	  std::vector<Field> new_vertex =
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
+	
+	  // TODO: destroy here!
+	  Tl.clear();
+	
+	  #ifdef PRINT_INFO
+		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		#endif
+	
+	  return new_vertex;
+	}
 }
 
 std::vector<Field> compute_res_vertex2(
@@ -741,26 +814,48 @@ std::vector<Field> compute_res_vertex2(
 	//normal_list_d.pop_back();
 	//std::cout << "normal vector:" << nli << std::endl;
 
-	// make a copy of T
-	CTriangulation Tl(T);
-
-	// outer normal vector --> upper hull projection
-  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false);
-	//print_res_vertices(Tl);
-
-	// project Tl i.e. triangulation
-  int dcur = Tl.current_dimension();
-  std::vector<Field> new_vertex =
-    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
-
-  // TODO: destroy here!
-  Tl.clear();
-
-  #ifdef PRINT_INFO
-	  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
-	#endif
-
-  return new_vertex;
+	if (pointset.size() == proj.size()){
+		// make a new T
+		CTriangulation Tl(CD);
+		// outer normal vector --> upper hull projection
+	  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false);
+		//print_res_vertices(Tl);
+	
+		// project Tl i.e. triangulation
+	  int dcur = Tl.current_dimension();
+	  std::vector<Field> new_vertex =
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
+	
+	  // TODO: destroy here!
+	  Tl.clear();
+	
+	  #ifdef PRINT_INFO
+		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		#endif
+	
+	  return new_vertex;	
+	} else {
+		// make a copy of T
+		CTriangulation Tl(T);
+		// outer normal vector --> upper hull projection
+	  LiftingTriangulationDynamic(pointset,nli,proj,T,Tl,dets,false);
+		//print_res_vertices(Tl);
+	
+		// project Tl i.e. triangulation
+	  int dcur = Tl.current_dimension();
+	  std::vector<Field> new_vertex =
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false);
+	
+	  // TODO: destroy here!
+	  Tl.clear();
+	
+	  #ifdef PRINT_INFO
+		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		#endif
+	
+	  return new_vertex;
+	}
+	
 }
 
 
@@ -782,11 +877,13 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
   #endif
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
+  //normal_list_d.simple_initialize();
   normal_list_d.simple_initialize();
 
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors
   int minD = (PD>RD)?RD:PD;
+  //std::cout << "minD:"<<minD<<"PD:"<<PD<<std::endl;
   while(Res.current_dimension()<minD && !normal_list_d.empty()){
 		std::vector<Field> new_vertex =
       compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
@@ -849,7 +946,7 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
 }
 
 ////////////////////////////////////////////////////////////
-// the new (hopefully faster) algorithm
+// the algorithm
 std::pair<int,int> compute_res_faster(
         const std::vector<std::vector<Field> >& pointset,
         int m,

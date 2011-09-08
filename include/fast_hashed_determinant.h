@@ -230,8 +230,8 @@ class FastHashedDeterminant{
         // compute_determinant is called.
 #ifdef USE_HASHED_DETERMINANTS
         NT& determinant(const Index &idx){
-                /*if(number_of_hashed_determinants==10000000){
-                        std::cout<<"CLEAR HASH!"<<std::endl;
+                /*if(number_of_hashed_determinants==100000){
+                        std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
                         number_of_hashed_determinants=0;
                         _determinants.clear();
                 }*/

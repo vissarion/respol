@@ -9,7 +9,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4.5)
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 
 if ( COMMAND cmake_policy )
-  cmake_policy( SET CMP0003 NEW )
+#  cmake_policy( SET CMP0003 NEW )  
+  cmake_policy( SET CMP0005 NEW )  
 endif()
 
 find_package(CGAL QUIET COMPONENTS Core )
@@ -29,15 +30,17 @@ if ( CGAL_FOUND )
   #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
 
   #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
-  add_definitions(${CMAKE_CXX_FLAGS}
-                  "-DMAPLE_EXECUTABLE=/opt/maple13/bin/maple")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
+  
+  # MAPLE
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DMAPLE_EXECUTABLE=/workspace/maple13/bin/maple")
 
   # uncomment when using linbox
   #link_libraries("blas")

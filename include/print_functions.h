@@ -254,17 +254,17 @@ void print_statistics(int numoftriangs,
                       double timedet,
                       const Vol &volume){
   std::cout << std::endl;
-  std::cout << "Num of triangs enumed (init+augment)\t"
+  std::cout << "Num of triangs enumed (init+augment)\t\t\t\t"
             << numoftriangs+numoftriangs2 << " ("
             << numoftriangs << "+" << numoftriangs2
             << ")" << std::endl;
-  std::cout << "Projected Res vertices (extreme) \t\t"
+  std::cout << "Projected Res vertices (extreme; if maple enabled!) \t\t"
             << numofvertices
             << "(" << numofextremevertices << ")"
             << std::endl;
-  std::cout << "Time overall     \t\t\t\t" << timeall << std::endl;
-  std::cout << "Determinant time \t\t\t\t" << timedet << std::endl;
-  std::cout << "Volume   \t\t\t\t" << volume
+  std::cout << "Time overall     \t\t\t\t\t\t" << timeall << std::endl;
+  std::cout << "Determinant time \t\t\t\t\t\t" << timedet << std::endl;
+  std::cout << "Volume   \t\t\t\t\t\t\t" << volume
             << " ~ " <<  CGAL::to_double(volume) << std::endl;
 }
 

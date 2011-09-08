@@ -19,7 +19,7 @@
 #include <cassert>
 #include <ctime>
 
-// these have no meaning;  cayley_trick function will change them
+// these values have no meaning;  cayley_trick function will change them
 // according to the input
 int D;      	 	// this is the dimension of the supports
 int CD;	   	// this is the Cayley space + 1 for lifting
@@ -31,6 +31,7 @@ int PD;				//this is the dimension of the projection
 //#include <../include/cgal_chd_hornus.h>
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>
 #include <../include/cgal_chd_hornus_cellinfo.h>
+//#include <../include/cgal_chd_hornus_cellinfo_placing.h>
 //#include <../include/cgal_chd_hornus_cellinfo_with_cgal_det.h>
 
 //////////////////////////////////////////////////////////////////
@@ -45,17 +46,17 @@ int main(const int argc, const char** argv) {
 	// mi will be the cardinalities of the support sets
 	// n is sum{mi}
  	// construct an empty pointset
-	std::vector<int> mi;
- 	int n;
+	std::vector<int> mi,proj;
+	int n;
  	std::vector<std::vector<Field> > pointset;
 
 	// initialize all the above
  	// read input (pointset, mi, n), apply cayley trick
- 	cayley_trick(pointset, mi, n);
+ 	cayley_trick(pointset, mi, proj, n);
 
 	// this is the dimension of the resultant (and secondary) polytope
  	int RD = n - 2*D -1;
-
+  
 	// compute the big matrix
 	// you don't have to homogenize!
   HD dets(pointset.begin(),pointset.end());
@@ -66,7 +67,7 @@ int main(const int argc, const char** argv) {
 
 	// define the projection
 	// attention! proj SHOULD BE SORTED
-	std::vector<int> proj = proj_first_coord(PD,n,mi);
+	//std::vector<int> proj = proj_first_coord(PD,n,mi);
 	//std::vector<int> proj = proj_more_coord(PD,n,mi);
   //std::cout << proj << std::endl;
 	//std::vector<int> proj = full_proj(PD,n,mi);
@@ -84,19 +85,19 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 
 	// print the result i.e. the proj of the Resultant polytope
-	//print_res_vertices(Res,std::cout);
+	print_res_vertices(Res,std::cout);
 
 	//print_res_facets_number(Res);
 
   // print some statistics
   #ifdef PRINT_INFO
-  print_statistics(num_of_triangs.first, 
+  print_statistics (num_of_triangs.first, 
                    num_of_triangs.second,
                    Res.number_of_vertices(), 
                    compute_extreme_res_vertices_maple(Res), 
                    tstopall-tstartall, // overall time
                    dets.get_determinant_time()+
-                     Pdets.get_determinant_time(), // determinant time
+                   Pdets.get_determinant_time(), // determinant time
                    volume(Res,Pdets));
   #else
   print_statistics_small(CD-1, 
@@ -107,9 +108,8 @@ int main(const int argc, const char** argv) {
                          compute_extreme_res_vertices_maple(Res), 
                          tstopall-tstartall, // overall time
                          dets.get_determinant_time()+
-                           Pdets.get_determinant_time(), // determinant time
-                         //volume(Res,Pdets));
-                         0);
+                         Pdets.get_determinant_time(), // determinant time
+                         volume(Res,Pdets));
   #endif
   //Pdets.print_matrix(std::cout);
 
