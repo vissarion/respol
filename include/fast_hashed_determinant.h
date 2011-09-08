@@ -386,6 +386,8 @@ class FastHashedDeterminant{
 
         // This function prints the full matrix to an output stream.
         std::ostream& print_matrix(std::ostream &o)const{
+                if(!_points.size())
+                        return o;
                 size_t s=_points[0].size();
                 for(size_t row=0;row<s;++row){
                         o<<"[ ";
