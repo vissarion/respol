@@ -39,6 +39,8 @@
 
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
+
+// to generate initial normal vectors
 #include <../include/normal_vector_ds.h>
 
 // for indexed points

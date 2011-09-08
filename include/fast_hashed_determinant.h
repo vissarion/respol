@@ -165,20 +165,29 @@ class FastHashedDeterminant{
                 _points.size()<<" hashed points, of max dim "<<dimension<<
                 "\nnon-hom hash: "<<
                 _determinants.bucket_count()<<" buckets, "<<
-                nh_collisions<<" collisions in "<<nh_bad_buckets<<
+                nh_collisions<<" collisions (" << 
+                ((double)nh_collisions/(double)number_of_computed_determinants)*100 << 
+                "%) in "<<nh_bad_buckets<<
                 " buckets of max size "<<nh_biggest_bucket<<
                 "\nnon-hom determinants: computed "<<
                 number_of_computed_determinants<<" out of "<<
                 number_of_determinant_calls<<
+                "\n load_factor()="<<_determinants.load_factor()<<
+                ",max_load_factor()="<<_determinants.max_load_factor()<<
                 "\ntime in non-hom full-dim determinant computations: "<<
                 (double)full_determinant_time/CLOCKS_PER_SEC<<
                 " seconds\nhom hash: "<<
                 _h_determinants.bucket_count()<<" buckets, "<<
-                h_collisions<<" collisions in "<<h_bad_buckets<<
+                h_collisions<<" collisions (" << 
+                ((double)h_collisions/(double)number_of_computed_hom_determinants)*100<< 
+                "%) in "<<h_bad_buckets<<
                 " buckets of max size "<<h_biggest_bucket<<
                 "\nhom determinants: computed "<<
                 number_of_computed_hom_determinants<<
-                " out of "<<number_of_hom_determinants<<std::endl;
+                " out of "<<number_of_hom_determinants<<
+                "\n load_factor()="<<_h_determinants.load_factor()<<
+                ",max_load_factor()="<<_h_determinants.max_load_factor()<<
+                std::endl;
 #endif
         }
 
@@ -255,11 +264,11 @@ class FastHashedDeterminant{
                         if(idx.size()==dimension){
                                 start=clock();
                         }
-#else
 #ifdef LOG_DET_TIME
                         if(idx.size()==_points[0].size())
                                 determinant_time+=clock()-start_all;
 #endif
+#else
                         return
 #endif
                         (_determinants[idx]=compute_determinant(idx));

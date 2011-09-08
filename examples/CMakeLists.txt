@@ -30,7 +30,7 @@ if ( CGAL_FOUND )
   #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
 
   #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
@@ -48,6 +48,7 @@ if ( CGAL_FOUND )
   #link_libraries("givaro")
 
   create_single_source_cgal_program("res_enum_d.cpp" )
+  create_single_source_cgal_program("triang.cpp" )
 
 else()
 

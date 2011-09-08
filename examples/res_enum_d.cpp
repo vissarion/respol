@@ -86,7 +86,7 @@ int main(const int argc, const char** argv) {
 
 	// print the result i.e. the proj of the Resultant polytope
 	print_res_vertices(Res,std::cout);
-
+ 
 	//print_res_facets_number(Res);
 
   // print some statistics
