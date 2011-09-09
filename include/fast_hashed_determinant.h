@@ -456,14 +456,14 @@ class FastHashedDeterminant{
 				inline NT compute_determinant(const Index &idx)const{
 					int d = idx.size();
 					//std::cout << first-last << "|" << d << std::endl;
-					LA::Matrix M(d);
+					typename LA::Matrix M(d);
 					//std::vector<CPoint_d>::iterator s = first;
 					
 					for( int j = 0; j < d; ++j ){
 							//std::cout << *s << std::endl;
 							for( int i = 0; i < d; ++i ){
 									//std::cout << i << "," << j;
-									M(i,j) = _points[idx[i]];
+									M(i,j) = _points[idx[i]][j];
 									//std::cout << " -> " << M(i,j) << std::endl;
 							}
 					}
