@@ -45,6 +45,8 @@
 #include <linbox/solutions/det.h>
 #endif
 
+#include <CGAL/Cartesian_d.h>
+
 // FastHashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
 // of this matrix. It takes one template parameter, _NT, which is the
@@ -57,6 +59,8 @@ template <class _NT>
 class FastHashedDeterminant{
         public:
         typedef _NT                                     NT;
+        typedef CGAL::Cartesian_d<NT> 								  CK;
+        typedef typename CK::LA													LA;
         typedef std::vector<NT>                         Column;
         typedef std::vector<NT>                         Row;
         typedef std::vector<size_t>                     Index;
@@ -231,7 +235,8 @@ class FastHashedDeterminant{
                 result=std::find(_points.begin(),_points.end(),c);
                 return (result==_points.end()?-1:result-_points.begin());
         }
-
+				
+				
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
@@ -447,6 +452,24 @@ class FastHashedDeterminant{
                                       LinBox::Method::Hybrid());
                         return det;
         }
+#elif USE_CGAL_DET
+				inline NT compute_determinant(const Index &idx)const{
+					int d = idx.size();
+					//std::cout << first-last << "|" << d << std::endl;
+					LA::Matrix M(d);
+					//std::vector<CPoint_d>::iterator s = first;
+					
+					for( int j = 0; j < d; ++j ){
+							//std::cout << *s << std::endl;
+							for( int i = 0; i < d; ++i ){
+									//std::cout << i << "," << j;
+									M(i,j) = _points[idx[i]];
+									//std::cout << " -> " << M(i,j) << std::endl;
+							}
+					}
+					return LA::determinant(M);
+				}
+				
 #else
         inline NT compute_determinant(const Index &idx)
         #ifndef USE_HASHED_DETERMINANTS
