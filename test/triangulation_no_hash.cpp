@@ -22,7 +22,6 @@
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/Triangulation.h>
 #include <CGAL/point_generators_d.h>
-#include <../include/fast_hashed_determinant.h>
 
 int main(const int argc, const char** argv){
 
@@ -30,7 +29,6 @@ int main(const int argc, const char** argv){
         typedef CGAL::Cartesian_d<Field>                CK;
         typedef CGAL::Triangulation<CK>                 CTriangulation;
         typedef CTriangulation::Point_d                 CPoint_d;
-        typedef FastHashedDeterminant<Field>            HD;
 
         if(argc<3){
                 std::cout<<"usage: "<<argv[0]<<
@@ -49,20 +47,6 @@ int main(const int argc, const char** argv){
         //for(size_t i=0;i<N;++i)
         //        std::cout<<" "<<v[i]<<std::endl;
 
-        // 2. put everything in a FHD table
-        HD hash_table;
-        for(size_t i=0;i<N;++i){
-                v[i].set_hash(&hash_table);
-                std::vector<Field> coords;
-                for(size_t j=0;j<D;++j)
-                        coords.push_back(v[i][j]);
-                hash_table.add_column(coords);
-                v[i].set_index(i);
-        }
-        // show hash table
-        //std::cout<<"---"<<std::endl;
-        //hash_table.print_matrix(std::cout);
-
         // 3. compute a triangulation and count the time spent
         CTriangulation T(D);
         clock_t triangulation_time=clock();
@@ -71,7 +55,7 @@ int main(const int argc, const char** argv){
         triangulation_time=clock()-triangulation_time;
 
         // 4. output size of the triangulation and spent time
-        std::cout<<(double)triangulation_time/CLOCKS_PER_SEC<<std::endl;
+        std::cout<<(double)triangulation_time/CLOCKS_PER_SEC<<std::flush;
 
         return 0;
 }

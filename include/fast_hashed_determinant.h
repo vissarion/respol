@@ -536,12 +536,12 @@ class FastHashedDeterminant{
 #endif
 #ifdef HASH_STATISTICS
         public:
-        unsigned dimension;
-        unsigned number_of_max_dimension_calls;
-        unsigned number_of_determinant_calls;
-        unsigned number_of_computed_determinants;
-        unsigned number_of_hom_determinants;
-        unsigned number_of_computed_hom_determinants;
+        size_t dimension;
+        unsigned long number_of_max_dimension_calls;
+        unsigned long number_of_determinant_calls;
+        unsigned long number_of_computed_determinants;
+        unsigned long number_of_hom_determinants;
+        unsigned long number_of_computed_hom_determinants;
         clock_t full_determinant_time;
 #endif
 };

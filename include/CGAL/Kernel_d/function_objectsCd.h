@@ -23,6 +23,7 @@
 
 #ifndef CGAL_FUNCTION_OBJECTSCD_H
 #define CGAL_FUNCTION_OBJECTSCD_H
+#define HACKED_CGAL_FUNCTION_OBJECTSCD_H
 
 #include <CGAL/basic.h>
 #include <CGAL/enum.h>
