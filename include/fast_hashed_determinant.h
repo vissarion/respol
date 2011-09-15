@@ -74,6 +74,9 @@ class FastHashedDeterminant{
         typedef std::vector<Column>                     Matrix;
         typedef boost::unordered_map<Index,NT>          Determinants;
         typedef boost::unordered_map<Index,NT>          HDeterminants;
+#ifdef USE_ORIENTATION_DET
+        typedef boost::unordered_map<Index,NT>          ODeterminants;
+#endif
 
         public:
         // constructor for incremental det table
@@ -94,6 +97,9 @@ class FastHashedDeterminant{
         _points(),
         _determinants(),
         _h_determinants(),
+#ifdef USE_ORIENTATION_DET
+        _o_determinants(),
+#endif
         number_of_hashed_determinants(0)
         {};
 
@@ -114,6 +120,9 @@ class FastHashedDeterminant{
         _points(columns),
         _determinants(),
         _h_determinants(),
+#ifdef USE_ORIENTATION_DET
+        _o_determinants(),
+#endif
         number_of_hashed_determinants(0)
         {};
 
@@ -136,6 +145,9 @@ class FastHashedDeterminant{
         _points(),
         _determinants(),
         _h_determinants(),
+#ifdef USE_ORIENTATION_DET
+        _o_determinants(),
+#endif
         number_of_hashed_determinants(0){
                 for(Iterator i=begin;i!=end;++i){
 #ifdef HASH_STATISTICS
@@ -148,6 +160,10 @@ class FastHashedDeterminant{
 
         ~FastHashedDeterminant(){
 #ifdef HASH_STATISTICS
+#ifdef USE_ORIENTATION_DET
+        std::cerr<<"orientation determinant statistics not implemented yet"
+                <<std::endl;
+#else // USE_ORIENTATION_DET
         // collect non-homogeneous hash statistics
         size_t nh_collisions=0,nh_bad_buckets=0,nh_biggest_bucket=0;
         for(size_t bucket=0;bucket!=_determinants.bucket_count();++bucket)
@@ -200,7 +216,8 @@ class FastHashedDeterminant{
                 "\n load_factor()="<<_h_determinants.load_factor()<<
                 ",max_load_factor()="<<_h_determinants.max_load_factor()<<
                 std::endl;
-#endif
+#endif // USE_ORIENTATION_DET
+#endif // HASH_STATISTICS
         }
 
         // Returns the total time spent in determinant computations.
@@ -405,6 +422,119 @@ class FastHashedDeterminant{
                 return det;
         }
 
+#ifdef USE_ORIENTATION_DET
+        NT det_minor(NT **m,const Index &idx3,const Index &idx4){
+                // idx3 contains the n indices of the columns of the matrix
+                // m whose determinant is to be computed. idx4 contains the
+                // indices of _points that correspond to the columns used
+                // for the computation of m. The size of idx4 is n+1. The
+                // (n+1)th element is the number of column subtracted from
+                // the first n columns.
+                size_t n=idx3.size();
+                assert(n>0);
+                assert(idx4.size()==n+1);
+                if(n==1)
+                        return m[idx3[0]][0];
+                // check whether idx4 is in _o_determinants
+                if(_o_determinants.count(idx4)!=0){
+                        assert(_o_determinants.count(idx4)==1);
+                        return _o_determinants[idx4];
+                }
+                // idx5 contains the n-1 indices of the columns which
+                // determine the minor whose determinant compute. It is
+                // updated on each iteration. idx6 contains n indices,
+                // which indicate which columns of _points were used to
+                // construct the matrix represented by idx5.
+                Index idx5,idx6;
+                for(size_t i=1;i<n;++i){
+                        idx5.push_back(idx3[i]);
+                        idx6.push_back(idx4[i]);
+                }
+                assert(idx5.size()==n-1);
+                idx6.push_back(idx4[n]);
+                assert(idx6.size()==n);
+                NT det(0);
+                for(size_t col=0;col<n;++col){
+                        //if(m[idx3[col]][n-1]!=0){
+                                if((idx3[col]+n)%2)
+                                        det-=m[idx3[col]][n-1]*
+                                             det_minor(m,idx5,idx6);
+                                else
+                                        det+=m[idx3[col]][n-1]*
+                                             det_minor(m,idx5,idx6);
+                        //}
+                        idx5[col]=idx3[col];
+                        idx6[col]=idx4[col];
+                }
+                _o_determinants[idx4]=det;
+                return det;
+        }
+
+        NT orientation(const Index &idx,const Row &r){
+                assert(idx.size()==r.size());
+                assert(_points.size()>=idx.size());
+                // check if idx is in _o_determinants
+                if(_o_determinants.count(idx)!=0){
+                        assert(_o_determinants.count(idx)==1);
+                        return _o_determinants[idx];
+                }
+                // n is the dimension, which is one less than the size of
+                // the orientation matrix
+                size_t n=idx.size()-1;
+                // m is a n*n matrix, which is obtained from the original
+                // (n+1)*(n+1) matrix by subtracting the (n+1)th column to
+                // the first n columns
+                NT **m=(NT**)malloc(n*sizeof(NT*));
+                for(size_t col=0;col<n;++col){
+                        m[col]=new NT[n];
+                        for(size_t row=0;row<n-1;++row)
+                                m[col][row]=_points[idx[col]][row]-
+                                            _points[idx[n]][row];
+                        // TODO: it is superfluous to store this row
+                        m[col][n-1]=r[col]-r[n];
+                }
+                // show matrix m
+                //for(size_t row=0;row<n;++row){
+                //        std::cout<<"[ ";
+                //        for(size_t col=0;col<n;++col)
+                //                std::cout<<m[col][row]<<' ';
+                //        std::cout<<"]\n";
+                //}
+                // idx3 contains the indices of the n-1 columns of m that
+                // determine the minor whose determinant is to be computed.
+                // idx4 contains the indices of _points that correspond to
+                // the columns used for the computation of the minor of m.
+                // The size of idx4 is n. The n-th element is the number of
+                // column subtracted from the first (n-1) columns.
+                Index idx3,idx4;
+                for(size_t i=1;i<n;++i){
+                        idx3.push_back(i);
+                        idx4.push_back(idx[i]);
+                }
+                assert(idx3.size()==n-1);
+                idx4.push_back(idx[n]);
+                assert(idx4.size()==n);
+                NT det(0);
+                for(size_t col=0;col<n;++col){
+                        if(m[col][n-1]!=0){
+                                if((col+n)%2)
+                                        det+=m[col][n-1]*det_minor(m,idx3,idx4);
+                                else
+                                        det-=m[col][n-1]*det_minor(m,idx3,idx4);
+                        }
+                        idx3[col]=col;
+                        idx4[col]=idx[col];
+                }
+                for(size_t col=0;col<n;++col)
+                        delete[] m[col];
+                free(m);
+                // computation is done and memory is freed, insert det in
+                // _o_determinants and return
+                _o_determinants[idx]=det;
+                return det;
+        }
+#endif
+
         // This function prints the full matrix to an output stream.
         std::ostream& print_matrix(std::ostream &o)const{
                 if(!_points.size())
@@ -508,6 +638,9 @@ class FastHashedDeterminant{
         Matrix _points;
         Determinants _determinants;
         HDeterminants _h_determinants;
+#ifdef USE_ORIENTATION_DET
+        ODeterminants _o_determinants;
+#endif
         unsigned long number_of_hashed_determinants;
 #ifdef LOG_DET_TIME
         clock_t determinant_time;

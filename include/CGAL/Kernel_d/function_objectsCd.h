@@ -258,7 +258,11 @@ public:
         }
         CGAL_assertion_msg(first->hash()!=NULL,
                            "the hash of the first point is not set!");
+#ifdef USE_ORIENTATION_DET
+        return Sgn()((first->hash())->orientation(idx,r));
+#else
         return Sgn()((first->hash())->homogeneous_determinant(idx,r));
+#endif
     }
 };
 #else

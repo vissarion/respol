@@ -9,8 +9,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4.5)
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 
 if ( COMMAND cmake_policy )
-#  cmake_policy( SET CMP0003 NEW )  
-  cmake_policy( SET CMP0005 NEW )  
+  cmake_policy( SET CMP0005 NEW )
 endif()
 
 find_package(CGAL QUIET COMPONENTS Core )
@@ -37,8 +36,9 @@ if ( CGAL_FOUND )
   add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
   add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
-  
+
   # MAPLE
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DMAPLE_EXECUTABLE=/workspace/maple13/bin/maple")
@@ -49,7 +49,6 @@ if ( CGAL_FOUND )
   #link_libraries("givaro")
 
   create_single_source_cgal_program("res_enum_d.cpp" )
-  create_single_source_cgal_program("triang.cpp" )
 
 else()
 
