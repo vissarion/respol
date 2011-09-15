@@ -35,17 +35,21 @@
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
 #include <cassert>
+
 #ifdef HASH_STATISTICS
 #include <ostream>
 #include <ctime>
 #endif
+
 #ifdef USE_LINBOX_DET
 #include <CGAL/LinBox/mpq_class_field.h>
 #include <CGAL/LinBox/dense_matrix.h>
 #include <linbox/solutions/det.h>
 #endif
 
+#ifdef USE_CGAL_DET
 #include <CGAL/Cartesian_d.h>
+#endif
 
 // FastHashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
@@ -59,8 +63,10 @@ template <class _NT>
 class FastHashedDeterminant{
         public:
         typedef _NT                                     NT;
-        typedef CGAL::Cartesian_d<NT> 								  CK;
-        typedef typename CK::LA													LA;
+#ifdef USE_CGAL_DET
+        typedef CGAL::Cartesian_d<NT>                   CK;
+        typedef typename CK::LA                         LA;
+#endif
         typedef std::vector<NT>                         Column;
         typedef std::vector<NT>                         Row;
         typedef std::vector<size_t>                     Index;
@@ -169,8 +175,9 @@ class FastHashedDeterminant{
                 _points.size()<<" hashed points, of max dim "<<dimension<<
                 "\nnon-hom hash: "<<
                 _determinants.bucket_count()<<" buckets, "<<
-                nh_collisions<<" collisions (" << 
-                ((double)nh_collisions/(double)number_of_computed_determinants)*100 << 
+                nh_collisions<<" collisions (" <<
+                ((double)nh_collisions/
+                 (double)number_of_computed_determinants)*100<<
                 "%) in "<<nh_bad_buckets<<
                 " buckets of max size "<<nh_biggest_bucket<<
                 "\nnon-hom determinants: computed "<<
@@ -182,8 +189,9 @@ class FastHashedDeterminant{
                 (double)full_determinant_time/CLOCKS_PER_SEC<<
                 " seconds\nhom hash: "<<
                 _h_determinants.bucket_count()<<" buckets, "<<
-                h_collisions<<" collisions (" << 
-                ((double)h_collisions/(double)number_of_computed_hom_determinants)*100<< 
+                h_collisions<<" collisions ("<<
+                ((double)h_collisions/
+                 (double)number_of_computed_hom_determinants)*100<<
                 "%) in "<<h_bad_buckets<<
                 " buckets of max size "<<h_biggest_bucket<<
                 "\nhom determinants: computed "<<
@@ -235,8 +243,7 @@ class FastHashedDeterminant{
                 result=std::find(_points.begin(),_points.end(),c);
                 return (result==_points.end()?-1:result-_points.begin());
         }
-				
-				
+
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
@@ -453,23 +460,22 @@ class FastHashedDeterminant{
                         return det;
         }
 #elif USE_CGAL_DET
-				inline NT compute_determinant(const Index &idx)const{
-					int d = idx.size();
-					//std::cout << first-last << "|" << d << std::endl;
-					typename LA::Matrix M(d);
-					//std::vector<CPoint_d>::iterator s = first;
-					
-					for( int j = 0; j < d; ++j ){
-							//std::cout << *s << std::endl;
-							for( int i = 0; i < d; ++i ){
-									//std::cout << i << "," << j;
-									M(i,j) = _points[idx[i]][j];
-									//std::cout << " -> " << M(i,j) << std::endl;
-							}
-					}
-					return LA::determinant(M);
-				}
-				
+        inline NT compute_determinant(const Index &idx)const{
+                int d = idx.size();
+                //std::cout << first-last << "|" << d << std::endl;
+                typename LA::Matrix M(d);
+                //std::vector<CPoint_d>::iterator s = first;
+                for( int j = 0; j < d; ++j ){
+                        //std::cout << *s << std::endl;
+                        for( int i = 0; i < d; ++i ){
+                                //std::cout << i << "," << j;
+                                M(i,j) = _points[idx[i]][j];
+                                //std::cout << " -> " << M(i,j) << std::endl;
+                        }
+                }
+                return LA::determinant(M);
+        }
+
 #else
         inline NT compute_determinant(const Index &idx)
         #ifndef USE_HASHED_DETERMINANTS
@@ -497,34 +503,6 @@ class FastHashedDeterminant{
                 return det;
         }
 #endif
-
-        // This function computes a determinant of size dim+1, where the
-        // matrix is enlarged by adding at the bottom the vector r. There
-        // is also a vector of indices of r, idxr, which specifies the
-        // elements of r used to compute the determinant. The size of idx
-        // and idxr must be dim+1.
-        /*NT enlarged_homogeneous_determinant(const Index &idx,
-                                            const Row &r,
-                                            const Index &idxr){
-                assert(idx.size()==idxr.size());
-                Index idx2;
-                size_t n=idx.size();
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
-                assert(idx2.size()==n-1);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if(r[idxr[i]]!=0){
-                                if((i+n)%2)
-                                        det+=(r[idxr[i]]*determinant(idx2));
-                                else
-                                        det-=(r[idxr[i]]*determinant(idx2));
-                        }
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-                return det;
-        }*/
 
         private:
         Matrix _points;
