@@ -51,7 +51,7 @@ int main(const int argc, const char** argv) {
  	std::vector<std::vector<Field> > pointset;
 
 	// initialize all the above
- 	// read input (pointset, mi, n), apply cayley trick
+ 	// read input (pointset, mi, n), apply cayley trick, define projection
  	cayley_trick(pointset, mi, proj, n);
 
 	// this is the dimension of the resultant (and secondary) polytope
@@ -60,20 +60,13 @@ int main(const int argc, const char** argv) {
 	// compute the big matrix
 	// you don't have to homogenize!
   HD dets(pointset.begin(),pointset.end());
-
+  //dets.print_matrix(std::cout);
+  
 	// this is the big matrix for dimension PD it is empty at
 	// the beginning and we add the points when they are computed
 	HD Pdets;
 
-	// define the projection
-	// attention! proj SHOULD BE SORTED
-	//std::vector<int> proj = proj_first_coord(PD,n,mi);
-	//std::vector<int> proj = proj_more_coord(PD,n,mi);
-  //std::cout << proj << std::endl;
-	//std::vector<int> proj = full_proj(PD,n,mi);
-	//std::vector<int> proj (vec, vec + sizeof(vec) / sizeof(int) );
-
-	// the data structure to hold the res polytope
+		// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;
 	Triangulation Res(PD);
 
@@ -85,7 +78,7 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 
 	// print the result i.e. the proj of the Resultant polytope
-	print_res_vertices(Res,std::cout);
+	//print_res_vertices(Res,std::cout);
  
 	//print_res_facets_number(Res);
 

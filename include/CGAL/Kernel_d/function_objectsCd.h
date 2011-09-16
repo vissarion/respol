@@ -265,6 +265,38 @@ public:
 #endif
     }
 };
+#elif USE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL
+#warning using USE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL
+// This is our hack: instead of computing the determinant of a matrix
+// formed by the points, we use the index and the hash tables stored in the
+// points. This way, we gain a bit by avoiding coordinates copy and a lot
+// by computing only d multiplication and d additions instead of computing
+// the determinant of a matrix of size d.
+template <class R>
+class OrientationCd{
+public:
+    template <class ForwardIterator>
+    Orientation operator()(ForwardIterator first, ForwardIterator last)const{
+        // don't know what's this, but it was like that in the original file
+        TUPLE_DIM_CHECK(first,last,Orientation_d);
+        typedef typename std::iterator_traits<ForwardIterator>::value_type
+                                                                PointD;
+        typedef typename PointD::R                              R;
+        typedef typename R::FT                                  FT;
+        typedef CGAL::Real_embeddable_traits<FT>                RET;
+        typedef typename RET::Sgn                               Sgn;
+        typedef CGAL::Orientation                               Orientation;
+        std::vector<size_t> idx;
+        //std::vector<FT> r;
+        for(ForwardIterator it=first;it!=last;++it){
+                idx.push_back(it->index());
+                //r.push_back((*it)[it->dimension()-1]);
+        }
+        CGAL_assertion_msg(first->hash()!=NULL,
+                           "the hash of the first point is not set!");
+        return Sgn()((first->hash())->homogeneous_determinant(idx));
+    }
+};
 #else
 // this is the original predicate
 template <class R>

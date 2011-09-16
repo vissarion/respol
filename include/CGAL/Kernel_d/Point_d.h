@@ -28,7 +28,13 @@
 #warning Using hacked Point_d interface
 
 #include <CGAL/Dimension.h>
-#include <fast_hashed_determinant.h>
+
+// for fast determinant computation
+#ifdef USE_CGAL_DET
+  #include <../include/fast_hashed_determinant_non_homog.h>
+#else
+  #include <../include/fast_hashed_determinant.h>
+#endif
 
 namespace CGAL {
 

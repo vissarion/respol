@@ -38,10 +38,15 @@
 #include <print_functions.h>
 
 // for fast determinant computation
-#include <../include/fast_hashed_determinant.h>
+#ifdef USE_CGAL_DET
+  #include <../include/fast_hashed_determinant_non_homog.h>
+#else
+  #include <../include/fast_hashed_determinant.h>
+#endif
 
-// to generate initial normal vectors
-#include <../include/normal_vector_ds.h>
+// normal vectors data structure
+//#include <../include/normal_vector_ds.h>
+#include <../include/normal_set_ds.h>
 
 // for indexed points
 //#include <../include/indexed_point.h>
@@ -267,7 +272,7 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset,
 	else {
 		proj = proj_first_coord(D+1,m,mi);
 	}
-	std::cout<<proj<<std::endl;
+	//std::cout<<proj<<std::endl;
 	PD = proj.size();				//this is the dimension of the projection
 	sort(proj.begin(),proj.end());
 	
@@ -459,7 +464,9 @@ std::vector<std::pair<std::vector<Field>,size_t> > lift_to_proj(
 // compute lifting triangulation but not from scratch
 // use a copy of T and add new lifted points there
 // TODO: not insert points with negative lift
-// they will not affect upper hull! be careful
+// they will not affect upper hull! 
+// EDIT: this is not true!! (an einai sthn akrh?) 
+// be careful
 // if all points have neg lift then Tl will be
 // 2n dimensional so we have to project carefully
 void LiftingTriangulationDynamic(
