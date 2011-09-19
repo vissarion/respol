@@ -161,8 +161,14 @@ class FastHashedDeterminant{
         ~FastHashedDeterminant(){
 #ifdef HASH_STATISTICS
 #ifdef USE_ORIENTATION_DET
-        std::cerr<<"orientation determinant statistics not implemented yet"
-                <<std::endl;
+        std::cerr<<"hash statistics:\n"<<
+                _points.size()<<" hashed points, of max dim "<<dimension<<
+                '\n'<<number_of_computed_determinants<<
+                " determinants computed, out of "<<
+                number_of_determinant_calls<<
+                '\n'<<(double)full_determinant_time/CLOCKS_PER_SEC<<
+                " seconds spent in all determinant computations"<<
+                std::endl;
 #else // USE_ORIENTATION_DET
         // collect non-homogeneous hash statistics
         size_t nh_collisions=0,nh_bad_buckets=0,nh_biggest_bucket=0;
@@ -223,9 +229,13 @@ class FastHashedDeterminant{
         // Returns the total time spent in determinant computations.
         double get_determinant_time(){
 #ifdef LOG_DET_TIME
-                return (double)determinant_time/CLOCKS_PER_SEC;
+#ifdef USE_ORIENTATION_DET
+                return (double)full_determinant_time/CLOCKS_PER_SEC;
 #else
-                return .0;
+                return (double)determinant_time/CLOCKS_PER_SEC;
+#endif
+#else
+                return -1.;
 #endif
         }
 
@@ -455,14 +465,14 @@ class FastHashedDeterminant{
                 assert(idx6.size()==n);
                 NT det(0);
                 for(size_t col=0;col<n;++col){
-                        //if(m[idx3[col]][n-1]!=0){
-                                if((idx3[col]+n)%2)
-                                        det-=m[idx3[col]][n-1]*
-                                             det_minor(m,idx5,idx6);
-                                else
+                        if(m[idx3[col]][n-1]!=0){
+                                if((col+n)%2)
                                         det+=m[idx3[col]][n-1]*
                                              det_minor(m,idx5,idx6);
-                        //}
+                                else
+                                        det-=m[idx3[col]][n-1]*
+                                             det_minor(m,idx5,idx6);
+                        }
                         idx5[col]=idx3[col];
                         idx6[col]=idx4[col];
                 }
@@ -471,13 +481,20 @@ class FastHashedDeterminant{
         }
 
         NT orientation(const Index &idx,const Row &r){
+#ifdef HASH_STATISTICS
+                clock_t start=clock();
+                ++number_of_determinant_calls;
+#endif
                 assert(idx.size()==r.size());
                 assert(_points.size()>=idx.size());
                 // check if idx is in _o_determinants
-                if(_o_determinants.count(idx)!=0){
+                /*if(_o_determinants.count(idx)!=0){
                         assert(_o_determinants.count(idx)==1);
                         return _o_determinants[idx];
-                }
+                }*/
+#ifdef HASH_STATISTICS
+                ++number_of_computed_determinants;
+#endif
                 // n is the dimension, which is one less than the size of
                 // the orientation matrix
                 size_t n=idx.size()-1;
@@ -530,7 +547,8 @@ class FastHashedDeterminant{
                 free(m);
                 // computation is done and memory is freed, insert det in
                 // _o_determinants and return
-                _o_determinants[idx]=det;
+                //_o_determinants[idx]=det;
+                full_determinant_time+=(clock()-start);
                 return det;
         }
 #endif
