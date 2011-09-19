@@ -680,7 +680,6 @@ void insert_new_Rvertex2(Triangulation& Res,
  	#ifdef PRINT_INFO
 		std::cout << "one new R-vertex found !!! "<< std::endl;
 	#endif
-
 	int prev_dim = Res.current_dimension();
 	//insert it to the triangulation
 	PVertex_handle new_vert = Res.insert(new_point);
@@ -696,7 +695,6 @@ int get_illegal_facet(Triangulation& Res,
 	//Simplices inf_simplices;
 	//std::back_insert_iterator<Simplices> out(inf_simplices);
 	//Res.incident_full_cells(Res.infinite_vertex(), out);
-
 	PSimplex_iterator sit = Res.full_cells_begin();
 	//bool is_neg;
 	do{
@@ -732,7 +730,6 @@ int get_illegal_facet(Triangulation& Res,
 		}
 	} while(normal_list.put(current_vector) == 0 //|| is_neg==true)
 					 && sit != Res.full_cells_end());
-
 	// check if we run out of normals
 	if (sit != Res.full_cells_end())
 		return 1;
@@ -941,6 +938,7 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
 		std::vector<Field> new_vertex =
       compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector);
 		// insert it in the complex Res (if it is not already there)
+  	
   	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
   		insert_new_Rvertex2(Res,new_vertex,Pdets);
 		#ifdef PRINT_INFO

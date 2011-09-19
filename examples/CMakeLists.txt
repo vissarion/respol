@@ -40,7 +40,7 @@ if ( CGAL_FOUND )
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL")
   
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
   add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
 
   # MAPLE
