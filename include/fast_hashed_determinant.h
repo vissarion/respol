@@ -76,6 +76,7 @@ class FastHashedDeterminant{
         typedef boost::unordered_map<Index,NT>          HDeterminants;
 #ifdef USE_ORIENTATION_DET
         typedef boost::unordered_map<Index,NT>          ODeterminants;
+        typedef std::set<Index>                         CDeterminants;
 #endif
 
         public:
@@ -93,12 +94,16 @@ class FastHashedDeterminant{
         number_of_hom_determinants(0),
         number_of_computed_hom_determinants(0),
         full_determinant_time(0),
+#ifdef USE_ORIENTATION_DET
+        matrix_time(0),
+#endif
 #endif
         _points(),
         _determinants(),
         _h_determinants(),
 #ifdef USE_ORIENTATION_DET
         _o_determinants(),
+        _c_determinants(),
 #endif
         number_of_hashed_determinants(0)
         {};
@@ -116,12 +121,16 @@ class FastHashedDeterminant{
         number_of_hom_determinants(0),
         number_of_computed_hom_determinants(0),
         full_determinant_time(0),
+#ifdef USE_ORIENTATION_DET
+        matrix_time(0),
+#endif
 #endif
         _points(columns),
         _determinants(),
         _h_determinants(),
 #ifdef USE_ORIENTATION_DET
         _o_determinants(),
+        _c_determinants(),
 #endif
         number_of_hashed_determinants(0)
         {};
@@ -141,12 +150,16 @@ class FastHashedDeterminant{
         number_of_hom_determinants(0),
         number_of_computed_hom_determinants(0),
         full_determinant_time(0),
+#ifdef USE_ORIENTATION_DET
+        matrix_time(0),
+#endif
 #endif
         _points(),
         _determinants(),
         _h_determinants(),
 #ifdef USE_ORIENTATION_DET
         _o_determinants(),
+        _c_determinants(),
 #endif
         number_of_hashed_determinants(0){
                 for(Iterator i=begin;i!=end;++i){
@@ -166,7 +179,10 @@ class FastHashedDeterminant{
                 '\n'<<number_of_computed_determinants<<
                 " determinants computed, out of "<<
                 number_of_determinant_calls<<
-                '\n'<<(double)full_determinant_time/CLOCKS_PER_SEC<<
+                '\n'<<number_of_computed_determinants<<
+                " matrices computed in "<<
+                (double)matrix_time/CLOCKS_PER_SEC<<" seconds\n"<<
+                (double)full_determinant_time/CLOCKS_PER_SEC<<
                 " seconds spent in all determinant computations"<<
                 std::endl;
 #else // USE_ORIENTATION_DET
@@ -487,36 +503,9 @@ class FastHashedDeterminant{
 #endif
                 assert(idx.size()==r.size());
                 assert(_points.size()>=idx.size());
-                // check if idx is in _o_determinants
-                /*if(_o_determinants.count(idx)!=0){
-                        assert(_o_determinants.count(idx)==1);
-                        return _o_determinants[idx];
-                }*/
-#ifdef HASH_STATISTICS
-                ++number_of_computed_determinants;
-#endif
                 // n is the dimension, which is one less than the size of
                 // the orientation matrix
                 size_t n=idx.size()-1;
-                // m is a n*n matrix, which is obtained from the original
-                // (n+1)*(n+1) matrix by subtracting the (n+1)th column to
-                // the first n columns
-                NT **m=(NT**)malloc(n*sizeof(NT*));
-                for(size_t col=0;col<n;++col){
-                        m[col]=new NT[n];
-                        for(size_t row=0;row<n-1;++row)
-                                m[col][row]=_points[idx[col]][row]-
-                                            _points[idx[n]][row];
-                        // TODO: it is superfluous to store this row
-                        m[col][n-1]=r[col]-r[n];
-                }
-                // show matrix m
-                //for(size_t row=0;row<n;++row){
-                //        std::cout<<"[ ";
-                //        for(size_t col=0;col<n;++col)
-                //                std::cout<<m[col][row]<<' ';
-                //        std::cout<<"]\n";
-                //}
                 // idx3 contains the indices of the n-1 columns of m that
                 // determine the minor whose determinant is to be computed.
                 // idx4 contains the indices of _points that correspond to
@@ -531,13 +520,65 @@ class FastHashedDeterminant{
                 assert(idx3.size()==n-1);
                 idx4.push_back(idx[n]);
                 assert(idx4.size()==n);
+                // the determinant will be stored in det
                 NT det(0);
+                // Check first whether this determinant was computed. This
+                // means that the determinants of its minors are cached,
+                // thus we just need to perform only d subtractions, d
+                // multiplications and d additions.
+                if(_c_determinants.count(idx)!=0){
+                        assert(_c_determinants.count(idx)==1);
+                        NT element;
+                        for(size_t col=0;col<n;++col){
+                                assert(_o_determinants.count(idx4)==1);
+                                element=r[col]-r[n];
+                                if(element!=0){
+                                        if((col+n)%2)
+                                                det+=element*
+                                                     _o_determinants[idx4];
+                                        else
+                                                det-=element*
+                                                     _o_determinants[idx4];
+                                }
+                                idx4[col]=idx[col];
+                        }
+                        return det;
+                }
+#ifdef HASH_STATISTICS
+                ++number_of_computed_determinants;
+                clock_t matrix_start=clock();
+#endif
+                _c_determinants.insert(idx);
+                assert(_c_determinants.count(idx)>0);
+                // m is a n*n matrix, which is obtained from the original
+                // (n+1)*(n+1) matrix by subtracting the (n+1)th column to
+                // the first n columns
+                NT **m=(NT**)malloc(n*sizeof(NT*));
                 for(size_t col=0;col<n;++col){
+                        m[col]=new NT[n];
+                        for(size_t row=0;row<n-1;++row)
+                                m[col][row]=_points[idx[col]][row]-
+                                            _points[idx[n]][row];
+                        // TODO: it is superfluous to store this row
+                        m[col][n-1]=r[col]-r[n];
+                }
+#ifdef HASH_STATISTICS
+                matrix_time+=(clock()-matrix_start);
+#endif
+                // show matrix m
+                //for(size_t row=0;row<n;++row){
+                //        std::cout<<"[ ";
+                //        for(size_t col=0;col<n;++col)
+                //                std::cout<<m[col][row]<<' ';
+                //        std::cout<<"]\n";
+                //}
+                for(size_t col=0;col<n;++col){
+                        NT minor=det_minor(m,idx3,idx4);
                         if(m[col][n-1]!=0){
                                 if((col+n)%2)
-                                        det+=m[col][n-1]*det_minor(m,idx3,idx4);
+                                        det+=m[col][n-1]*minor;
                                 else
-                                        det-=m[col][n-1]*det_minor(m,idx3,idx4);
+                                        det-=m[col][n-1]*minor;
                         }
                         idx3[col]=col;
                         idx4[col]=idx[col];
@@ -545,10 +586,9 @@ class FastHashedDeterminant{
                 for(size_t col=0;col<n;++col)
                         delete[] m[col];
                 free(m);
-                // computation is done and memory is freed, insert det in
-                // _o_determinants and return
-                //_o_determinants[idx]=det;
+#ifdef HASH_STATISTICS
                 full_determinant_time+=(clock()-start);
+#endif
                 return det;
         }
 #endif
@@ -658,6 +698,7 @@ class FastHashedDeterminant{
         HDeterminants _h_determinants;
 #ifdef USE_ORIENTATION_DET
         ODeterminants _o_determinants;
+        CDeterminants _c_determinants;
 #endif
         unsigned long number_of_hashed_determinants;
 #ifdef LOG_DET_TIME
@@ -672,7 +713,10 @@ class FastHashedDeterminant{
         unsigned long number_of_hom_determinants;
         unsigned long number_of_computed_hom_determinants;
         clock_t full_determinant_time;
+#ifdef USE_ORIENTATION_DET
+        clock_t matrix_time;
 #endif
+#endif // HASH_STATISTICS
 };
 
 #endif // FAST_HASHED_DETERMINANT_H
