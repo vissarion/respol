@@ -293,12 +293,14 @@ class FastHashedDeterminant{
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called.
 #ifdef USE_HASHED_DETERMINANTS
-        NT& determinant(const Index &idx){
-                /*if(number_of_hashed_determinants==100000){
+        NT& determinant(const Index &idx){                
+                if(number_of_hashed_determinants==1000000){
+#ifdef PRINT_INFO
                         std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
+#endif
                         number_of_hashed_determinants=0;
                         _determinants.clear();
-                }*/
+                }
                 if(idx.size()==1)
                         return _points[idx[0]][0];
 #ifdef LOG_DET_TIME
