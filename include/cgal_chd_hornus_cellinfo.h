@@ -38,11 +38,7 @@
 #include <print_functions.h>
 
 // for fast determinant computation
-#ifdef USE_CGAL_DET
-  #include <../include/fast_hashed_determinant_non_homog.h>
-#else
-  #include <../include/fast_hashed_determinant.h>
-#endif
+#include <../include/fast_hashed_determinant.h>
 
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>
