@@ -51,6 +51,10 @@
 #include <CGAL/Cartesian_d.h>
 #endif
 
+#ifdef USE_EIGEN_DET
+#include<Eigen/Eigen>
+#endif
+
 // FastHashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
 // of this matrix. It takes one template parameter, _NT, which is the
@@ -324,20 +328,20 @@ class FastHashedDeterminant{
 #ifdef LOG_DET_TIME
                         if(idx.size()==_points[0].size())
                                 determinant_time+=clock()-start_all;
-#endif
-#else
+#endif // LOG_DET_TIME
+#else // HASH_STATISTICS
                         return
-#endif
+#endif // HASH_STATISTICS
                         (_determinants[idx]=compute_determinant(idx));
 #ifdef HASH_STATISTICS
                         if(idx.size()==dimension)
                                 full_determinant_time+=(clock()-start);
-#endif
+#endif // HASH_STATISTICS
                 }
 #ifdef LOG_DET_TIME
                 if(idx.size()==_points[0].size())
                         determinant_time+=clock()-start_all;
-#endif
+#endif // LOG_DET_TIME
                 return _determinants[idx];
         }
 #else // USE_HASHED_DETERMINANTS
@@ -449,6 +453,20 @@ class FastHashedDeterminant{
 #endif
                 return det;
         }
+
+#ifdef USE_EIGEN_DET
+        inline NT eigendet(NT **m,const Index &idx3){
+                size_t taille=idx3.size();
+                Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic>
+                        mat(taille,taille);
+                for(size_t i=0;i<taille;++i)
+                        mat.col(i)=Eigen::Map<
+                                                Eigen::Matrix<NT,
+                                                Eigen::Dynamic,
+                                                1> >(m[idx3[i]],taille);
+                return mat.determinant();
+        }
+#endif // USE_EIGEN_DET
 
 #ifdef USE_ORIENTATION_DET
         NT det_minor(NT **m,const Index &idx3,const Index &idx4){
@@ -574,6 +592,25 @@ class FastHashedDeterminant{
                 //                std::cout<<m[col][row]<<' ';
                 //        std::cout<<"]\n";
                 //}
+#ifdef USE_EIGEN_DET
+                for(size_t col=0;col<n;++col){
+                        NT minor;
+                        if(_o_determinants.count(idx4)==0){
+                                minor=eigendet(m,idx3);
+                                _o_determinants[idx4]=minor;
+                        }else{
+                                minor=_o_determinants[idx4];
+                        }
+                        if(m[col][n-1]!=0){
+                                if((col+n)%2)
+                                        det+=m[col][n-1]*minor;
+                                else
+                                        det-=m[col][n-1]*minor;
+                        }
+                        idx3[col]=col;
+                        idx4[col]=idx[col];
+                }
+#else // USE_EIGEN_DET
                 for(size_t col=0;col<n;++col){
                         NT minor=det_minor(m,idx3,idx4);
                         if(m[col][n-1]!=0){
@@ -585,6 +622,7 @@ class FastHashedDeterminant{
                         idx3[col]=col;
                         idx4[col]=idx[col];
                 }
+#endif // USE_EIGEN_DET
                 for(size_t col=0;col<n;++col)
                         delete[] m[col];
                 free(m);
@@ -665,7 +703,6 @@ class FastHashedDeterminant{
                 }
                 return LA::determinant(M);
         }
-
 #elif USE_CGAL_DET_2
         inline NT compute_determinant(const Index &idx)const{
                 int d = idx.size();
@@ -711,8 +748,18 @@ class FastHashedDeterminant{
                 exit(0);
                 return LA::determinant(M);
         }
-
-
+#elif USE_EIGEN_DET
+        inline NT compute_determinant(const Index &idx){
+                size_t n=idx.size();
+                Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> mat(n,n);
+                for(size_t i=0;i<n;++i)
+                        mat.col(i)=Eigen::Map<
+                                                Eigen::Matrix<NT,
+                                                              Eigen::Dynamic,
+                                                              1> >
+                                        (&_points[idx[i]][0],n);
+                return mat.determinant();
+        }
 #else
         inline NT compute_determinant(const Index &idx)
         #ifndef USE_HASHED_DETERMINANTS
