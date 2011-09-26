@@ -22,6 +22,9 @@ if ( CGAL_FOUND )
   include( CGAL_CreateSingleSourceCGALProgram )
 
   # uncomment to use hacked kernel for hashed determinants
+  include_directories (BEFORE ../kernel_d/include)
+  include_directories (BEFORE ../triangulation/include)
+  include_directories (BEFORE ../patches/include)
   include_directories (BEFORE ../include)
   # uncomment when using linbox
   #include_directories (BEFORE /home/vissarion/src/LinBox/include)
@@ -31,15 +34,16 @@ if ( CGAL_FOUND )
   #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
- 
+  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CGAL_DET")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
+
   #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
-  
+
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL")
-  
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CGAL_DET") 
+
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
   add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
 
