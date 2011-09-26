@@ -1,54 +1,78 @@
-Some simple instructions
----- ------ ------------
+ResPol is a software to compute a projection of the Newton polytope of the
+resultant of a given polynomial system.
 
-1. To compile the sources you have installed first the feature
-Triangulation of CGAL library. i.e.
+This archive contains patches to the sources of the CGAL library, the CGAL
+Triangulation package (not yet part of the CGAL library, included here
+thanks to the kind permission of its authors) and the ResPol sources. Both
+CGAL library and ResPol are written in C++.
 
-$ svn checkout --username YOURUSERNAME
-https://scm.gforge.inria.fr/svn/cgal/branches/features/Triangulation-higher_dimensions-odevil_shornus
+To compile and use ResPol, you need first to compile the CGAL library. You
+can follow these steps:
 
-and then
+
+------------------------
+1. Compile CGAL sources
+------------------------
+
+Follow the CGAL installation manual. It states that CGAL requires the Boost
+libraries. In particular the header files and the threading library
+binaries. Version 1.39 (or higher) are needed. Having GMP version 4.2 or
+higher and MPFR version 2.2.1 or higher installed is recommended. Once you
+fulfill these requirements, execute:
 
 $ cmake .
 $ make
-$ make install
 
-if you don't have access to scm.gforge.inria.fr contact us.
 
-2. Now you can get the sources for Resultant Polytope computation
+--------------------------
+2. Compile ResPol sources
+--------------------------
 
-$ svn co https://respol.svn.sourceforge.net/svnroot/respol respol
+In folder respol/examples execute:
 
-Then you can go to examples directory and run:
-
-$ cmake .
+$ cmake -DCGAL_DIR=_YOUR_CGAL_PATH_ .
 $ make
 
-Then you can test the code with some inputs from the examples/input
-directory. For example you can run
-
-$ ./res_enum_d_notopcom < inputs/cayley4_small.tmp
-
-and wait for the result ;)
+where _YOUR_CGAL_PATH_ is the path where CGAL library was compiled. For
+additional options, set by CMake flags, see the file README.FLAGS.
 
 
-Useful compilation flags
------- ----------- -----
+--------------
+3. Use ResPol
+--------------
 
-Compilation flags are set in CMakeLists.txt. They are:
-- PRINT_INFO: print information about what the algorithm is doing (set by
-  default),
-- LOG_DET_TIME: log the time spent in determinant computation; if this flag
-  is unset, zero will be printed (set by default),
-- USE_LINBOX_DET: use LinBox instead of the Laplace expansion algorithm for
-  computing determinants (unset by default),
-- HASH_STATISTICS: collect and print statistics on hashed determinants
-  (unset by default),
-- USE_HASHED_DETERMINANTS: no need to explain this (set by default),
-- USE_HACKED_KERNEL_ORIENTATION: this activates the hack to use hashed
-  determinants inside CGAL's Triangulation package (set by default),
-- USE_MAPLE_CONVEX_HULL: use Maple to compute the convex hull of the
-  resultant polytope vertices, in order to check whether CGAL included in
-  the convex hull some redundant points (set by default),
-- MAPLE_EXECUTABLE: if USE_MAPLE_CONVEX_HULL is defined, you must set this
-  to the complete path of the Maple executable.
+Then, you can test the code with some inputs from the examples/input
+directory. The format of the input files is:
+
+  1st line: dimension (i.e. the number of the system variables)
+  2nd line: the cardinalities of the supports '|' the projection
+  3d line: the support points
+
+ResPol supports:
+ (a) computations of projections defined by implicitization problems
+ (b) computations of arbitrary projections
+ (c) generic resultant polytope computations
+
+The 2nd line of the input file defines the projection and actually selects
+one of the above options.  (a) is supported by not defining any projection
+(ommit '|'), (b) by defining an arbitrary projection and (c) by providing
+only the symbol '|'.
+
+
+Input example:
+
+## file: inputs/cayley4_small_implic.tmp ##
+3
+3 3 3 3
+[[0, 0, 0],[1, 2, 1],[0, 2, 4], [0, 0, 0],[0, 1, 3],[2, 4, 0], [0, 0, 0],[0, 0,
+1], [2, 0, 0], [0, 0, 0], [0, 1, 4],[0, 1, 5]]
+##############
+
+This input belongs to the case (a) i.e implicitization. By adding "| 0 2 5
+6 7 8 9" in the second line, we are in the case (b) i.e. arbitrary
+projection. On the other hand, by adding only "|" we are in the case (c)
+i.e. generic resultant polytope.
+
+To run ResPol with this input execute:
+
+$ ./res_enum_d < inputs/cayley4_small_implic.tmp

@@ -22,10 +22,10 @@ if ( CGAL_FOUND )
   include( CGAL_CreateSingleSourceCGALProgram )
 
   # uncomment to use hacked kernel for hashed determinants
+  include_directories (BEFORE ../include)
   include_directories (BEFORE ../kernel_d/include)
   include_directories (BEFORE ../triangulation/include)
   include_directories (BEFORE ../patches/include)
-  include_directories (BEFORE ../include)
   # uncomment when using linbox
   #include_directories (BEFORE /home/vissarion/src/LinBox/include)
   #include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)

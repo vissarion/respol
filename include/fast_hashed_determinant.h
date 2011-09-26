@@ -248,12 +248,12 @@ class FastHashedDeterminant{
 
         // Returns the total time spent in determinant computations.
         double get_determinant_time(){
-#ifdef LOG_DET_TIME
+#if defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
 #ifdef USE_ORIENTATION_DET
                 return (double)full_determinant_time/CLOCKS_PER_SEC;
-#else
+#else // USE_ORIENTATION_DET
                 return (double)determinant_time/CLOCKS_PER_SEC;
-#endif
+#endif // USE_ORIENTATION_DET
 #else
                 return -1.;
 #endif
