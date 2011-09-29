@@ -297,7 +297,7 @@ class FastHashedDeterminant{
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called.
 #ifdef USE_HASHED_DETERMINANTS
-        NT& determinant(const Index &idx){                
+        NT& determinant(const Index &idx){
                 if(number_of_hashed_determinants==1000000){
 #ifdef PRINT_INFO
                         std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
@@ -456,14 +456,13 @@ class FastHashedDeterminant{
 
 #ifdef USE_EIGEN_DET
         inline NT eigendet(NT **m,const Index &idx3){
-                size_t taille=idx3.size();
-                Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic>
-                        mat(taille,taille);
-                for(size_t i=0;i<taille;++i)
+                size_t n=idx3.size();
+                Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> mat(n,n);
+                for(size_t i=0;i<n;++i)
                         mat.col(i)=Eigen::Map<
                                                 Eigen::Matrix<NT,
                                                 Eigen::Dynamic,
-                                                1> >(m[idx3[i]],taille);
+                                                1> >(m[idx3[i]],n);
                 return mat.determinant();
         }
 #endif // USE_EIGEN_DET
@@ -712,7 +711,7 @@ class FastHashedDeterminant{
                 typename LA::Matrix C(d/2);
                 typename LA::Matrix D(d/2);
                 //std::vector<CPoint_d>::iterator s = first;
-                      
+
                 for( int j = d/2; j < d; ++j ){
                         //std::cout << *s << std::endl;
                         for( int i = 0; i < d/2; ++i ){
