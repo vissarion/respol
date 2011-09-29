@@ -30,6 +30,9 @@
 #include <CGAL/Referenced_argument.h>
 
 #warning Using hacked function_objectsCd.h
+#ifdef USE_HACKED_GAUSSIAN_ELIMINATION
+#warning using hacked gaussian elimination
+#endif
 
 #undef CGAL_KD_TRACE
 #undef CGAL_KD_TRACEN
@@ -395,7 +398,11 @@ public:
                 ++s;
                 ++j;
             }
+#ifdef USE_HACKED_GAUSSIAN_ELIMINATION
+            Orientation o = Orientation(LA::destructive_sign_of_determinant(M));
+#else
             Orientation o = Orientation(LA::sign_of_determinant(M));
+#endif
             if( ( o != COPLANAR ) || state_.axes_found_ )
             {
                 state_.axes_found_ = true;
