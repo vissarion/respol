@@ -1,13 +1,33 @@
 Useful compilation flags
 ------ ----------- -----
 
-Compilation flags are set in CMakeLists.txt. They are:
+Compilation flags are set in CMakeLists.txt. Normally, there is no need to
+change them, but they are shown for completeness. They are:
+
 - PRINT_INFO: print information about what the algorithm is doing (set by
   default),
+- USE_CGAL_DET: use the default CGAL linear algebra determinant instead of
+  the Laplace expansion algorithm for computing determinants (unset by
+  default),
 - USE_LINBOX_DET: use LinBox instead of the Laplace expansion algorithm for
-  computing determinants (unset by default),
+  computing determinants (unset by default, requires LinBox and some more
+  experimental code),
+- USE_EIGEN_DET: use Eigen instead of the Laplace expansion algorithm for
+  computing determinants (unset by default, requires Eigen),
 - HASH_STATISTICS: collect and print statistics on hashed determinants
   (unset by default),
+- LOG_DET_TIME: print the total time spent in computing determinants (set
+  by default),
 - USE_HASHED_DETERMINANTS: no need to explain this (set by default),
 - USE_HACKED_KERNEL_ORIENTATION: this activates the hack to use hashed
-  determinants inside CGAL's Triangulation package (set by default).
+  determinants inside CGAL's Triangulation package (set by default),
+- USE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL: use the above hack to
+  compute convex hulls (unset by default),
+- USE_ORIENTATION_DET: perform a gaussian elimination step before computing
+  each determinant for orientation (unset by default),
+- COMPUTE_VOL: compute the volume of the output polytope (unset by
+  default),
+- USE_MAPLE_CONVEX_HULL: compute the convex hull of the output polytope
+  with Maple, to check the output for degeneracies (unset by default,
+  requires Maple),
+- MAPLE_EXECUTABLE=_path_: set the path to the Maple executable.

@@ -34,7 +34,8 @@ $ cmake -DCGAL_DIR=_YOUR_CGAL_PATH_ .
 $ make
 
 where _YOUR_CGAL_PATH_ is the path where CGAL library was compiled. For
-additional options, set by CMake flags, see the file README.FLAGS.
+additional options, set by CMake flags, see the file README.FLAGS (it is
+normally not needed to change default compilation options).
 
 
 --------------
