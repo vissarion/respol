@@ -271,6 +271,7 @@ void print_statistics(int numoftriangs,
 template <class Vol>
 void print_statistics_small(int Cdim,
                             int Pdim,
+                            int init_num_of_input_points,
                             int num_of_input_points,
                             int numoftriangs,
                             int numofvertices,
@@ -280,6 +281,7 @@ void print_statistics_small(int Cdim,
                             const Vol &volume){
   std::cout << Cdim << " "
             << Pdim << " "
+            << init_num_of_input_points << " "
             << num_of_input_points << " "
             << numoftriangs  << " "
             << numofvertices  << " "

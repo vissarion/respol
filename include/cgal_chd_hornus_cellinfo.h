@@ -35,6 +35,10 @@
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/algorithm.h>
 
+// extreme points d includes
+#include <CGAL/Extreme_points_d.h>
+#include <CGAL/Extreme_points_traits_d.h>
+
 #include <print_functions.h>
 
 // for fast determinant computation
@@ -48,15 +52,16 @@
 //#include <../include/indexed_point.h>
 
 // the kernel
-#include <gmpxx.h>
-typedef mpq_class Field;
-//#include <CGAL/Gmpq.h>
-//typedef CGAL::Gmpq Field;
+//#include <gmpxx.h>
+//typedef mpq_class Field;
+#include <CGAL/Gmpq.h>
+typedef CGAL::Gmpq Field;
 
 
 // Cayley space kernel; for the CH of the lifted points
 
 typedef CGAL::Cartesian_d<Field> 									CK;
+//typedef CGAL::Filtered_kernel_d<Field> 								CK;
 //typedef Indexed_Cartesian_d<Field> 							CK;
 //typedef CK::IndexedPoint_d											IndexedPoint_d;
 
@@ -79,6 +84,8 @@ typedef CTriangulation::Facet											CFacet;
 typedef CTriangulation::Face 											CFace;
 typedef CTriangulation::Facet 										CFacet;
 typedef CTriangulation::Locate_type 							CLocate_type;
+//extreme points typedefs
+typedef CGAL::Extreme_points_traits_d<CPoint_d>   EP_Traits_d;
 
 
 // projection kernel; for the Resultant polytope
@@ -104,6 +111,7 @@ typedef Triangulation::Facet_iterator							PFacet_iterator;
 typedef Triangulation::Locate_type 								PLocate_type;
 typedef Triangulation::Vertex_handle							PVertex_handle;
 typedef Triangulation::Vertex_iterator						PVertex_iterator;
+
 
 
 //misc typedefs
@@ -203,10 +211,10 @@ std::vector<int> proj_all(int m){
 ///////////////////////////////////////////////////////////
 // input functions
 
-int cayley_trick(std::vector<std::vector<Field> >& pointset,
-                 std::vector<int>& mi,
-                 std::vector<int>& proj,
-                 int& m){
+int read_pointset(std::vector<std::vector<Field> >& pointset,
+                  std::vector<int>& mi,
+                  std::vector<int>& proj,
+                  int& m){
 	int d;
 	std::cin >> d;
 	//TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
@@ -272,25 +280,15 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset,
 	PD = proj.size();				//this is the dimension of the projection
 	sort(proj.begin(),proj.end());
 	
-		// compute cayley vector to augment pointset
+	// compute cayley vector to augment pointset
 	if (mi.size() != d+1){
 		std::cout << "Input error" << std::endl;
 		exit(-1);
 	}
-	std::vector<std::vector<Field> > cayley_vec;
-	int i=0, j=-1, end=0;
-	for (std::vector<int>::iterator vit=mi.begin(); vit!=mi.end(); vit++){
-		end += *vit;
-		while (i<end){
-			std::vector<Field> cayley_point(d,0);
-			if (j>=0)
-				cayley_point[j] = 1;
-			cayley_vec.push_back(cayley_point);
-			i++;
-		}
-		j++;
-	}
+	
 	//std::cout<<cayley_vec<<std::endl;
+	
+	// construct pointset
 	std::string point;
   while(!std::getline(std::cin, point, ']').eof())
 	{
@@ -319,8 +317,29 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset,
 		std::cout << "Input error" << std::endl;
 		exit(-1);
 	}
-	// apply cayley trick and build an index
-	int p_index=0;
+	return 0;
+}
+
+// apply cayley trick 
+void cayley_trick(std::vector<std::vector<Field> >& pointset,
+									std::vector<int> mi){
+	// construct the cayley vector, zeroes-ones
+	std::vector<std::vector<Field> > cayley_vec;
+	int i=0, j=-1, end=0;
+	for (std::vector<int>::iterator vit=mi.begin(); vit!=mi.end(); vit++){
+		end += *vit;
+		while (i<end){
+			std::vector<Field> cayley_point(D,0);
+			if (j>=0)
+				cayley_point[j] = 1;
+			cayley_vec.push_back(cayley_point);
+			i++;
+		}
+		j++;
+	}
+	//std::cout << cayley_vec << std::endl;
+	// append cayley vectors to points of pointset
+	//int p_index=0;
 	std::vector<std::vector<Field> >::iterator cit=cayley_vec.begin();
 	for (std::vector<std::vector<Field> >::iterator vit=pointset.begin();
        vit!=pointset.end();
@@ -333,11 +352,102 @@ int cayley_trick(std::vector<std::vector<Field> >& pointset,
 	std::ofstream outfile;
   outfile.open("topcom_cayley.txt");
 	print_vertices_hom(pointset,outfile);
-  return 0;
+} 
+
+#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
+// compute the extreme points
+void compute_extreme_points(std::vector<std::vector<Field> >& pointset,
+														std::vector<int>& mi,
+														std::vector<int>& proj){
+  std::vector<std::vector<Field> > extreme_pointset;
+  std::vector<int> extreme_mi;
+  // the nonspecialized-projected points will be first 
+  // thus we have to change the projection
+  std::vector<int> proj_updated;
+	//std::cout<<pointset<<std::endl;
+	//std::cout << mi << std::endl;
+	int current_start=0, current_end=0;
+	for(std::vector<int>::iterator imi=mi.begin(); imi!=mi.end(); ++imi){
+		current_end+=(*imi);
+		//std::cout << current_start << "-" << current_end << std::endl;
+		std::vector<CPoint_d> points;
+		// vector<vector<Field> >  -->  vector<CPoint_d>
+		int specialized_points_position = extreme_pointset.size();
+		int count_specialized_points=0;
+		for (int i=current_start;i<current_end;++i){
+			// if the point in spesialized, i.e not projected
+			if (std::find(proj.begin(), proj.end(), i)==proj.end()){
+				CPoint_d p(D,pointset[i].begin(),pointset[i].end());
+				points.push_back(p);
+#ifdef PRINT_INFO
+				std::cout << p << "\n";
+#endif
+			} else {
+				proj_updated.push_back(specialized_points_position);
+				extreme_pointset.push_back(pointset[i]);
+				++specialized_points_position;
+				++count_specialized_points;
+			}
+		}
+		//std::cout << std::endl;
+		
+		// compute the extreme points
+		CGAL::Extreme_points_d<EP_Traits_d> ep(D);
+		ep.insert(points.begin(), points.end());
+		std::vector<CPoint_d> extreme_points;
+		ep.get_extreme_points(std::back_inserter(extreme_points));
+		
+		//vector<CPoint_d>  -->  vector<vector<Field> >
+		for (std::vector<CPoint_d>::iterator it=extreme_points.begin();
+				 it!=extreme_points.end();
+				 it++) {
+			//std::cout << *it << std::endl;
+			std::vector<Field> extreme_pointset_value;
+			for (int i=0; i<D; ++i)
+				extreme_pointset_value.push_back(it->cartesian(i));
+			extreme_pointset.push_back(extreme_pointset_value);
+		}
+#ifdef PRINT_INFO
+		std::cout<<"\nExtreme points=" << extreme_points.size()
+		         << "(out of" << points.size()
+		         << ")\n"<<std::endl;
+#endif
+		extreme_mi.push_back(extreme_points.size()+count_specialized_points);
+		current_start=current_end;
+	}
+#ifdef PRINT_INFO
+	std::cout << "mi= " << mi << " extreme_mi=" << extreme_mi << std::endl;
+	std::cout << "proj= " << proj << " proj_updated=" << proj_updated << std::endl;
+#endif
+	// update pointset, mi, proj
+	pointset = extreme_pointset;
+	mi = extreme_mi;
+	proj = proj_updated;
 }
+#endif
 
-
-
+///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//TODO use this to have only CPoint_d and not vector<vector<Field> >
+//transform vector<vector<Field> > to a vector of CPoint_d
+void transform_pointset(const std::vector<std::vector<Field> >& pointset,
+												std::vector<CPoint_d>& cgal_pointset,
+												const HD& dets){
+		std::cout << pointset << std::endl;
+		for (std::vector<std::vector<Field> >::const_iterator
+         vit=pointset.begin(); vit!=pointset.end(); vit++){
+			CPoint_d p(CD,vit->begin(),vit->end());
+			//std::cout << p <<"|"<< p.index() <<" point inserted" << std::endl;
+			//p.set_index(vit->second);
+			//p.set_hash(&dets);
+			p[0]=Field(-1);
+			std::cout << p << "\n ";
+		}
+		CPoint_d p(CD);
+		p[1]=1;
+		std::cout << "*" << p<< std::endl;
+		exit(1);
+	}
+	
 /*
 std::vector<int> proj_more_coord(const int d,
                                  int m,
@@ -531,7 +641,7 @@ std::vector<Field> project_upper_hull_r(const CTriangulation& pc,
 			lifting.push_back(p[dim-1]);
 			det_indices.push_back(p.index());
 		}
-
+    
 		// compute the last coordinate of the cross product
 		// i.e. the last coordinate of an orthogonal vector to the facet
 		// note that this is also the volume of the projection
@@ -635,13 +745,8 @@ void insert_new_Rvertex(Triangulation& Res,
 
 	//insert it to the triangulation
 	PVertex_handle new_vert = Res.insert(new_point);
-
 }
 
-
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 void update_cell_data(const Triangulation& Res,
 											const PVertex_handle &vert){
@@ -666,7 +771,8 @@ void update_cell_data(const Triangulation& Res,
 // this is for augment
 void insert_new_Rvertex2(Triangulation& Res,
 												const SRvertex& new_vertex,
-												HD& Pdets){
+												HD& Pdets,
+												PSimplex_d& near_cell){
 	// insert the coordinates of the point as a column to the HashDeterminants matrix
 	Pdets.add_column(new_vertex);
 	// construct the new point
@@ -678,15 +784,18 @@ void insert_new_Rvertex2(Triangulation& Res,
 	#endif
 	int prev_dim = Res.current_dimension();
 	//insert it to the triangulation
-	PVertex_handle new_vert = Res.insert(new_point);
+	PVertex_handle new_vert = Res.insert(new_point,near_cell);
 	int cur_dim = Res.current_dimension();
 	update_cell_data(Res,new_vert);
 }
 
+//////////////////////////////////////////////////////////
+
 // TODO: make it more efficient, don't gather all infinite cells
 int get_illegal_facet(Triangulation& Res,
 											NV_ds& normal_list,
-											PVector_d& current_vector){
+											PVector_d& current_vector,
+											PSimplex_d& near_cell){
 	//typedef std::vector<PSimplex_d> Simplices;
 	//Simplices inf_simplices;
 	//std::back_insert_iterator<Simplices> out(inf_simplices);
@@ -701,6 +810,7 @@ int get_illegal_facet(Triangulation& Res,
 				break;
 			}
 		}
+		near_cell = sit;
 		//print_cells_data(Res);
 		if (sit != Res.full_cells_end()){
 			std::vector<PPoint_d> facet_points;
@@ -928,19 +1038,24 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
   PVector_d current_vector;
   // make a stack (stl vector) with normals vectors used
   NV_ds normal_list_d;
-
-  while(get_illegal_facet(Res,normal_list_d,current_vector)){
+	//hint cell
+	PSimplex_d near_cell;
+  while(get_illegal_facet(Res,normal_list_d,current_vector,near_cell)){
 		//std::cout << "cur_vect" << current_vector << std::endl;
+		
+		//double t1 = (double)clock()/(double)CLOCKS_PER_SEC;    
 		std::vector<Field> new_vertex =
       compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector);
+    //double t2 = (double)clock()/(double)CLOCKS_PER_SEC;    
+    //std::cout << "ResVertex construction=" << t2-t1 << std::endl;
 		// insert it in the complex Res (if it is not already there)
   	
   	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
-  		insert_new_Rvertex2(Res,new_vertex,Pdets);
+  		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell);
 		#ifdef PRINT_INFO
 
-			std::cout<<"current number of Res vertices: "<<
-        Res.number_of_vertices()<<std::endl;
+			std::cout << "current number of Res vertices: " <<
+        Res.number_of_vertices() << std::endl;
 			//print_cells_data(Res);
 		#endif
 		num_of_triangs++;
@@ -961,8 +1076,8 @@ std::pair<int,int> compute_res_faster(
         Triangulation& Res){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
-
-	// construct an initial triangulation of the points that will not be projected
+ 
+  // construct an initial triangulation of the points that will not be projected
 	CTriangulation T(CD);
 	StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;

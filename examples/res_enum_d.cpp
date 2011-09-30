@@ -49,11 +49,24 @@ int main(const int argc, const char** argv) {
 	std::vector<int> mi,proj;
 	int n;
  	std::vector<std::vector<Field> > pointset;
-
+ 	
 	// initialize all the above
  	// read input (pointset, mi, n), apply cayley trick, define projection
- 	cayley_trick(pointset, mi, proj, n);
-
+ 	read_pointset(pointset, mi, proj, n);
+	int initial_pointset_size = pointset.size();
+	
+	//HD dets1(pointset.begin(),pointset.end());
+  //dets1.print_matrix(std::cout);
+	//std::cout << proj << std::endl;
+	#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
+	compute_extreme_points(pointset,mi,proj);
+	#endif
+	//HD dets2(pointset.begin(),pointset.end());
+  //dets2.print_matrix(std::cout);
+  //std::cout << proj << std::endl;
+  
+	cayley_trick(pointset, mi);
+	
 	// this is the dimension of the resultant (and secondary) polytope
  	int RD = n - 2*D -1;
   
@@ -78,8 +91,9 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 
 	// print the result i.e. the proj of the Resultant polytope
-	//print_res_vertices(Res,std::cout);
- 
+ 	#ifdef PRINT_INFO	
+	print_res_vertices(Res,std::cout);
+  #endif
 	//print_res_facets_number(Res);
 
   // print some statistics
@@ -95,6 +109,7 @@ int main(const int argc, const char** argv) {
   #else
   print_statistics_small(CD-1, 
                          PD,
+                         initial_pointset_size,
                          pointset.size(),
                          num_of_triangs.first+num_of_triangs.second,
                          Res.number_of_vertices(),
