@@ -33,11 +33,8 @@
 #include <CGAL/Triangulation_full_cell.h>
 #include <CGAL/Triangulation_data_structure.h>
 #include <CGAL/Cartesian_d.h>
+#include <CGAL/Linear_algebraCd.h>
 #include <CGAL/algorithm.h>
-
-// extreme points d includes
-#include <CGAL/Extreme_points_d.h>
-#include <CGAL/Extreme_points_traits_d.h>
 
 #include <print_functions.h>
 
@@ -59,11 +56,11 @@ typedef CGAL::Gmpq Field;
 
 
 // Cayley space kernel; for the CH of the lifted points
+typedef CGAL::Cartesian_d<Field>		CK;
 
-typedef CGAL::Cartesian_d<Field> 									CK;
-//typedef CGAL::Filtered_kernel_d<Field> 								CK;
+//typedef CGAL::Filtered_kernel_d<Field> 						CK;
 //typedef Indexed_Cartesian_d<Field> 							CK;
-//typedef CK::IndexedPoint_d											IndexedPoint_d;
+//typedef CK::IndexedPoint_d									IndexedPoint_d;
 
 //typedef CGAL::Triangulation_vertex<CK,size_t>						tv;
 //typedef CGAL::Triangulation_full_cell<CK>		tc;
@@ -71,46 +68,51 @@ typedef CGAL::Cartesian_d<Field> 									CK;
 // not working if we'll not pas all the parameters explicitly
 //e.g. CGAL::Triangulation_data_structure<CGAL::Dimension_tag<CD> > tds; gives error
 //typedef CGAL::Triangulation<CK,tds> 							CTriangulation;
-typedef CGAL::Triangulation<CK>			 							CTriangulation;
-typedef CTriangulation::Point_d 									CPoint_d;
-typedef CK::Hyperplane_d													CHyperplane_d;
-typedef CK::Vector_d															CVector_d;
-typedef CTriangulation::Vertex_iterator						CVertex_iterator;
+typedef CGAL::Triangulation<CK>			 						CTriangulation;
+typedef CTriangulation::Point_d 								CPoint_d;
+typedef CK::Hyperplane_d										CHyperplane_d;
+typedef CK::Vector_d											CVector_d;
+typedef CTriangulation::Vertex_iterator							CVertex_iterator;
 typedef CTriangulation::Vertex_handle							CVertex_handle;
-typedef CTriangulation::Full_cell_iterator				CSimplex_iterator;
-typedef CTriangulation::Full_cell_const_iterator	CSimplex_const_iterator;
-typedef CTriangulation::Full_cell_handle					CSimplex_d;
-typedef CTriangulation::Facet											CFacet;
-typedef CTriangulation::Face 											CFace;
-typedef CTriangulation::Facet 										CFacet;
+typedef CTriangulation::Full_cell_iterator						CSimplex_iterator;
+typedef CTriangulation::Full_cell_const_iterator				CSimplex_const_iterator;
+typedef CTriangulation::Full_cell_handle						CSimplex_d;
+typedef CTriangulation::Facet									CFacet;
+typedef CTriangulation::Face 									CFace;
+typedef CTriangulation::Facet 									CFacet;
 typedef CTriangulation::Locate_type 							CLocate_type;
+
+#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
+// extreme points d includes
+#include <CGAL/Extreme_points_d.h>
+#include <CGAL/Extreme_points_traits_d.h>
 //extreme points typedefs
 typedef CGAL::Extreme_points_traits_d<CPoint_d>   EP_Traits_d;
-
+#endif
 
 // projection kernel; for the Resultant polytope
 
 typedef CGAL::Cartesian_d<Field>									PK;
 
-typedef CGAL::Triangulation_vertex<CK>						tv;
-typedef CGAL::Triangulation_full_cell<CK,bool>		tc;
+typedef CGAL::Triangulation_vertex<CK>								tv;
+typedef CGAL::Triangulation_full_cell<CK,bool>						tc;
 typedef CGAL::Triangulation_data_structure<CGAL::Dynamic_dimension_tag,tv,tc > tds;
 typedef CGAL::Triangulation<PK,tds> 							Triangulation;
 //typedef CGAL::Triangulation<PK> 								Triangulation;
 
-typedef PK::Direction_d														PVector_d;
-typedef PK::Hyperplane_d													PHyperplane_d;
-typedef Triangulation::Full_cell_handle						PSimplex_d;
-typedef Triangulation::Finite_full_cell_iterator	PSimplex_finite_iterator;
-typedef Triangulation::Finite_full_cell_const_iterator  PSimplex_finite_const_iterator;
-typedef Triangulation::Full_cell_iterator					PSimplex_iterator;
-typedef Triangulation::Point_d 										PPoint_d;
-typedef Triangulation::Face 											PFace;
-typedef Triangulation::Facet 											PFacet;
+typedef PK::Direction_d											PVector_d;
+typedef PK::Hyperplane_d										PHyperplane_d;
+typedef Triangulation::Full_cell_handle							PSimplex_d;
+typedef Triangulation::Finite_full_cell_iterator				PSimplex_finite_iterator;
+typedef Triangulation::Finite_full_cell_const_iterator  		PSimplex_finite_const_iterator;
+typedef Triangulation::Full_cell_iterator						PSimplex_iterator;
+typedef Triangulation::Point_d 									PPoint_d;
+typedef Triangulation::Face 									PFace;
+typedef Triangulation::Facet 									PFacet;
 typedef Triangulation::Facet_iterator							PFacet_iterator;
 typedef Triangulation::Locate_type 								PLocate_type;
 typedef Triangulation::Vertex_handle							PVertex_handle;
-typedef Triangulation::Vertex_iterator						PVertex_iterator;
+typedef Triangulation::Vertex_iterator							PVertex_iterator;
 
 
 
@@ -122,7 +124,7 @@ typedef std::vector<SRvertex>   Resvertex;
 typedef std::set<SRvertex>      Polytope;
 
 // big matrix determinants typedefs
-typedef FastHashedDeterminant<Field>              HD;
+typedef FastHashedDeterminant<Field>             			HD;
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
@@ -1078,8 +1080,8 @@ std::pair<int,int> compute_res_faster(
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
  
   // construct an initial triangulation of the points that will not be projected
-	CTriangulation T(CD);
-	StaticTriangulation(pointset,proj,T,dets);
+  CTriangulation T(CD);
+  StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
 
   // start by computing a simplex

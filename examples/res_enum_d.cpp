@@ -81,8 +81,10 @@ int main(const int argc, const char** argv) {
 
 		// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;
-	Triangulation Res(PD);
-
+	
+  Triangulation Res(PD);
+	//Res.Geom_traits.is_hashed();
+  
 	//compute the res polytope
 	std::pair<int,int> num_of_triangs =
     compute_res_faster(pointset,n,mi,RD,proj,dets,Pdets,Res);

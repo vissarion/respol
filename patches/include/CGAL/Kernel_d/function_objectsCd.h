@@ -241,7 +241,7 @@ public:
 // the determinant of a matrix of size d.
 template <class R>
 class OrientationCd{
-public:
+public:    
     template <class ForwardIterator>
     Orientation operator()(ForwardIterator first, ForwardIterator last)const{
         // don't know what's this, but it was like that in the original file

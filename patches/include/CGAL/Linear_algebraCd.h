@@ -38,6 +38,15 @@ namespace CGAL {
 template < class _FT, class _AL = CGAL_ALLOCATOR(_FT) >
 class Linear_algebraCd
 {
+	/*
+public:
+  bool hashed;
+  void is_hashed(){
+	  hashed = true;
+  }
+  void is_not_hashed(){
+	  hashed = false;
+  }*/
 public:
   typedef _FT                     FT;
   typedef _FT                     RT;
@@ -49,7 +58,8 @@ public:
   typedef FT*                     iterator;
   
   Linear_algebraCd() {}
-
+  
+  
 protected:
   // Major routines for Linear_algebra_d
   static 

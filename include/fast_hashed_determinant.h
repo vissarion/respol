@@ -67,11 +67,16 @@ template <class _NT>
 class FastHashedDeterminant{
         public:
         typedef _NT                                     NT;
-#ifdef USE_CGAL_DET
+#ifdef  USE_CGAL_DET 
         typedef CGAL::Cartesian_d<NT>                   CK;
         typedef typename CK::LA                         LA;
 #endif
-        typedef std::vector<NT>                         Column;
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+        typedef CGAL::Cartesian_d<NT>                   CK;
+        typedef typename CK::LA                         LA;
+#endif
+
+				typedef std::vector<NT>                         Column;
         typedef std::vector<NT>                         Row;
         typedef std::vector<size_t>                     Index;
         private:
@@ -109,6 +114,9 @@ class FastHashedDeterminant{
         _o_determinants(),
         _c_determinants(),
 #endif
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+        _hashed(true),
+#endif 
         number_of_hashed_determinants(0)
         {};
 
@@ -161,6 +169,10 @@ class FastHashedDeterminant{
         _points(),
         _determinants(),
         _h_determinants(),
+        
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+        _hashed(false),
+#endif        
 #ifdef USE_ORIENTATION_DET
         _o_determinants(),
         _c_determinants(),
@@ -426,6 +438,9 @@ class FastHashedDeterminant{
         }
 
         NT homogeneous_determinant(const Index &idx,const Row &r){
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+          if (!_hashed){      
+#endif
                 assert(idx.size()==r.size());
 #ifdef LOG_DET_TIME
                 clock_t start_all,det_old;
@@ -452,6 +467,38 @@ class FastHashedDeterminant{
                 determinant_time=det_old+(clock()-start_all);
 #endif
                 return det;
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+          } else {
+						int d = idx.size() - 1;
+						//std::cout << first-last << "|" << d << std::endl;
+						typename LA::Matrix M(d);
+						//std::vector<CPoint_d>::iterator s = first;
+						for( int j = 0; j < d-1; ++j ){
+										//std::cout << *s << std::endl;
+										for( int i = 1; i <= d; ++i ){
+														//std::cout << i << "," << j;
+														M(i-1,j) = _points[idx[i]][j] - _points[idx[0]][j];
+														//std::cout << " -> " << M(i,j) << std::endl;
+								//						std::cout //<< _points[idx[i]][j] << " " ;
+														//std::cout << "(" << _points[idx[i]][j] << "-"
+														//          << _points[idx[0]][j] << ") " 
+							//							          << M(i-1,j) << " ";
+										}
+									//	std::cout << "\n" ;
+						}
+						for( int i = 1; i <= d; ++i ){
+										//std::cout << i << "," << j;
+										M(i-1,d-1) = r[i] - r[0];
+							//			std::cout //<< r[i] << " " ;
+										//std::cout << "(" << r[i] << "-" << r[0] << ") =" 
+								//		          << r[i] - r[0] << " ";
+										//std::cout << " -> " << M(i,j) << std::endl;
+						}
+						//std::cout << std::endl;
+						//exit(0);
+						return LA::sign_of_determinant(M);
+					}
+#endif
         }
 
 #ifdef USE_EIGEN_DET
@@ -791,6 +838,9 @@ class FastHashedDeterminant{
         Matrix _points;
         Determinants _determinants;
         HDeterminants _h_determinants;
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+				bool _hashed;
+#endif        
 #ifdef USE_ORIENTATION_DET
         ODeterminants _o_determinants;
         CDeterminants _c_determinants;
