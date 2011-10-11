@@ -258,7 +258,7 @@ void print_statistics(int numoftriangs,
             << numoftriangs+numoftriangs2 << " ("
             << numoftriangs << "+" << numoftriangs2
             << ")" << std::endl;
-  std::cout << "Projected Res vertices (extreme; if maple enabled!) \t\t"
+  std::cout << "Projected Res vertices (extreme; if enabled) \t\t"
             << numofvertices
             << "(" << numofextremevertices << ")"
             << std::endl;

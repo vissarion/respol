@@ -428,6 +428,23 @@ void compute_extreme_points(std::vector<std::vector<Field> >& pointset,
 }
 #endif
 
+template <class Triang>
+int count_extreme_vertices(const Triang &Res){
+	typedef typename Triang::Vertex_const_iterator        VCI;
+  typedef typename Triang::Point_d                      P;
+  typedef typename P::Cartesian_const_iterator          PCCI;
+  std::vector<PPoint_d> points;
+  for (VCI vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
+    points.push_back(vit->point());
+  }
+	// compute the extreme points
+	CGAL::Extreme_points_d<EP_Traits_d> ep(Res.current_dimension());
+	ep.insert(points.begin(),points.end());
+	std::vector<CPoint_d> extreme_points;
+	ep.get_extreme_points(std::back_inserter(extreme_points));
+	return extreme_points.size();
+}
+
 ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO use this to have only CPoint_d and not vector<vector<Field> >
 //transform vector<vector<Field> > to a vector of CPoint_d

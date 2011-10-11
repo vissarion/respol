@@ -55,16 +55,12 @@ int main(const int argc, const char** argv) {
  	read_pointset(pointset, mi, proj, n);
 	int initial_pointset_size = pointset.size();
 	
-	//HD dets1(pointset.begin(),pointset.end());
-  //dets1.print_matrix(std::cout);
-	//std::cout << proj << std::endl;
+	// remove spesialized redundant (non-extreme) points
 	#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
 	compute_extreme_points(pointset,mi,proj);
 	#endif
-	//HD dets2(pointset.begin(),pointset.end());
-  //dets2.print_matrix(std::cout);
-  //std::cout << proj << std::endl;
   
+  // compute the cayley points set
 	cayley_trick(pointset, mi);
 	
 	// this is the dimension of the resultant (and secondary) polytope
@@ -81,9 +77,7 @@ int main(const int argc, const char** argv) {
 
 		// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;
-	
   Triangulation Res(PD);
-	//Res.Geom_traits.is_hashed();
   
 	//compute the res polytope
 	std::pair<int,int> num_of_triangs =
@@ -103,7 +97,7 @@ int main(const int argc, const char** argv) {
   print_statistics (num_of_triangs.first, 
                    num_of_triangs.second,
                    Res.number_of_vertices(), 
-                   compute_extreme_res_vertices_maple(Res), 
+                   count_extreme_vertices(Res),
                    tstopall-tstartall, // overall time
                    dets.get_determinant_time()+
                    Pdets.get_determinant_time(), // determinant time
@@ -115,7 +109,7 @@ int main(const int argc, const char** argv) {
                          pointset.size(),
                          num_of_triangs.first+num_of_triangs.second,
                          Res.number_of_vertices(),
-                         compute_extreme_res_vertices_maple(Res), 
+                         count_extreme_vertices(Res),
                          tstopall-tstartall, // overall time
                          dets.get_determinant_time()+
                          Pdets.get_determinant_time(), // determinant time
