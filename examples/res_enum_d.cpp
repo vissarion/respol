@@ -115,6 +115,7 @@ int main(const int argc, const char** argv) {
                          Pdets.get_determinant_time(), // determinant time
                          volume(Res,Pdets));
   #endif
+  std::cout << "convex hull time = " << conv_time << std::endl;
   //Pdets.print_matrix(std::cout);
 
   return 0;

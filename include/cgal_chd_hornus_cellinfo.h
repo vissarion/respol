@@ -114,7 +114,7 @@ typedef Triangulation::Locate_type 								PLocate_type;
 typedef Triangulation::Vertex_handle							PVertex_handle;
 typedef Triangulation::Vertex_iterator							PVertex_iterator;
 
-
+double conv_time = 0;
 
 //misc typedefs
 
@@ -759,7 +759,7 @@ void insert_new_Rvertex(Triangulation& Res,
 	new_point.set_index(Res.number_of_vertices());
 	new_point.set_hash(&Pdets);
  	#ifdef PRINT_INFO
-		std::cout << "one new R-vertex found !!! "<< std::endl;
+		//std::cout << "one new R-vertex found !!! "<< std::endl;
 	#endif
 
 	//insert it to the triangulation
@@ -799,11 +799,16 @@ void insert_new_Rvertex2(Triangulation& Res,
 	new_point.set_index(Res.number_of_vertices());
 	new_point.set_hash(&Pdets);
  	#ifdef PRINT_INFO
-		std::cout << "one new R-vertex found !!! "<< std::endl;
+		//std::cout << "one new R-vertex found !!! "<< std::endl;
 	#endif
 	int prev_dim = Res.current_dimension();
 	//insert it to the triangulation
+	double tstartall = (double)clock()/(double)CLOCKS_PER_SEC;
 	PVertex_handle new_vert = Res.insert(new_point,near_cell);
+  double tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
+	conv_time += tstopall - tstartall;
+	//std::cout << "time: " <<  tstopall - tstartall << std::endl;
+	
 	int cur_dim = Res.current_dimension();
 	update_cell_data(Res,new_vert);
 }
@@ -900,9 +905,9 @@ std::vector<Field> compute_res_vertex(
 	  Tl.clear();
 	
 	  #ifdef PRINT_INFO
-		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		  std::cout << "new Res vertex (up)= ( " << new_vertex << ")" << std::endl;
 		#endif
-	
+	  std::cout << new_vertex << std::endl;
 	  return new_vertex;	
 	} else {
 		// make a copy of T
@@ -920,9 +925,9 @@ std::vector<Field> compute_res_vertex(
 	  Tl.clear();
 	
 	  #ifdef PRINT_INFO
-		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		  std::cout << "new Res vertex (up)= ( " << new_vertex << ")" << std::endl;
 		#endif
-	
+	  std::cout << new_vertex << std::endl;
 	  return new_vertex;
 	}
 }
@@ -963,7 +968,7 @@ std::vector<Field> compute_res_vertex2(
 	  #ifdef PRINT_INFO
 		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
 		#endif
-	
+	  std::cout << new_vertex << std::endl;
 	  return new_vertex;	
 	} else {
 		// make a copy of T
@@ -983,7 +988,7 @@ std::vector<Field> compute_res_vertex2(
 	  #ifdef PRINT_INFO
 		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
 		#endif
-	
+	  std::cout << new_vertex << std::endl;
 	  return new_vertex;
 	}
 	
@@ -1069,8 +1074,9 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
     //std::cout << "ResVertex construction=" << t2-t1 << std::endl;
 		// insert it in the complex Res (if it is not already there)
   	
-  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
+  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0){
   		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell);
+		}
 		#ifdef PRINT_INFO
 
 			std::cout << "current number of Res vertices: " <<
