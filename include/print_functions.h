@@ -24,6 +24,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <CGAL/Gmpz.h>
 
 /////////////////////////////////////////////////////////////////
 // overload of << operators for various types
@@ -229,6 +230,68 @@ void print_cells_data(const Triang &Res){
   std::cout << std::endl;
 }
 
+template <class Triang>
+void print_polymake_testfile(const Triang &Res,
+														 std::string ch_algo, 
+														 std::ostream& os){
+  // print the vertices of the res polytope
+  int number_of_vertices = 0;
+  typedef typename Triang::Vertex_const_iterator        VCI;
+  typedef typename Triang::Point_d                      P;
+  typedef typename P::Cartesian_const_iterator          PCCI;
+  //os << "dim=" << Res.current_dimension() << std::endl;
+	os << "use Time::HiRes qw(gettimeofday tv_interval);\n";
+	os << "use application 'polytope';\n";
+	os << "prefer '"<< ch_algo <<"';\n";
+	os << "my $p=new Polytope<Rational>;\n";
+	os << "$p->POINTS=<<'.';\n";
+  for (VCI vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
+    os << "1 ";
+    for (PCCI cit=vit->point().cartesian_begin();
+         cit != vit->point().cartesian_end();
+         cit++){
+      os << cit->numerator();
+      if (cit->denominator() != CGAL::Gmpz(1)){
+				std::cout << " NOT INTEGER coeff in RES pol";
+				exit(-1);
+			}
+      if (cit - vit->point().cartesian_begin() != vit->point().dimension()-1)
+        os << " ";
+    }
+    //os << "|" << vit->point().index();
+    os << "\n";
+  }
+	os << ".\n";
+	os << "print ' ';\n";
+	os << "print $p->N_POINTS;\n";
+	os << "print ' ';\n";
+	os << "print $p->N_VERTICES;\n";
+	os << "print ' ';\n";
+	os << "print $p->DIM;\n";
+	os << "print ' ';\n";
+	os << "my $t0 = [gettimeofday];\n";
+	os << "my $f=$p->FACETS;\n";
+	os << "print tv_interval($t0,[gettimeofday]);\n";
+	os << "print ' ';\n";
+	//os << "print \"\\n\";\n";
+  os << std::endl;
+}
+
+template <class Triang>
+void generate_polymake_scripts(const Triang &Res){
+	std::ofstream polymakefile1;
+  polymakefile1.open("test_cdd.polymake");
+  print_polymake_testfile(Res,"cdd",polymakefile1); 
+  
+  std::ofstream polymakefile2;
+  polymakefile2.open("test_lrs.polymake");
+  print_polymake_testfile(Res,"lrs",polymakefile2);
+  
+  std::ofstream polymakefile3;
+  polymakefile3.open("test_bb.polymake");
+  print_polymake_testfile(Res,"beneath_beyond",polymakefile3);
+}
+
 /////////////////////////////////////////////////////////////////
 // functions to print statistics
 
@@ -258,7 +321,7 @@ void print_statistics(int numoftriangs,
             << numoftriangs+numoftriangs2 << " ("
             << numoftriangs << "+" << numoftriangs2
             << ")" << std::endl;
-  std::cout << "Projected Res vertices (extreme; if enabled) \t\t"
+  std::cout << "Projected Res vertices (extreme; if enabled) \t\t\t"
             << numofvertices
             << "(" << numofextremevertices << ")"
             << std::endl;
@@ -277,6 +340,7 @@ void print_statistics_small(int Cdim,
                             int numofvertices,
                             int numofextremevertices,
                             double timeall,
+                            double timehull,
                             double timedet,
                             const Vol &volume){
   std::cout << Cdim << " "
@@ -287,9 +351,11 @@ void print_statistics_small(int Cdim,
             << numofvertices  << " "
             << numofextremevertices << " "
             << timeall << " "
+            << timehull << " "
             << timedet << " "
             << volume
-            << std::endl;
+            //<< std::endl
+            ;
 }
 
 #endif // PRINT_FUNCTIONS_H

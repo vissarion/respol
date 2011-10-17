@@ -88,10 +88,11 @@ int main(const int argc, const char** argv) {
 
 	// print the result i.e. the proj of the Resultant polytope
  	#ifdef PRINT_INFO	
-	print_res_vertices(Res,std::cout);
+	//print_res_vertices(Res,std::cout);
   #endif
 	//print_res_facets_number(Res);
-
+  generate_polymake_scripts(Res);
+  
   // print some statistics
   #ifdef PRINT_INFO
   print_statistics (num_of_triangs.first, 
@@ -111,11 +112,12 @@ int main(const int argc, const char** argv) {
                          Res.number_of_vertices(),
                          count_extreme_vertices(Res),
                          tstopall-tstartall, // overall time
+                         conv_time, // Res convex hull time
                          dets.get_determinant_time()+
                          Pdets.get_determinant_time(), // determinant time
                          volume(Res,Pdets));
   #endif
-  std::cout << "convex hull time = " << conv_time << std::endl;
+  //std::cout << "convex hull time = " << conv_time << std::endl;
   //Pdets.print_matrix(std::cout);
 
   return 0;

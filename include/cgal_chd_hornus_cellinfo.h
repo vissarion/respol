@@ -907,7 +907,7 @@ std::vector<Field> compute_res_vertex(
 	  #ifdef PRINT_INFO
 		  std::cout << "new Res vertex (up)= ( " << new_vertex << ")" << std::endl;
 		#endif
-	  std::cout << new_vertex << std::endl;
+	  //std::cout << new_vertex << std::endl;
 	  return new_vertex;	
 	} else {
 		// make a copy of T
@@ -927,7 +927,7 @@ std::vector<Field> compute_res_vertex(
 	  #ifdef PRINT_INFO
 		  std::cout << "new Res vertex (up)= ( " << new_vertex << ")" << std::endl;
 		#endif
-	  std::cout << new_vertex << std::endl;
+	  //std::cout << new_vertex << std::endl;
 	  return new_vertex;
 	}
 }
@@ -968,7 +968,7 @@ std::vector<Field> compute_res_vertex2(
 	  #ifdef PRINT_INFO
 		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
 		#endif
-	  std::cout << new_vertex << std::endl;
+	  //std::cout << new_vertex << std::endl;
 	  return new_vertex;	
 	} else {
 		// make a copy of T
@@ -988,7 +988,7 @@ std::vector<Field> compute_res_vertex2(
 	  #ifdef PRINT_INFO
 		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
 		#endif
-	  std::cout << new_vertex << std::endl;
+	  //std::cout << new_vertex << std::endl;
 	  return new_vertex;
 	}
 	
