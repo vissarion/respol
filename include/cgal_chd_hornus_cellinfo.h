@@ -1083,6 +1083,9 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
         Res.number_of_vertices() << std::endl;
 			//print_cells_data(Res);
 		#endif
+		if (Res.number_of_vertices() == 100){
+			return num_of_triangs;
+		}
 		num_of_triangs++;
 	}
 	return num_of_triangs;
