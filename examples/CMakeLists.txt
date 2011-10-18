@@ -25,8 +25,8 @@ if ( CGAL_FOUND )
   
   include_directories (BEFORE ../external/triangulation/include)
   include_directories (BEFORE ../external/extreme_points_d/include)
+  include_directories (BEFORE ../external/kernel_d/include)
   
-  include_directories (BEFORE ../kernel_d/include)
   include_directories (BEFORE ../include)
   include_directories (BEFORE ../patches/include)
   # uncomment when using linbox
