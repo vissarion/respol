@@ -23,8 +23,8 @@ if ( CGAL_FOUND )
 
   # uncomment to use hacked kernel for hashed determinants
   
-  include_directories (BEFORE ../triangulation/include)
-  include_directories (BEFORE ../extreme_points_d/include)
+  include_directories (BEFORE ../external/triangulation/include)
+  include_directories (BEFORE ../external/extreme_points_d/include)
   
   include_directories (BEFORE ../kernel_d/include)
   include_directories (BEFORE ../include)
