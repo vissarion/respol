@@ -114,7 +114,10 @@ typedef Triangulation::Locate_type 								PLocate_type;
 typedef Triangulation::Vertex_handle							PVertex_handle;
 typedef Triangulation::Vertex_iterator							PVertex_iterator;
 
+// some global variables for experiments 
+// should be excluded
 double conv_time = 0;
+int restricted_num_Res;
 
 //misc typedefs
 
@@ -217,6 +220,7 @@ int read_pointset(std::vector<std::vector<Field> >& pointset,
                   std::vector<int>& mi,
                   std::vector<int>& proj,
                   int& m){
+	std::cin >> restricted_num_Res;
 	int d;
 	std::cin >> d;
 	//TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
@@ -1083,7 +1087,7 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
         Res.number_of_vertices() << std::endl;
 			//print_cells_data(Res);
 		#endif
-		if (Res.number_of_vertices() == 100){
+		if (Res.number_of_vertices() == restricted_num_Res){
 			return num_of_triangs;
 		}
 		num_of_triangs++;

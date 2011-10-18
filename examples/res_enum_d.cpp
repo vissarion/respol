@@ -87,9 +87,9 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 
 	// print the result i.e. the proj of the Resultant polytope
- 	#ifdef PRINT_INFO	
+ 	//#ifdef PRINT_INFO	
 	//print_res_vertices(Res,std::cout);
-  #endif
+  //#endif
 	//print_res_facets_number(Res);
   generate_polymake_scripts(Res);
   
