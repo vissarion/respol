@@ -354,7 +354,7 @@ void print_statistics_small(int Cdim,
             << timehull << " "
             << timedet << " "
             << volume
-            //<< std::endl
+            << std::endl
             ;
 }
 

@@ -117,8 +117,9 @@ typedef Triangulation::Vertex_iterator							PVertex_iterator;
 // some global variables for experiments 
 // should be excluded
 double conv_time = 0;
+#ifdef RESTRICTED_RES
 int restricted_num_Res;
-
+#endif
 //misc typedefs
 
 typedef std::vector<Field>      SRvertex;
@@ -220,7 +221,9 @@ int read_pointset(std::vector<std::vector<Field> >& pointset,
                   std::vector<int>& mi,
                   std::vector<int>& proj,
                   int& m){
+#ifdef RESTRICTED_RES	
 	std::cin >> restricted_num_Res;
+#endif
 	int d;
 	std::cin >> d;
 	//TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
@@ -1087,9 +1090,11 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
         Res.number_of_vertices() << std::endl;
 			//print_cells_data(Res);
 		#endif
-		if (Res.number_of_vertices() == restricted_num_Res){
-			return num_of_triangs;
-		}
+		#ifdef RESTRICTED_RES
+			if (Res.number_of_vertices() == restricted_num_Res){
+				return num_of_triangs;
+			}
+		#endif
 		num_of_triangs++;
 	}
 	return num_of_triangs;
