@@ -295,21 +295,9 @@ void generate_polymake_scripts(const Triang &Res){
 /////////////////////////////////////////////////////////////////
 // functions to print statistics
 
-// this is the old version of print_statistics, see below for the newer one
-void print_statistics(int numoftriangs,
-                      int numofinitvertices,
-                      int numofvertices,
-                      double timeall){
-  std::cout << std::endl;
-  std::cout << "Number of triangs enumerated \t" << numoftriangs << std::endl;
-  std::cout << "Projected Res vertices (INIT)\t" << numofinitvertices <<
-    std::endl;
-  std::cout << "Projected Res vertices \t\t" << numofvertices << std::endl;
-  std::cout << "Time overall   \t\t\t" << timeall << std::endl;
-}
-
 template <class Vol>
-void print_statistics(int numoftriangs,
+void print_statistics(int current_dim,
+                      int numoftriangs,
                       int numoftriangs2,
                       int numofvertices,
                       int numofextremevertices,
@@ -317,6 +305,7 @@ void print_statistics(int numoftriangs,
                       double timedet,
                       const Vol &volume){
   std::cout << std::endl;
+  std::cout << "Res dim   \t\t\t\t\t\t\t" << current_dim << std::endl;
   std::cout << "Num of triangs enumed (init+augment)\t\t\t\t"
             << numoftriangs+numoftriangs2 << " ("
             << numoftriangs << "+" << numoftriangs2
@@ -334,6 +323,7 @@ void print_statistics(int numoftriangs,
 template <class Vol>
 void print_statistics_small(int Cdim,
                             int Pdim,
+                            int current_dim,
                             int init_num_of_input_points,
                             int num_of_input_points,
                             int numoftriangs,
@@ -345,6 +335,7 @@ void print_statistics_small(int Cdim,
                             const Vol &volume){
   std::cout << Cdim << " "
             << Pdim << " "
+            << current_dim << " "
             << init_num_of_input_points << " "
             << num_of_input_points << " "
             << numoftriangs  << " "
@@ -354,7 +345,9 @@ void print_statistics_small(int Cdim,
             << timehull << " "
             << timedet << " "
             << volume
+#ifndef RESTRICTED_RES
             << std::endl
+#endif
             ;
 }
 

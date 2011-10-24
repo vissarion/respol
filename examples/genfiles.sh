@@ -5,11 +5,12 @@
 	#	do
 			for r in `seq 20 20 500`;
 			do
-				file="f"$r
-			  echo  $file
-			  cat experiments/restricted_hi/f
-			  echo $r > experiments/restricted_hi/d8/$file
-			  cat experiments/restricted_hi/f >> experiments/restricted_hi/d8/$file
+				file="cayley4_generic_d8"
+				folder="gd8"
+			  echo  $file$r
+			  cat experiments/restricted_hi/$file
+			  echo $r > experiments/restricted_hi/$folder/$file$r
+			  cat experiments/restricted_hi/$file >> experiments/restricted_hi/$folder/$file$r
 			done
 	#done
 #done

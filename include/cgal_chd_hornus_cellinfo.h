@@ -1022,8 +1022,8 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
   #endif
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
-  //normal_list_d.simple_initialize();
-  normal_list_d.initialize();
+  normal_list_d.simple_initialize();
+  //normal_list_d.initialize();
 
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors

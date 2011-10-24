@@ -95,7 +95,8 @@ int main(const int argc, const char** argv) {
   
   // print some statistics
   #ifdef PRINT_INFO
-  print_statistics (num_of_triangs.first, 
+  print_statistics (Res.current_dimension(),
+                   num_of_triangs.first, 
                    num_of_triangs.second,
                    Res.number_of_vertices(), 
 #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
@@ -110,6 +111,7 @@ int main(const int argc, const char** argv) {
   #else
   print_statistics_small(CD-1, 
                          PD,
+                         Res.current_dimension(),
                          initial_pointset_size,
                          pointset.size(),
                          num_of_triangs.first+num_of_triangs.second,
@@ -126,7 +128,7 @@ int main(const int argc, const char** argv) {
                          volume(Res,Pdets));
   #endif
   //std::cout << "convex hull time = " << conv_time << std::endl;
-  Pdets.print_matrix(std::cout);
+  //Pdets.print_matrix(std::cout);
 
   return 0;
 }
