@@ -98,7 +98,11 @@ int main(const int argc, const char** argv) {
   print_statistics (num_of_triangs.first, 
                    num_of_triangs.second,
                    Res.number_of_vertices(), 
+#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
                    count_extreme_vertices(Res),
+#else
+                   -1,
+#endif                   
                    tstopall-tstartall, // overall time
                    dets.get_determinant_time()+
                    Pdets.get_determinant_time(), // determinant time
@@ -110,7 +114,11 @@ int main(const int argc, const char** argv) {
                          pointset.size(),
                          num_of_triangs.first+num_of_triangs.second,
                          Res.number_of_vertices(),
+#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
                          count_extreme_vertices(Res),
+#else
+                         -1,
+#endif
                          tstopall-tstartall, // overall time
                          conv_time, // Res convex hull time
                          dets.get_determinant_time()+
@@ -118,7 +126,7 @@ int main(const int argc, const char** argv) {
                          volume(Res,Pdets));
   #endif
   //std::cout << "convex hull time = " << conv_time << std::endl;
-  //Pdets.print_matrix(std::cout);
+  Pdets.print_matrix(std::cout);
 
   return 0;
 }

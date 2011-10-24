@@ -435,6 +435,7 @@ void compute_extreme_points(std::vector<std::vector<Field> >& pointset,
 }
 #endif
 
+#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
 template <class Triang>
 int count_extreme_vertices(const Triang &Res){
 	typedef typename Triang::Vertex_const_iterator        VCI;
@@ -451,6 +452,7 @@ int count_extreme_vertices(const Triang &Res){
 	ep.get_extreme_points(std::back_inserter(extreme_points));
 	return extreme_points.size();
 }
+#endif
 
 ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 //TODO use this to have only CPoint_d and not vector<vector<Field> >
@@ -1021,7 +1023,7 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
   //normal_list_d.simple_initialize();
-  normal_list_d.simple_initialize();
+  normal_list_d.initialize();
 
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors
