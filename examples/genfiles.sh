@@ -3,7 +3,7 @@
 #do
 	#for j in `seq 0 1`;
 	#	do
-			for r in `seq 20 20 500`;
+			for r in `seq 500 20 1000`;
 			do
 				file="cayley4_generic_d8"
 				folder="gd8"

@@ -120,7 +120,7 @@ public:
     std::pair<base_iterator,bool> result = insert(d);
     return (result.second)?1:0;
   }
-
+  
   V back(){
 		base_iterator last = this->end();
 		last--;

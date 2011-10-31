@@ -1,6 +1,7 @@
 # Created by the script cgal_create_cmake_script
 # This is the CMake script for compiling a CGAL application.
 
+
 project( Resultant_enumeration_example )
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4.5)
@@ -15,6 +16,7 @@ find_package(CGAL QUIET COMPONENTS Core )
 
 if ( CGAL_FOUND )
 
+
   include( ${CGAL_USE_FILE} )
 
   include( CGAL_CreateSingleSourceCGALProgram )
@@ -28,12 +30,10 @@ if ( CGAL_FOUND )
   
   include_directories (BEFORE ../include)
   include_directories (BEFORE ../patches/include)
-  # uncomment when using LinBox
+  # uncomment when using linbox
   #include_directories (BEFORE /home/vissarion/src/LinBox/include)
   #include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
   #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
-  # uncomment when using Eigen
-  #include_directories (BEFORE /home/luis/eigen-eigen-3.0.2)
 
   #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
   add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
@@ -62,7 +62,7 @@ if ( CGAL_FOUND )
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DMAPLE_EXECUTABLE=/workspace/maple13/bin/maple")
 
-  # uncomment when using LinBox
+  # uncomment when using linbox
   #link_libraries("blas")
   #link_libraries("lapack")
   #link_libraries("givaro")
@@ -78,3 +78,4 @@ else()
   message(STATUS "This program requires the CGAL library, and will not be compiled.")
 
 endif()
+

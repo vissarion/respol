@@ -35,13 +35,12 @@
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/Linear_algebraCd.h>
 #include <CGAL/algorithm.h>
+#include <CGAL/point_generators_d.h>
 
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
 
-// normal vectors data structure
-//#include <../include/normal_vector_ds.h>
-#include <../include/normal_set_ds.h>
+
 
 // for indexed points
 //#include <../include/indexed_point.h>
@@ -128,6 +127,10 @@ typedef std::set<SRvertex>      Polytope;
 
 // big matrix determinants typedefs
 typedef FastHashedDeterminant<Field>             			HD;
+
+// normal vectors data structure
+//#include <../include/normal_vector_ds.h>
+#include <../include/normal_set_ds.h>
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
@@ -1029,14 +1032,16 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
   #endif
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
-  normal_list_d.simple_initialize();
+  normal_list_d.random_initialize(2000);
+  //normal_list_d.simple_initialize();
   //normal_list_d.initialize();
 
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors
   int minD = (PD>RD)?RD:PD;
   //std::cout << "minD:"<<minD<<"PD:"<<PD<<std::endl;
-  while(Res.current_dimension()<minD && !normal_list_d.empty()){
+  //while(Res.current_dimension()<minD && !normal_list_d.empty()){
+	while(!normal_list_d.empty()){
 		std::vector<Field> new_vertex =
       compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
 		// insert it in the complex Res (if it is not already there)
@@ -1164,7 +1169,7 @@ std::pair<int,int> compute_res_faster(
         Triangulation& Res){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
- 
+
   // construct an initial triangulation of the points that will not be projected
   CTriangulation T(CD);
   StaticTriangulation(pointset,proj,T,dets);
