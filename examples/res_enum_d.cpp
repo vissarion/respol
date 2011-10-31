@@ -94,7 +94,7 @@ int main(const int argc, const char** argv) {
   generate_polymake_scripts(Res);
   
   // print some statistics
-  #ifdef PRINT_INFO
+/*  #ifdef PRINT_INFO
   print_statistics (Res.current_dimension(),
                    num_of_triangs.first, 
                    num_of_triangs.second,
@@ -109,6 +109,7 @@ int main(const int argc, const char** argv) {
                    Pdets.get_determinant_time(), // determinant time
                    volume(Res,Pdets));
   #else
+*/
   print_statistics_small(CD-1, 
                          PD,
                          Res.current_dimension(),
@@ -126,10 +127,19 @@ int main(const int argc, const char** argv) {
                          dets.get_determinant_time()+
                          Pdets.get_determinant_time(), // determinant time
                          volume(Res,Pdets));
-  #endif
+  //#endif
+  
   //std::cout << "convex hull time = " << conv_time << std::endl;
   //Pdets.print_matrix(std::cout);
-
+  
+  #ifdef PRINT_INFO
+    recompute_Res(Res);
+  #endif
+  
+  #ifdef USE_LRSLIB
+  ch();
+  #endif
+  
   return 0;
 }
 // vim: ts=2:expandtab

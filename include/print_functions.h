@@ -215,19 +215,45 @@ void print_res_facets_number(const Triang &Res){
 }
 
 template <class Triang>
-void print_cells_data(const Triang &Res){
+void print_cells_data(Triang &Res){
   typedef typename Triang::Full_cell_handle             Simplex;
   typedef std::vector<Simplex> Simplices;
-
+  typedef typename Triang::Vertex_iterator        VCI;
+  
   Simplices inf_simplices;
   std::back_insert_iterator<Simplices> out(inf_simplices);
   Res.incident_full_cells(Res.infinite_vertex(), out);
-  std::cout << "simplex data:";
-  for(typename Simplices::const_iterator sit = inf_simplices.begin();
-      sit != inf_simplices.end();
-      ++sit )
-    std::cout << (*sit)->data();
-  std::cout << std::endl;
+  size_t finite_cells=0;
+  for (PSimplex_finite_const_iterator cit=Res.finite_full_cells_begin();
+             cit!=Res.finite_full_cells_end();
+             cit++){
+    ++finite_cells;
+  }
+  
+  //for(typename Simplices::const_iterator sit = inf_simplices.begin();
+  //    sit != inf_simplices.end();
+  //    ++sit )
+  //  std::cout << (*sit)->data();
+  //std::cout << std::endl;
+  int total_edges=0;
+	for (VCI vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
+		typedef typename Triang::Face Face;
+		typedef std::vector<Face> Faces;
+		Faces edges;
+		std::back_insert_iterator<Faces> out(edges);
+		Res.incident_faces(vit, 1, out); // collect edges
+		total_edges += edges.size();
+		edges.clear();
+	}	
+	
+	std::cout << "(finite/infinite cells= " 
+            << finite_cells
+            << "/"
+            << inf_simplices.end() - inf_simplices.begin()
+            << ") (edges= "
+            << total_edges/2
+            << ")"
+            << std::endl;
 }
 
 template <class Triang>

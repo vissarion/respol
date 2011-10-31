@@ -27,7 +27,7 @@
 //#include <CGAL/Filtered_kernel_d.h>
 //#include <CGAL/Pure_complex.h>
 //#include <CGAL/Delaunay_complex.h>
-//#include <CGAL/Delaunay_triangulation_d.h>
+//#include <CGAL/Delaunay_triangulation.h>
 #include <CGAL/Triangulation.h>
 #include <CGAL/Triangulation_vertex.h>
 #include <CGAL/Triangulation_full_cell.h>
@@ -35,8 +35,6 @@
 #include <CGAL/Cartesian_d.h>
 #include <CGAL/Linear_algebraCd.h>
 #include <CGAL/algorithm.h>
-
-#include <print_functions.h>
 
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
@@ -98,6 +96,7 @@ typedef CGAL::Triangulation_vertex<CK>								tv;
 typedef CGAL::Triangulation_full_cell<CK,bool>						tc;
 typedef CGAL::Triangulation_data_structure<CGAL::Dynamic_dimension_tag,tv,tc > tds;
 typedef CGAL::Triangulation<PK,tds> 							Triangulation;
+//typedef CGAL::Delaunay_triangulation<PK,tds> 							Triangulation;
 //typedef CGAL::Triangulation<PK> 								Triangulation;
 
 typedef PK::Direction_d											PVector_d;
@@ -131,6 +130,14 @@ typedef std::set<SRvertex>      Polytope;
 typedef FastHashedDeterminant<Field>             			HD;
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
+
+// functions for printing
+#include <print_functions.h>
+
+// lrslib includes
+#ifdef USE_LRSLIB
+#include <../include/lrs_functions.h>
+#endif
 
 /////////////////////////////
 //functions implementations
@@ -770,7 +777,6 @@ void insert_new_Rvertex(Triangulation& Res,
  	#ifdef PRINT_INFO
 		//std::cout << "one new R-vertex found !!! "<< std::endl;
 	#endif
-
 	//insert it to the triangulation
 	PVertex_handle new_vert = Res.insert(new_point);
 }
@@ -816,8 +822,9 @@ void insert_new_Rvertex2(Triangulation& Res,
 	PVertex_handle new_vert = Res.insert(new_point,near_cell);
   double tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 	conv_time += tstopall - tstartall;
-	//std::cout << "time: " <<  tstopall - tstartall << std::endl;
-	
+	#ifdef PRINT_INFO
+	  std::cout << "insert in Res time= " <<  tstopall - tstartall << std::endl;
+	#endif
 	int cur_dim = Res.current_dimension();
 	update_cell_data(Res,new_vert);
 }
@@ -975,7 +982,7 @@ std::vector<Field> compute_res_vertex2(
 	  Tl.clear();
 	
 	  #ifdef PRINT_INFO
-		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		  std::cout << "new Res vertex (up)= ( " << new_vertex << ")\n";
 		#endif
 	  //std::cout << new_vertex << std::endl;
 	  return new_vertex;	
@@ -995,7 +1002,7 @@ std::vector<Field> compute_res_vertex2(
 	  Tl.clear();
 	
 	  #ifdef PRINT_INFO
-		  std::cout << "\nnew Res vertex (up)= ( " << new_vertex << ")\n\n";
+		  std::cout << "new Res vertex (up)= ( " << new_vertex << ")\n";
 		#endif
 	  //std::cout << new_vertex << std::endl;
 	  return new_vertex;
@@ -1046,6 +1053,42 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
 	return num_of_triangs;
 }
 
+#ifdef RANDOM_RES
+int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
+								 const std::vector<int>& mi,
+								 int RD,
+								 const std::vector<int>& proj,
+								 HD& dets,
+								 HD& Pdets,
+								 Triangulation& Res,
+								 const CTriangulation& T){
+
+	int num_of_triangs=0;
+	#ifdef PRINT_INFO
+	  std::cout << "dim=" << Res.current_dimension() << std::endl;
+  #endif
+  // make a stack (stl vector) with normals vectors and initialize
+  NV_ds normal_list_d;
+  normal_list_d.random_initialize(10000);
+
+  // compute trinagulations using normals as liftings until we  run out of  normal vectors
+	std::set<std::vector<Field> > Res_vertices;
+	while(!normal_list_d.empty()){
+		std::cout << "normal=" << normal_list_d.back() << std::endl;
+		std::vector<Field> new_vertex =
+      compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
+		Res_vertices.insert(new_vertex);
+		num_of_triangs++;
+		#ifdef PRINT_INFO
+			normal_list_d.print();
+			std::cout<< "current number of Res vertices: "
+							 << Res_vertices.size()
+							 << std::endl;
+		#endif
+	}
+	return num_of_triangs;
+}
+#endif
 
 // compute all Res vertices left by augmenting the simplex
 // to the directions of the normal vectors of the facets
@@ -1074,30 +1117,36 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
 	//hint cell
 	PSimplex_d near_cell;
   while(get_illegal_facet(Res,normal_list_d,current_vector,near_cell)){
-		//std::cout << "cur_vect" << current_vector << std::endl;
-		
-		//double t1 = (double)clock()/(double)CLOCKS_PER_SEC;    
+		#ifdef PRINT_INFO
+		std::cout << "\nAUGmenting step " << num_of_triangs << std::endl;
+		std::cout << "current normal" << current_vector << std::endl;
+		double t1 = (double)clock()/(double)CLOCKS_PER_SEC;    
+		#endif
 		std::vector<Field> new_vertex =
       compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector);
-    //double t2 = (double)clock()/(double)CLOCKS_PER_SEC;    
-    //std::cout << "ResVertex construction=" << t2-t1 << std::endl;
+    #ifdef PRINT_INFO
+    double t2 = (double)clock()/(double)CLOCKS_PER_SEC;    
+    std::cout << "Compute triang time= " << t2-t1 << std::endl;
+		#endif
+		
 		// insert it in the complex Res (if it is not already there)
-  	
-  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0){
+  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0){	
   		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell);
 		}
 		#ifdef PRINT_INFO
-
-			std::cout << "current number of Res vertices: " <<
-        Res.number_of_vertices() << std::endl;
-			//print_cells_data(Res);
+			std::cout << "Res: (vertices= " <<
+        Res.number_of_vertices() << ") ";
+			print_cells_data(Res);
 		#endif
 		#ifdef RESTRICTED_RES
 			if (Res.number_of_vertices() == restricted_num_Res){
 				return num_of_triangs;
 			}
 		#endif
-		num_of_triangs++;
+		//if (Res.number_of_vertices() == 40){
+		//		return num_of_triangs;
+		//	}
+		++num_of_triangs;
 	}
 	return num_of_triangs;
 }
@@ -1120,7 +1169,13 @@ std::pair<int,int> compute_res_faster(
   CTriangulation T(CD);
   StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
-
+	
+  #ifdef RANDOM_RES
+    int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+    std::pair<int,int> num_of_triangs(start_triangs,0);
+		return num_of_triangs;
+  #endif
+  
   // start by computing a simplex
   int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
 
@@ -1136,6 +1191,21 @@ std::pair<int,int> compute_res_faster(
 
 ////////////////////////////////////////////////////////////
 // misc
+
+template <class Triang>
+void recompute_Res(const Triang &Res){
+  std::vector<PPoint_d> Res_points;
+  for (typename Triang::Vertex_const_iterator vit = 
+       Res.vertices_begin(); 
+       vit != Res.vertices_end(); vit++)
+    Res_points.push_back(vit->point());
+  Triangulation Res2(PD);
+  double tstart, tstop;
+	tstart = (double)clock()/(double)CLOCKS_PER_SEC;
+  Res2.insert(Res_points.begin(),Res_points.end());
+  tstop = (double)clock()/(double)CLOCKS_PER_SEC;
+  std::cout << "CH Res offline time= " << tstop - tstart << std::endl;
+}
 
 Field volume(const Triangulation& Res, HD& Pdets){
 	Field vol=0;

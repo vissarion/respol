@@ -19,7 +19,8 @@ if ( CGAL_FOUND )
 
   include( CGAL_CreateSingleSourceCGALProgram )
 
-  # uncomment to use hacked kernel for hashed determinants
+  # uncomment to use lrslib
+  include_directories (BEFORE ../external/lrslib-042c/include)
   
   include_directories (BEFORE ../external/triangulation/include)
   include_directories (BEFORE ../external/extreme_points_d/include)
@@ -35,7 +36,7 @@ if ( CGAL_FOUND )
   #include_directories (BEFORE /home/luis/eigen-eigen-3.0.2)
 
   #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CGAL_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
@@ -50,7 +51,12 @@ if ( CGAL_FOUND )
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EXTREME_SPECIALIZED_POINTS_ONLY")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
   add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DRESTRICTED_RES")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DRESTRICTED_RES")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DRANDOM_RES")
+  
+  #link_directories(/home/vissarion/workspace/Triangulation_hdoh/Triangulation/respol/external/lrslib-042c/include)
+  #target_link_libraries(../external/lrslib-042c/include/lrsmp.c)
   
   # MAPLE
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
@@ -60,9 +66,13 @@ if ( CGAL_FOUND )
   #link_libraries("blas")
   #link_libraries("lapack")
   #link_libraries("givaro")
-
+  target_link_libraries("/usr/lib/liblrs.so")
   create_single_source_cgal_program("res_enum_d.cpp" )
-
+  #ADD_EXECUTABLE(res_enum_d
+  #               ../external/lrslib-042c/include/lrsmp.c
+  #               ../external/lrslib-042c/include/lrslib.c
+  #               res_enum_d.cpp
+  #               )
 else()
 
   message(STATUS "This program requires the CGAL library, and will not be compiled.")

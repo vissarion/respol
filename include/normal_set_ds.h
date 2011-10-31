@@ -21,6 +21,7 @@
 
 #include <set>
 #include <CGAL/Random.h>
+#include <CGAL/point_generators_d.h>
 //#include <algorithm>
 
 // comparison between data, needed to keep them sorted!
@@ -80,17 +81,21 @@ public:
     }
   }
 
-  void random_initialize(){
+  // RANDOM initialization of ds
+  void random_initialize(int k){
     // Instanciate a random point generator
-    //CGAL::Random rng;
-    //typedef CGAL::Random_points_in_cube_d<V> Random_points_iterator;
-    //Random_points_iterator rand_it(PD, 1.0, rng);
+    CGAL::Random rng;
+    typedef CGAL::Random_points_in_ball_d<V> Random_points_iterator;
+    Random_points_iterator rand_it(PD, 1.0, rng);
 
     // Generate 1 random point
-    //std::vector<V> points;
-    //CGAL::copy_n(rand_it, 1, std::back_inserter(points));
-    //put(V(*(points.begin())));
-    ;
+    std::vector<V> points;
+    CGAL::copy_n(rand_it, k, std::back_inserter(points));
+    for (typename std::vector<V>::const_iterator it=points.begin(); 
+         it!=points.end();++it){
+      std::cout << "random point=" << V(*it) << std::endl;
+      put(V(*it));
+    }
   }
 
   // initialization of ds
