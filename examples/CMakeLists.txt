@@ -25,6 +25,7 @@ if ( CGAL_FOUND )
   include_directories (BEFORE ../external/lrslib-042c/include)
   
   include_directories (BEFORE ../external/triangulation/include)
+  include_directories (BEFORE ../external/spatial_sorting/include)
   include_directories (BEFORE ../external/extreme_points_d/include)
   include_directories (BEFORE ../external/kernel_d/include)
   
