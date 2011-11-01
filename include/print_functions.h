@@ -215,7 +215,7 @@ void print_res_facets_number(const Triang &Res){
 }
 
 template <class Triang>
-void print_cells_data(Triang &Res){
+void f_vector(Triang &Res){
   typedef typename Triang::Full_cell_handle             Simplex;
   typedef std::vector<Simplex> Simplices;
   typedef typename Triang::Vertex_iterator        VCI;
@@ -245,14 +245,18 @@ void print_cells_data(Triang &Res){
 		total_edges += edges.size();
 		edges.clear();
 	}	
+	int dim = Res.current_dimension();
+	int facets = inf_simplices.end() - inf_simplices.begin();
 	
-	std::cout << "(finite/infinite cells= " 
-            << finite_cells
-            << "/"
-            << inf_simplices.end() - inf_simplices.begin()
-            << ") (edges= "
-            << total_edges/2
-            << ")"
+	std::cout << "(cells" << ","
+	          << "facets" << ","
+	          << "edges" << ","
+	          //<< "boundary edges" << ","
+	          << "vertices)=";            
+	std::cout << finite_cells << " "
+	          << facets << " "
+	          << total_edges/2 << " "
+	          << Res.number_of_vertices() 
             << std::endl;
 }
 

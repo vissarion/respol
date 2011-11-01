@@ -1032,16 +1032,13 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
   #endif
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
-  normal_list_d.random_initialize(2000);
-  //normal_list_d.simple_initialize();
-  //normal_list_d.initialize();
-
+  normal_list_d.simple_initialize();
+  
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors
   int minD = (PD>RD)?RD:PD;
   //std::cout << "minD:"<<minD<<"PD:"<<PD<<std::endl;
-  //while(Res.current_dimension()<minD && !normal_list_d.empty()){
-	while(!normal_list_d.empty()){
+  while(Res.current_dimension()<minD && !normal_list_d.empty()){
 		std::vector<Field> new_vertex =
       compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
 		// insert it in the complex Res (if it is not already there)
@@ -1139,9 +1136,7 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
   		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell);
 		}
 		#ifdef PRINT_INFO
-			std::cout << "Res: (vertices= " <<
-        Res.number_of_vertices() << ") ";
-			print_cells_data(Res);
+			f_vector(Res);
 		#endif
 		#ifdef RESTRICTED_RES
 			if (Res.number_of_vertices() == restricted_num_Res){

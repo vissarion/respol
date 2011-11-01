@@ -80,7 +80,7 @@ public:
       }
     }
   }
-
+#ifdef RANDOM_RES
   // RANDOM initialization of ds
   void random_initialize(int k){
     // Instanciate a random point generator
@@ -97,7 +97,7 @@ public:
       put(V(*it));
     }
   }
-
+#endif
   // initialization of ds
   void simple_initialize(){
     int vec[]={-1,1};
