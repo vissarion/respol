@@ -37,6 +37,8 @@
 #include <CGAL/algorithm.h>
 #include <CGAL/point_generators_d.h>
 
+#include <CGAL/Kernel_d/Vector_d.h>
+
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
 
@@ -99,6 +101,7 @@ typedef CGAL::Triangulation<PK,tds> 							Triangulation;
 //typedef CGAL::Triangulation<PK> 								Triangulation;
 
 typedef PK::Direction_d											PVector_d;
+typedef PK::Vector_d											  Vector_d;
 typedef PK::Hyperplane_d										PHyperplane_d;
 typedef Triangulation::Full_cell_handle							PSimplex_d;
 typedef Triangulation::Finite_full_cell_iterator				PSimplex_finite_iterator;
@@ -1014,6 +1017,22 @@ std::vector<Field> compute_res_vertex2(
 }
 
 
+Vector_d generate_random_vector(Vector_d a,
+                                 Vector_d b,
+                                 Vector_d c,
+                                 Vector_d d){
+		CGAL::Random rng;
+		Vector_d r;
+		a*=Field(rng.get_int(0,10000));
+		b*=Field(rng.get_int(0,10000));
+		c*=Field(rng.get_int(0,10000));
+		d*=Field(rng.get_int(0,10000));
+		r = a+b+c+d;
+		std::cout << a << "|" << b << "|" << c  << "|" << d
+		          << "-->" << r << std::endl;
+  	return r;
+}
+
 
 // compute Res vertices until it builts a simplex
 
@@ -1173,8 +1192,7 @@ std::pair<int,int> compute_res_faster(
   #ifdef RANDOM_RES
     int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
     std::pair<int,int> num_of_triangs(start_triangs,0);
-		return num_of_triangs;
-  #endif
+	#else
   
   // start by computing a simplex
   int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
@@ -1184,7 +1202,7 @@ std::pair<int,int> compute_res_faster(
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);
-
+  #endif
   return num_of_triangs;
 }
 

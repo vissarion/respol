@@ -74,6 +74,11 @@ int main(const int argc, const char** argv) {
 	// this is the big matrix for dimension PD it is empty at
 	// the beginning and we add the points when they are computed
 	HD Pdets;
+    //Field z(0);
+    //Field o(1);
+    //generate_random_vector(Vector_d(z,z,o),Vector_d(z,z,o),
+    //                     Vector_d(o,z,o),Vector_d(z,o,o));
+    //exit(1);
 
 		// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;

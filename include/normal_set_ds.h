@@ -93,11 +93,12 @@ public:
     CGAL::copy_n(rand_it, k, std::back_inserter(points));
     for (typename std::vector<V>::const_iterator it=points.begin(); 
          it!=points.end();++it){
-      std::cout << "random point=" << V(*it) << std::endl;
+      //std::cout << "random point=" << V(*it) << std::endl;
       put(V(*it));
     }
   }
 #endif
+
   // initialization of ds
   void simple_initialize(){
     int vec[]={-1,1};
