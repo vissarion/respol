@@ -37,8 +37,6 @@
 #include <CGAL/algorithm.h>
 #include <CGAL/point_generators_d.h>
 
-#include <CGAL/Kernel_d/Vector_d.h>
-
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
 
@@ -1016,24 +1014,6 @@ std::vector<Field> compute_res_vertex2(
 	
 }
 
-
-Vector_d generate_random_vector(Vector_d a,
-                                 Vector_d b,
-                                 Vector_d c,
-                                 Vector_d d){
-		CGAL::Random rng;
-		Vector_d r;
-		a*=Field(rng.get_int(0,10000));
-		b*=Field(rng.get_int(0,10000));
-		c*=Field(rng.get_int(0,10000));
-		d*=Field(rng.get_int(0,10000));
-		r = a+b+c+d;
-		std::cout << a << "|" << b << "|" << c  << "|" << d
-		          << "-->" << r << std::endl;
-  	return r;
-}
-
-
 // compute Res vertices until it builts a simplex
 
 int initialize_Res(const std::vector<std::vector<Field> >& pointset,
@@ -1190,7 +1170,7 @@ std::pair<int,int> compute_res_faster(
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
 	
   #ifdef RANDOM_RES
-    int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+    int start_triangs = random_compute_Res(pointset,mi,RD,proj9i,dets,Pdets,Res,T);
     std::pair<int,int> num_of_triangs(start_triangs,0);
 	#else
   

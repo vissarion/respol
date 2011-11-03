@@ -30,7 +30,8 @@ int PD;				//this is the dimension of the projection
 //#include <../include/cgal_chd.h>
 //#include <../include/cgal_chd_hornus.h>
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>
-#include <../include/cgal_chd_hornus_cellinfo.h>
+#include <cgal_chd_hornus_cellinfo.h>
+#include <randomized_res.h>
 //#include <../include/cgal_chd_hornus_cellinfo_placing.h>
 //#include <../include/cgal_chd_hornus_cellinfo_with_cgal_det.h>
 
@@ -74,11 +75,6 @@ int main(const int argc, const char** argv) {
 	// this is the big matrix for dimension PD it is empty at
 	// the beginning and we add the points when they are computed
 	HD Pdets;
-    //Field z(0);
-    //Field o(1);
-    //generate_random_vector(Vector_d(z,z,o),Vector_d(z,z,o),
-    //                     Vector_d(o,z,o),Vector_d(z,o,o));
-    //exit(1);
 
 		// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;
@@ -135,7 +131,7 @@ int main(const int argc, const char** argv) {
   //#endif
   
   //std::cout << "convex hull time = " << conv_time << std::endl;
-  //Pdets.print_matrix(std::cout);
+  Pdets.print_matrix(std::cout);
   
   #ifdef PRINT_INFO
     recompute_Res(Res);
@@ -144,6 +140,8 @@ int main(const int argc, const char** argv) {
   #ifdef USE_LRSLIB
   ch();
   #endif
+  
+  run_rand_vec(Pdets);
   
   return 0;
 }

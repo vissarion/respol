@@ -835,6 +835,11 @@ class FastHashedDeterminant{
                 return det;
         }
 #endif
+public:
+        Column& operator[](size_t i) { 
+					CGAL_assertion(i>=0&&i<_points.size());
+					return _points[i]; 
+			  }
 
         private:
         Matrix _points;
