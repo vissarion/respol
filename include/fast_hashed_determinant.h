@@ -52,7 +52,11 @@
 #endif
 
 #ifdef USE_EIGEN_DET
-#include<Eigen/Eigen>
+#include <Eigen/Eigen>
+#endif
+
+#ifdef USE_SORTED_INDICES
+#include <sort_swap.h>
 #endif
 
 // FastHashedDeterminant constructs a big matrix of columns and provides
@@ -86,7 +90,11 @@ class FastHashedDeterminant{
 #ifdef USE_ORIENTATION_DET
         typedef boost::unordered_map<Index,NT>          ODeterminants;
         typedef std::set<Index>                         CDeterminants;
-#endif
+#endif // USE_ORIENTATION_DET
+#ifdef USE_SORTED_INDICES
+        // define the pair type to store a sorted index and a swap boolean
+        typedef std::pair<Index,bool>                   SS;
+#endif // USE_SORTED_INDICES
 
         public:
         // constructor for incremental det table
@@ -180,8 +188,8 @@ class FastHashedDeterminant{
         number_of_hashed_determinants(0){
                 for(Iterator i=begin;i!=end;++i){
 #ifdef HASH_STATISTICS
-                if(i->size()>dimension)
-                        dimension=i->size();
+                        if(i->size()>dimension)
+                                dimension=i->size();
 #endif
                         _points.push_back(*i);
                 }
@@ -201,7 +209,7 @@ class FastHashedDeterminant{
                 (double)full_determinant_time/CLOCKS_PER_SEC<<
                 " seconds spent in all determinant computations"<<
                 std::endl;
-#else // USE_ORIENTATION_DET
+#else // USE_ORIENTATION_DET is not defined
         // collect non-homogeneous hash statistics
         size_t nh_collisions=0,nh_bad_buckets=0,nh_biggest_bucket=0;
         for(size_t bucket=0;bucket!=_determinants.bucket_count();++bucket)
@@ -263,12 +271,12 @@ class FastHashedDeterminant{
 #if defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
 #ifdef USE_ORIENTATION_DET
                 return (double)full_determinant_time/CLOCKS_PER_SEC;
-#else // USE_ORIENTATION_DET
+#else // USE_ORIENTATION_DET is not defined
                 return (double)determinant_time/CLOCKS_PER_SEC;
 #endif // USE_ORIENTATION_DET
-#else
+#else // (defined(LOG_DET_TIME) && defined(HASH_STATISTICS)) is false
                 return -1.;
-#endif
+#endif // defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
         }
 
         // This function sets a column of the matrix. This function must be
@@ -309,30 +317,42 @@ class FastHashedDeterminant{
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called.
 #ifdef USE_HASHED_DETERMINANTS
-        NT& determinant(const Index &idx){
+#ifdef USE_SORTED_INDICES
+        NT
+#else // USE_SORTED_INDICES is not defined
+        NT&
+#endif // USE_SORTED_INDICES
+        determinant(const Index &idx){
 #ifdef USE_CLEAR_DET_HASH
                 if(number_of_hashed_determinants==1000000){
 #ifdef PRINT_INFO
                         std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
-#endif
+#endif // PRINT_INFO
                         number_of_hashed_determinants=0;
                         _determinants.clear();
                 }
-#endif
+#endif // USE_CLEAR_DET_HASH
                 if(idx.size()==1)
                         return _points[idx[0]][0];
 #ifdef LOG_DET_TIME
                 clock_t start_all;
                 if(idx.size()==_points[0].size())
                         start_all=clock();
-#endif
+#endif // LOG_DET_TIME
 #ifdef HASH_STATISTICS
                 clock_t start;
                 if(idx.size()==dimension)
                         ++number_of_max_dimension_calls;
                 ++number_of_determinant_calls;
-#endif
-                if(_determinants.count(idx)==0){
+#endif // HASH_STATISTICS
+#ifdef USE_SORTED_INDICES
+                SS idxs=sort_swap(idx);
+                // compute the determinant if it is not stored in the table
+                if(_determinants.count(idxs.first)==0)
+#else // USE_SORTED_INDICES is not defined
+                if(_determinants.count(idx)==0)
+#endif // USE_SORTED_INDICES
+                {
                         ++number_of_hashed_determinants;
 #ifdef HASH_STATISTICS
                         ++number_of_computed_determinants;
@@ -343,10 +363,15 @@ class FastHashedDeterminant{
                         if(idx.size()==_points[0].size())
                                 determinant_time+=clock()-start_all;
 #endif // LOG_DET_TIME
-#else // HASH_STATISTICS
+#else // HASH_STATISTICS is not defined
                         return
 #endif // HASH_STATISTICS
+#ifdef USE_SORTED_INDICES
+                        (_determinants[idxs.first]=
+                                compute_determinant(idxs.first));
+#else // USE_SORTED_INDICES is not defined
                         (_determinants[idx]=compute_determinant(idx));
+#endif // USE_SORTED_INDICES
 #ifdef HASH_STATISTICS
                         if(idx.size()==dimension)
                                 full_determinant_time+=(clock()-start);
@@ -356,9 +381,16 @@ class FastHashedDeterminant{
                 if(idx.size()==_points[0].size())
                         determinant_time+=clock()-start_all;
 #endif // LOG_DET_TIME
+#ifdef USE_SORTED_INDICES
+                assert(_determinants.count(idxs.first)>0);
+                return (idxs.second?
+                        _determinants[idxs.first]:
+                        -_determinants[idxs.first]);
+#else // USE_SORTED_INDICES is not defined
                 return _determinants[idx];
+#endif // USE_SORTED_INDICES
         }
-#else // USE_HASHED_DETERMINANTS
+#else // USE_HASHED_DETERMINANTS is not defined
         // TODO: we can use here gaussian elimination or any O(n^3)
         // factorization algorithm
         NT determinant(const Index &idx)
@@ -373,7 +405,7 @@ class FastHashedDeterminant{
                 clock_t start_all;
                 if(idx.size()==_points[0].size())
                         start_all=clock();
-#endif
+#endif // LOG_DET_TIME
                 Index idx2;
                 for(size_t i=1;i<n;++i)
                         idx2.push_back(idx[i]);
@@ -394,7 +426,7 @@ class FastHashedDeterminant{
 #ifdef LOG_DET_TIME
                 if(idx.size()==_points[0].size())
                         determinant_time+=clock()-start_all;
-#endif
+#endif // LOG_DET_TIME
                 return det;
         }
 #endif // USE_HASHED_DETERMINANTS
@@ -404,19 +436,19 @@ class FastHashedDeterminant{
         NT homogeneous_determinant(const Index &idx){
 #ifdef HASH_STATISTICS
                 number_of_hom_determinants+=1;
-#endif
+#endif // HASH_STATISTICS
 #ifdef LOG_DET_TIME
                 clock_t start_all,det_old;
                 start_all=clock();
                 det_old=determinant_time;
-#endif
+#endif // LOG_DET_TIME
                 if(_h_determinants.count(idx)!=0){
                         assert(_h_determinants.count(idx)==1);
                         return _h_determinants[idx];
                 }
 #ifdef HASH_STATISTICS
                 number_of_computed_hom_determinants+=1;
-#endif
+#endif // HASH_STATISTICS
                 Index idx2;
                 size_t n=idx.size();
                 for(size_t i=1;i<n;++i) idx2.push_back(idx[i]);
@@ -432,10 +464,10 @@ class FastHashedDeterminant{
                 }
 #ifdef USE_HASHED_DETERMINANTS
                 _h_determinants[idx]=det;
-#endif
+#endif // USE_HASHED_DETERMINANTS
 #ifdef LOG_DET_TIME
                 determinant_time=det_old+(clock()-start_all);
-#endif
+#endif // LOG_DET_TIME
                 return det;
         }
 
@@ -500,7 +532,7 @@ class FastHashedDeterminant{
 						//exit(0);
 						return LA::sign_of_determinant(M);
 					}
-#endif
+#endif // USE_ONLY_CAYLEY_DET_HASH
         }
 
 #ifdef USE_EIGEN_DET
@@ -568,7 +600,7 @@ class FastHashedDeterminant{
 #ifdef HASH_STATISTICS
                 clock_t start=clock();
                 ++number_of_determinant_calls;
-#endif
+#endif // HASH_STATISTICS
                 assert(idx.size()==r.size());
                 assert(_points.size()>=idx.size());
                 // n is the dimension, which is one less than the size of
@@ -658,7 +690,7 @@ class FastHashedDeterminant{
                         idx3[col]=col;
                         idx4[col]=idx[col];
                 }
-#else // USE_EIGEN_DET
+#else // USE_EIGEN_DET is not defined
                 for(size_t col=0;col<n;++col){
                         NT minor=det_minor(m,idx3,idx4);
                         if(m[col][n-1]!=0){
@@ -676,10 +708,10 @@ class FastHashedDeterminant{
                 free(m);
 #ifdef HASH_STATISTICS
                 full_determinant_time+=(clock()-start);
-#endif
+#endif // HASH_STATISTICS
                 return det;
         }
-#endif
+#endif // USE_ORIENTATION_DET
 
         // This function prints the full matrix to an output stream.
         std::ostream& print_matrix(std::ostream &o)const{
@@ -808,7 +840,7 @@ class FastHashedDeterminant{
                                         (&_points[idx[i]][0],n);
                 return mat.determinant();
         }
-#else
+#else // USE_LINBOX_DET USE_CGAL_DET USE_CGAL_DET_2 USE_EIGEN_DET not defined
         inline NT compute_determinant(const Index &idx)
         #ifndef USE_HASHED_DETERMINANTS
         const
@@ -834,7 +866,7 @@ class FastHashedDeterminant{
                 }
                 return det;
         }
-#endif
+#endif // USE_LINBOX_DET USE_CGAL_DET USE_CGAL_DET_2 USE_EIGEN_DET
 public:
         Column& operator[](size_t i) { 
 					CGAL_assertion(i>=0&&i<_points.size());
@@ -847,15 +879,15 @@ public:
         HDeterminants _h_determinants;
 #ifdef USE_ONLY_CAYLEY_DET_HASH
 				bool _hashed;
-#endif        
+#endif // USE_ONLY_CAYLEY_DET_HASH
 #ifdef USE_ORIENTATION_DET
         ODeterminants _o_determinants;
         CDeterminants _c_determinants;
-#endif
+#endif // USE_ORIENTATION_DET
         unsigned long number_of_hashed_determinants;
 #ifdef LOG_DET_TIME
         clock_t determinant_time;
-#endif
+#endif // LOG_DET_TIME
 #ifdef HASH_STATISTICS
         public:
         size_t dimension;
@@ -867,8 +899,9 @@ public:
         clock_t full_determinant_time;
 #ifdef USE_ORIENTATION_DET
         clock_t matrix_time;
-#endif
+#endif // USE_ORIENTATION_DET
 #endif // HASH_STATISTICS
 };
 
 #endif // FAST_HASHED_DETERMINANT_H
+// vim: ts=2

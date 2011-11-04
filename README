@@ -1,13 +1,15 @@
 ResPol is a software to compute a projection of the Newton polytope of the
 resultant of a given polynomial system.
 
-This archive contains patches to the sources of the CGAL library, the CGAL
-Triangulation package (not yet part of the CGAL library, included here
-thanks to the kind permission of its authors) and the ResPol sources. Both
-CGAL library and ResPol are written in C++.
+This archive contains patches to the sources of the CGAL library, the
+experimental CGAL packages "Triangulation" and "Extreme points" (not yet
+part of the CGAL library, both were included here thanks to the kind
+permission of its authors) and the ResPol sources. Both CGAL library and
+ResPol are written in C++.
 
-To compile and use ResPol, you need first to compile the CGAL library. You
-can follow these steps:
+To compile and use ResPol, you need first to compile the CGAL library, or
+download the precompiled library (this software has been tested with CGAL
+3.6 and newer versions). You can follow these steps:
 
 
 ------------------------
@@ -47,12 +49,12 @@ directory. The format of the input files is:
 
   1st line: dimension (i.e. the number of the system variables)
   2nd line: the cardinalities of the supports '|' the projection
-  3d line: the support points
+  3rd line: the support points
 
 ResPol supports:
- (a) computations of projections defined by implicitization problems
- (b) computations of arbitrary projections
- (c) generic resultant polytope computations
+  (a) computations of projections defined by implicitization problems
+  (b) computations of arbitrary projections
+  (c) generic resultant polytope computations
 
 The 2nd line of the input file defines the projection and actually selects
 one of the above options.  (a) is supported by not defining any projection
