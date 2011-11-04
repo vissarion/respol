@@ -1054,43 +1054,6 @@ int initialize_Res(const std::vector<std::vector<Field> >& pointset,
 	return num_of_triangs;
 }
 
-#ifdef RANDOM_RES
-int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
-								 const std::vector<int>& mi,
-								 int RD,
-								 const std::vector<int>& proj,
-								 HD& dets,
-								 HD& Pdets,
-								 Triangulation& Res,
-								 const CTriangulation& T){
-
-	int num_of_triangs=0;
-	#ifdef PRINT_INFO
-	  std::cout << "dim=" << Res.current_dimension() << std::endl;
-  #endif
-  // make a stack (stl vector) with normals vectors and initialize
-  NV_ds normal_list_d;
-  normal_list_d.random_initialize(10000);
-
-  // compute trinagulations using normals as liftings until we  run out of  normal vectors
-	std::set<std::vector<Field> > Res_vertices;
-	while(!normal_list_d.empty()){
-		std::cout << "normal=" << normal_list_d.back() << std::endl;
-		std::vector<Field> new_vertex =
-      compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
-		Res_vertices.insert(new_vertex);
-		num_of_triangs++;
-		#ifdef PRINT_INFO
-			normal_list_d.print();
-			std::cout<< "current number of Res vertices: "
-							 << Res_vertices.size()
-							 << std::endl;
-		#endif
-	}
-	return num_of_triangs;
-}
-#endif
-
 // compute all Res vertices left by augmenting the simplex
 // to the directions of the normal vectors of the facets
 
@@ -1152,7 +1115,7 @@ int augment_Res(const std::vector<std::vector<Field> >& pointset,
 
 ////////////////////////////////////////////////////////////
 // the algorithm
-std::pair<int,int> compute_res_faster(
+std::pair<int,int> compute_res(
         const std::vector<std::vector<Field> >& pointset,
         int m,
         const std::vector<int>& mi,
@@ -1169,11 +1132,6 @@ std::pair<int,int> compute_res_faster(
   StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
 	
-  #ifdef RANDOM_RES
-    int start_triangs = random_compute_Res(pointset,mi,RD,proj9i,dets,Pdets,Res,T);
-    std::pair<int,int> num_of_triangs(start_triangs,0);
-	#else
-  
   // start by computing a simplex
   int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
 
@@ -1182,7 +1140,7 @@ std::pair<int,int> compute_res_faster(
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);
-  #endif
+
   return num_of_triangs;
 }
 
