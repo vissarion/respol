@@ -18,9 +18,22 @@
 
 #include <CGAL/constructions_d.h>
 
-typedef std::set<size_t> cone;
+typedef std::vector<size_t> cone;
 typedef std::set<cone> Cones;
 typedef std::set<std::vector<Field> > VPolytope;
+
+// comparison between data, needed to keep them sorted!
+template <class V>
+struct vp_compare
+{
+  bool operator()(const V& v1, const V& v2) const
+  {
+    return std::lexicographical_compare(v1.begin(),
+			                                  v1.end(),
+			                                  v2.begin(),
+			                                  v2.end());
+  }
+};
   
 VPolytope init_VRes(Triangulation& Res){
 	typedef Triangulation::Vertex_iterator  VCI;
@@ -48,7 +61,7 @@ Cones construct_init_cones(Triangulation& Res){
     cone c;
     for (int i=1; i<=Res.current_dimension(); i++){
 			if (!Res.is_infinite((*cit)->vertex(i))){
-			  c.insert((*cit)->vertex(i)->point().index());
+			  c.push_back((*cit)->vertex(i)->point().index());
 			}
 		}
 		C.insert(c);
@@ -64,7 +77,7 @@ Cones construct_init_cones(Triangulation& Res){
 Vector_d generate_random_vector(HD& Pdets,
 																cone idx,
 																PPoint_d inner_p){
-		CGAL::Random rng;
+		CGAL::Random rng((double)clock());
 		#ifdef PRINT_INFO
 		  //std::cout << PD << " " << (Pdets[0]).end()-(Pdets[0]).begin() << 
 		  //         " " << Pdets[0] << std::endl;
@@ -74,7 +87,7 @@ Vector_d generate_random_vector(HD& Pdets,
 		     idx_it!=idx.end(); ++idx_it){
 		  PPoint_d p(PD,Pdets[*idx_it].begin(),Pdets[*idx_it].end());
 		  Vector_d v=p-inner_p;
-		  v*=Field(rng.get_int(0,100));
+		  v*=Field(rng.get_int(0,1000));
 		  r+=v;
 		  #ifdef PRINT_INFO  
 		    //std::cout << v << "-->" << r << std::endl;
@@ -94,36 +107,76 @@ int augment_Res_rand(const std::vector<std::vector<Field> >& pointset,
 										 HD& Pdets,
 										 Triangulation& Res,
 										 const CTriangulation& T,
-                     Cones& C){
+                     Cones& C,
+                     VPolytope& VRes){
 
 	#ifdef PRINT_INFO
 		std::cout << "\n\nRANDOMIZED AUGMENTING RESULTANT POLYTOPE" << std::endl;
   #endif
-  PPoint_d a(PD,Pdets[0].begin(),Pdets[0].end());
-	PPoint_d b(PD,Pdets[1].begin(),Pdets[1].end());
-	PPoint_d c(PD,Pdets[0].begin(),Pdets[0].end());
-	PPoint_d d(PD,Pdets[1].begin(),Pdets[1].end());
-	PPoint_d e(PD,Pdets[0].begin(),Pdets[0].end());
-	PPoint_d ab = CGAL::midpoint(a,b);
-	PPoint_d abc = CGAL::midpoint(ab,c);
-	PPoint_d abcd = CGAL::midpoint(abc,d);
-	PPoint_d inner_p = CGAL::midpoint(abcd,e);
-	
-	
+  
+  std::vector<PPoint_d> init_simplex_points;
+  for (HD::iterator Pit=Pdets.begin(); 
+                           Pit!=Pdets.end(); ++Pit){
+		PPoint_d p(PD,Pit->begin(),Pit->end());
+		init_simplex_points.push_back(p);
+  }
+  std::vector<PPoint_d>::iterator 
+                       vit=init_simplex_points.begin();
+  PPoint_d inner_p=*vit;
+  ++vit;
+  for (;vit!=init_simplex_points.end();++vit){
+		inner_p = CGAL::midpoint(inner_p,*vit);
+  }
+		
 	size_t step=0;
   while (!C.empty()){
-		++step;
+		// pop last elements from C
 		Cones::iterator cit = C.end();
 		--cit;
 		cone c = *(cit);
 	  C.erase(*cit);
-	  Vector_d v = generate_random_vector(Pdets,c,inner_p);
-	  #ifdef PRINT_INFO
-		std::cout << "\nAUGmenting step " << step << std::endl;
-		std::cout << "current normal= " << v << std::endl;
-		#endif
-	  std::vector<Field> new_vertex =
-      compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,v);
+	  for (size_t i=0; i<10; ++i){
+		  Vector_d v = generate_random_vector(Pdets,c,inner_p);
+		  #ifdef PRINT_INFO
+			std::cout << "\nAUGmenting step " << ++step << std::endl;
+			std::cout << "C.size()= " << C.size() << std::endl;
+			std::cout << "current normal= " << v << std::endl;
+			std::cout << "number of vertices= " << VRes.size() << std::endl;
+			std::cout << c << std::endl;
+			#endif
+		  std::vector<Field> new_vertex =
+	     compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,v);
+	    std::pair<VPolytope::iterator,bool> ret =  
+	      VRes.insert(new_vertex);
+	    if (ret.second == true){ //it is a truly new vertex
+				Pdets.add_column(new_vertex);
+				Pdets.print_matrix(std::cout);
+				for (size_t i=0; i<c.size(); ++i){
+					std::cout << c << std::endl;
+					cone temp = c;
+					temp[i]=VRes.size()-2;
+					std::cout << temp << std::endl;
+					C.insert(temp);
+				}
+				std::cout << VRes << std::endl;
+		  }
+		}
+		//Pdets.add_column(new_vertex);
+		//if (!Pdets.find(new_vertex)){
+		//	Pdets.add_column(new_vertex);
+		//}
+		/*bool really_new=true;
+		for (cone::iterator cit=c.begin(); cit!=c.end(); ++cit){
+	    std::cout << Pdets[*cit] << std::endl;
+	    if(Pdets[*cit] == new_vertex){
+				really_new=false;
+				break;
+			}
+		}
+		if (really_new)
+		  Pdets.add_column(new_vertex);
+		*/
+		//}
   }
   
 	return 0;
@@ -153,15 +206,21 @@ std::pair<int,int>
   int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
 
   VPolytope VRes = init_VRes(Res);
-  std::cout << VRes << std::endl;
+  size_t num_VRes_init = VRes.size();
+  
   Cones C = construct_init_cones(Res);
   
   // augment simplex to compute the Res polytope
-  int augment_triangs = augment_Res_rand(pointset,mi,RD,proj,dets,Pdets,Res,T,C);
+  int augment_triangs = augment_Res_rand(pointset,mi,RD,proj,dets,Pdets,Res,T,C,VRes);
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);
-
+  
+  std::cout << num_VRes_init << " "
+            << VRes.size() << " "
+            << std::endl;
+  std::cout << VRes << std::endl;
+   
   return num_of_triangs;
 }
 
@@ -170,6 +229,7 @@ std::pair<int,int>
 ///! DRAFT PAGE
 ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // test function 
+/*
 int run_rand_vec(HD& Pdets){
 	PPoint_d a(PD,Pdets[0].begin(),Pdets[0].end());
 	PPoint_d b(PD,Pdets[1].begin(),Pdets[1].end());
@@ -179,13 +239,12 @@ int run_rand_vec(HD& Pdets){
   std::set<size_t> idx (idx_v, idx_v + sizeof(idx_v) / sizeof(size_t) );
   generate_random_vector(Pdets,idx,inner_p);
 }
-
+*/
 
 
 ///////////////////////////////////////////////////////////////////////
 // uniformly distributed random
 
-#ifdef RANDOM_RES
 int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 								 const std::vector<int>& mi,
 								 int RD,
@@ -240,9 +299,9 @@ std::pair<int,int> compute_res_rand_uniform(
   StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
 
-  int start_triangs = random_compute_Res(pointset,mi,RD,proj9i,dets,Pdets,Res,T);
+  int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
   std::pair<int,int> num_of_triangs(start_triangs,0);
 
   return num_of_triangs;
 }
-#endif
+

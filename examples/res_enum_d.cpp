@@ -86,6 +86,10 @@ int main(const int argc, const char** argv) {
   
 	std::pair<int,int> num_of_triangs =
   RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  
+  //std::pair<int,int> num_of_triangs =
+  //compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 

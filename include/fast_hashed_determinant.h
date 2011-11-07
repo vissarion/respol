@@ -85,6 +85,9 @@ class FastHashedDeterminant{
         typedef std::vector<size_t>                     Index;
         private:
         typedef std::vector<Column>                     Matrix;
+        public:
+        typedef typename Matrix::iterator                     iterator;
+        private:
         typedef boost::unordered_map<Index,NT>          Determinants;
         typedef boost::unordered_map<Index,NT>          HDeterminants;
 #ifdef USE_ORIENTATION_DET
@@ -872,7 +875,15 @@ public:
 					CGAL_assertion(i>=0&&i<_points.size());
 					return _points[i]; 
 			  }
-
+			  
+        typename Matrix::iterator begin(){
+					return  _points.begin();
+			  }
+			  
+			  typename Matrix::iterator end(){
+					return  _points.end();
+			  }
+			  
         private:
         Matrix _points;
         Determinants _determinants;

@@ -55,7 +55,7 @@ if ( CGAL_FOUND )
   add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRESTRICTED_RES")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DRANDOM_RES")
+  add_definitions(${CMAKE_CXX_FLAGS} "-DRANDOM_RES")
   
   #link_directories(/home/vissarion/workspace/Triangulation_hdoh/Triangulation/respol/external/lrslib-042c/include)
   #target_link_libraries(../external/lrslib-042c/include/lrsmp.c)
