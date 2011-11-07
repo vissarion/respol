@@ -140,7 +140,9 @@ typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
 // lrslib includes
 #ifdef USE_LRSLIB
-#include <../include/lrs_functions.h>
+extern "C" {
+#include <lrs_functions.h>
+}
 #endif
 
 /////////////////////////////
