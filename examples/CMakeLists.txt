@@ -17,6 +17,10 @@ find_package(CGAL QUIET COMPONENTS Core )
 if ( CGAL_FOUND )
 
   option ( RESPOL_USE_LRS "use LRS to compute convex hulls" FALSE )
+  #option ( RESPOL_USE_MAPLE "use Maple to check convex hulls" FALSE )
+  #set ( RESPOL_USE_MAPLE_EXEC "/opt/maple13/bin/maple" CACHE FILEPATH
+  #      "path to Maple executable" )
+  #option ( RESPOL_USE_LINBOX "use LinBox to compute determinants" FALSE )
 
   include( ${CGAL_USE_FILE} )
 
@@ -29,14 +33,8 @@ if ( CGAL_FOUND )
 
   include_directories (BEFORE ../include)
   include_directories (BEFORE ../patches/include)
-  # uncomment when using linbox
-  #include_directories (BEFORE /home/vissarion/src/LinBox/include)
-  #include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
-  #include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
 
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
   add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CGAL_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
@@ -54,14 +52,22 @@ if ( CGAL_FOUND )
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRESTRICTED_RES")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRANDOM_RES")
 
-  # MAPLE
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DMAPLE_EXECUTABLE=/workspace/maple13/bin/maple")
+  if( RESPOL_USE_LINBOX )
+    include_directories (BEFORE /home/vissarion/src/LinBox/include)
+    include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
+    include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
+    add_definitions(${CMAKE_CXX_FLAGS} "-DLinBoxSrcOnly")
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LINBOX_DET")
+    link_libraries("blas")
+    link_libraries("lapack")
+    link_libraries("givaro")
+  endif( RESPOL_USE_LINBOX )
 
-  # uncomment when using linbox
-  #link_libraries("blas")
-  #link_libraries("lapack")
-  #link_libraries("givaro")
+  if( RESPOL_USE_MAPLE )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_MAPLE_CONVEX_HULL")
+    add_definitions(${CMAKE_CXX_FLAGS}
+                    "-DMAPLE_EXECUTABLE=${RESPOL_USE_MAPLE_EXEC}")
+  endif( RESPOL_USE_MAPLE )
 
   if( RESPOL_USE_LRS )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB -DTIMES -DSIGNALS -DGMP")
