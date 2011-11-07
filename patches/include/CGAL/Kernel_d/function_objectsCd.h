@@ -259,8 +259,10 @@ public:
                 idx.push_back(it->index());
                 r.push_back((*it)[it->dimension()-1]);
         }
+#ifndef USE_ONLY_CAYLEY_DET_HASH        
         CGAL_assertion_msg(first->hash()!=NULL,
                            "the hash of the first point is not set!");
+#endif
 #ifdef USE_ORIENTATION_DET
         return Sgn()((first->hash())->orientation(idx,r));
 #else

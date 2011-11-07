@@ -243,7 +243,7 @@ int run_rand_vec(HD& Pdets){
 
 
 ///////////////////////////////////////////////////////////////////////
-// uniformly distributed random
+// uniform randomized
 
 int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 								 const std::vector<int>& mi,
@@ -252,7 +252,8 @@ int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 								 HD& dets,
 								 HD& Pdets,
 								 Triangulation& Res,
-								 const CTriangulation& T){
+								 const CTriangulation& T,
+								 size_t num_of_rand_vec){
 
 	int num_of_triangs=0;
 	#ifdef PRINT_INFO
@@ -260,20 +261,22 @@ int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
   #endif
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
-  normal_list_d.random_initialize(10000);
+  normal_list_d.random_initialize(num_of_rand_vec);
 
   // compute trinagulations using normals as liftings until we  run out of  normal vectors
-	std::set<std::vector<Field> > Res_vertices;
+	
 	while(!normal_list_d.empty()){
 		std::cout << "normal=" << normal_list_d.back() << std::endl;
 		std::vector<Field> new_vertex =
       compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
-		Res_vertices.insert(new_vertex);
+		//Res_vertices.insert(new_vertex);
+		if (Pdets.find(new_vertex) == -1)
+		  Pdets.add_column(new_vertex);
 		num_of_triangs++;
 		#ifdef PRINT_INFO
 			normal_list_d.print();
 			std::cout<< "current number of Res vertices: "
-							 << Res_vertices.size()
+							 << Pdets.size()
 							 << std::endl;
 		#endif
 	}
@@ -290,16 +293,17 @@ std::pair<int,int> compute_res_rand_uniform(
         const std::vector<int>& proj,
         HD& dets,
         HD& Pdets,
-        Triangulation& Res){
+        Triangulation& Res,
+        size_t num_of_rand_vec){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
-
+  
   // construct an initial triangulation of the points that will not be projected
   CTriangulation T(CD);
   StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
 
-  int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,num_of_rand_vec);
   std::pair<int,int> num_of_triangs(start_triangs,0);
 
   return num_of_triangs;

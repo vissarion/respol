@@ -361,6 +361,7 @@ void print_statistics_small(int Cdim,
                             int numofextremevertices,
                             double timeall,
                             double timehull,
+                            double timeofflinehull,
                             double timedet,
                             const Vol &volume){
   std::cout << Cdim << " "
@@ -373,6 +374,7 @@ void print_statistics_small(int Cdim,
             << numofextremevertices << " "
             << timeall << " "
             << timehull << " "
+            << timeofflinehull  << " "
             << timedet << " "
             << volume
 #ifndef RESTRICTED_RES

@@ -80,7 +80,7 @@ int main(const int argc, const char** argv) {
 	int numof_triangs=0, numof_init_Res_vertices;
   Triangulation Res(PD);
   
-	//compute the res polytope
+	//COMPUTE THE RES POLYTOPE
 	//std::pair<int,int> num_of_triangs =
   //  compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
@@ -88,11 +88,13 @@ int main(const int argc, const char** argv) {
   RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
   //std::pair<int,int> num_of_triangs =
-  //compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  //compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets,Res,100);
   
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
-
+  
+  double recompute_time = compute_Res_offline(Pdets,Res);
+  
 	// print the result i.e. the proj of the Resultant polytope
  	//#ifdef PRINT_INFO	
 	//print_res_vertices(Res,std::cout);
@@ -131,6 +133,7 @@ int main(const int argc, const char** argv) {
 #endif
                          tstopall-tstartall, // overall time
                          conv_time, // Res convex hull time
+                         recompute_time, // Res convex hull offline time
                          dets.get_determinant_time()+
                          Pdets.get_determinant_time(), // determinant time
                          volume(Res,Pdets));

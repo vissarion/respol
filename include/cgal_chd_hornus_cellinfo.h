@@ -40,8 +40,6 @@
 // for fast determinant computation
 #include <../include/fast_hashed_determinant.h>
 
-
-
 // for indexed points
 //#include <../include/indexed_point.h>
 
@@ -1163,6 +1161,25 @@ void recompute_Res(const Triang &Res){
   Res2.insert(Res_points.begin(),Res_points.end());
   tstop = (double)clock()/(double)CLOCKS_PER_SEC;
   std::cout << "CH Res offline time= " << tstop - tstart << std::endl;
+}
+
+double compute_Res_offline(HD& Pdets,
+                           Triangulation& Res){
+  //Res.clear();
+  std::vector<PPoint_d> Res_points;
+  for (HD::iterator Pit=Pdets.begin(); 
+                           Pit!=Pdets.end(); ++Pit){
+		PPoint_d p(PD,Pit->begin(),Pit->end());
+		p.set_hash(&Pdets);
+		p.set_index(Pit-Pdets.begin());
+		Res_points.push_back(p);
+		Res.insert(p);
+  }
+  double tstart, tstop;
+	tstart = (double)clock()/(double)CLOCKS_PER_SEC;
+  //Res.insert(Res_points.begin(),Res_points.end());
+  tstop = (double)clock()/(double)CLOCKS_PER_SEC;
+  return tstop - tstart;
 }
 
 Field volume(const Triangulation& Res, HD& Pdets){

@@ -884,6 +884,10 @@ public:
 					return  _points.end();
 			  }
 			  
+			  int size(){
+					return  _points.size();
+			  }
+			  
         private:
         Matrix _points;
         Determinants _determinants;
