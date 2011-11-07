@@ -70,7 +70,13 @@ if ( CGAL_FOUND )
   endif( RESPOL_USE_MAPLE )
 
   if( RESPOL_USE_LRS )
-    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB -DTIMES -DSIGNALS -DGMP")
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
+    add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
+    add_definitions(${CMAKE_CXX_FLAGS} "-DSIGNALS")
+    add_definitions(${CMAKE_CXX_FLAGS} "-DGMP")
+    if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
+      add_definitions(${CMAKE_CXX_FLAGS} "-DB64")
+    endif ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
     include_directories (BEFORE ../external/lrslib-042c/include)
     set ( RESPOL_AUX_PROGS "../external/lrslib-042c/include/lrslib.c"
                            "../external/lrslib-042c/include/lrsgmp.c"
@@ -84,4 +90,3 @@ else()
   message(STATUS "This program requires the CGAL library, and will not be compiled.")
 
 endif()
-
