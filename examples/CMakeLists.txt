@@ -70,6 +70,7 @@ if ( CGAL_FOUND )
   endif( RESPOL_USE_MAPLE )
 
   if( RESPOL_USE_LRS )
+    message(WARNING "LRS support is buggy!")
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
     add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
     add_definitions(${CMAKE_CXX_FLAGS} "-DSIGNALS")
@@ -81,6 +82,7 @@ if ( CGAL_FOUND )
     set ( RESPOL_AUX_PROGS "../external/lrslib-042c/include/lrslib.c"
                            "../external/lrslib-042c/include/lrsgmp.c"
                            "lrs_functions.c")
+    create_single_source_cgal_program("test_lrs.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_USE_LRS )
 
   create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})

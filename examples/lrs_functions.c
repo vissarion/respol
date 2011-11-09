@@ -118,4 +118,3 @@ void makecyclic (lrs_dic *P, lrs_dat *Q)
      }
    
 } /* end of makecyclic */
-// vim: ts=2
