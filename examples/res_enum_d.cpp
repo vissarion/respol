@@ -32,6 +32,7 @@ int PD;				//this is the dimension of the projection
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>
 #include <cgal_chd_hornus_cellinfo.h>
 #include <randomized_res.h>
+#include <simplices_augmentation.h>
 //#include <../include/cgal_chd_hornus_cellinfo_placing.h>
 //#include <../include/cgal_chd_hornus_cellinfo_with_cgal_det.h>
 
@@ -80,15 +81,22 @@ int main(const int argc, const char** argv) {
 	int numof_triangs=0, numof_init_Res_vertices;
   Triangulation Res(PD);
   
+  //////////////////////////////////////////////////////////////////////
 	//COMPUTE THE RES POLYTOPE
-	//std::pair<int,int> num_of_triangs =
-  //  compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res);
-  
+	
 	std::pair<int,int> num_of_triangs =
-  RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
+    compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  
+  //std::pair<int,int> num_of_triangs =
+  //InnerQwithsimplices(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  
+	//std::pair<int,int> num_of_triangs =
+  //RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
   //std::pair<int,int> num_of_triangs =
   //compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets,Res,100);
+  
+  //////////////////////////////////////////////////////////////////////
   
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
