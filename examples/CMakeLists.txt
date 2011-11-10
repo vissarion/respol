@@ -20,24 +20,24 @@ if ( CGAL_FOUND )
   ######################################################################
 
   include ( CMakeDependentOption )
-  option ( RESPOL_PRINT_INFO
-           "print statistical information during the execution"
-           OFF )
+  option ( RESPOL_PRINT_INFO "show some information during execution" OFF )
   option ( RESPOL_USE_HASHED_DET "hash computed determinant minors" ON )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_STATS
                            "print hashed determinants statistics" OFF
-                           "RESPOL_USE_HASHED_DET" OFF)
+                           "RESPOL_USE_HASHED_DET" OFF )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_SORTED_INDICES
                            "used sorted indices in hash" OFF
-                           "RESPOL_USE_HASHED_DET" OFF)
+                           "RESPOL_USE_HASHED_DET" OFF )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_CLEAR
                            "clear the hash when memory consumption is high" ON
-                           "RESPOL_USE_HASHED_DET" ON)
+                           "RESPOL_USE_HASHED_DET" OFF )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_ONLY_CAYLEY
                            "use hash only for determinants in Cayley space" ON
-                           "RESPOL_USE_HASHED_DET" ON)
+                           "RESPOL_USE_HASHED_DET" OFF )
   option ( RESPOL_VOL "compute the volume of the output polytope" OFF )
-  option ( RESPOL_DET_TIME "output the determinant computation time" OFF )
+  CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_DET_TIME
+                           "output the determinant computation time" OFF 
+                           "RESPOL_USE_HASHED_DET" OFF )
   #option ( RESPOL_USE_LINBOX "use LinBox to compute determinants" OFF )
   #option ( RESPOL_USE_MAPLE "use Maple to check convex hulls" OFF )
   #set ( RESPOL_USE_MAPLE_EXEC
@@ -92,15 +92,22 @@ if ( CGAL_FOUND )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_SORTED_INDICES")
   endif( RESPOL_HASH_SORTED_INDICES )
 
-if( RESPOL_HASH_CLEAR )
+  # Set the default value of RESPOL_HASH_CLEAR_DETS or use the cached value
+  # if it exists.
+  if( RESPOL_HASH_CLEAR_DETS )
+    set ( RESPOL_HASH_CLEAR_DETS ${RESPOL_HASH_CLEAR_DETS} CACHE INTERNAL
+          "cached setting of disabled option" )
+  else( RESPOL_HASH_CLEAR_DETS )
+    set ( RESPOL_HASH_CLEAR_DETS 1000000 CACHE INTERNAL "default setting" )
+  endif( RESPOL_HASH_CLEAR_DETS )
+
+  if( RESPOL_HASH_CLEAR )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CLEAR_DET_HASH")
-    set ( RESPOL_HASH_CLEAR_DETS 1000000 CACHE INTEGER
+    # This line makes this option visible in the GUI.
+    set ( RESPOL_HASH_CLEAR_DETS ${RESPOL_HASH_CLEAR_DETS} CACHE INTEGER
           "clear the hash when it stores this amount of determinants" FORCE )
     add_definitions(${CMAKE_CXX_FLAGS}
                     "-DCLEAR_DET_NUMBER=${RESPOL_HASH_CLEAR_DETS}")
-  else( RESPOL_HASH_CLEAR )
-    # this is to hide the option when RESPOL_HASH_CLEAR is unset
-    set ( RESPOL_HASH_CLEAR_DETS 1 CACHE INTERNAL "disabled option" )
   endif( RESPOL_HASH_CLEAR )
 
   if( RESPOL_HASH_ONLY_CAYLEY )
@@ -111,11 +118,12 @@ if( RESPOL_HASH_CLEAR )
     add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
   endif ( RESPOL_VOL )
 
-  if( RESPOL_DET_TIME )
+  if( RESPOL_HASH_DET_TIME )
     add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
-  endif( RESPOL_DET_TIME )
+  endif( RESPOL_HASH_DET_TIME )
 
   if( RESPOL_USE_LINBOX )
+    # TODO: let the user choose these directories
     include_directories (BEFORE /home/vissarion/src/LinBox/include)
     include_directories (BEFORE /home/vissarion/src/linbox-1.2.0)
     include_directories (BEFORE /home/vissarion/src/fflas-ffpack-1.4.1)
