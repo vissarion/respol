@@ -16,41 +16,104 @@ find_package(CGAL QUIET COMPONENTS Core )
 
 if ( CGAL_FOUND )
 
-  option ( RESPOL_USE_LRS "use LRS to compute convex hulls" FALSE )
-  #option ( RESPOL_USE_MAPLE "use Maple to check convex hulls" FALSE )
-  #set ( RESPOL_USE_MAPLE_EXEC "/opt/maple13/bin/maple" CACHE FILEPATH
+  # COMPILATION OPTIONS
+  ######################################################################
+
+  include ( CMakeDependentOption )
+  option ( RESPOL_PRINT_INFO
+           "print statistical information during the execution"
+           OFF )
+  option ( RESPOL_USE_HASHED_DET "hash computed determinant minors" ON )
+  CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_STATS
+                           "print hashed determinants statistics" OFF
+                           "RESPOL_USE_HASHED_DET" OFF)
+  CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_SORTED_INDICES
+                           "used sorted indices in hash" OFF
+                           "RESPOL_USE_HASHED_DET" OFF)
+  CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_CLEAR
+                           "clear the hash when memory consumption is high" ON
+                           "RESPOL_USE_HASHED_DET" ON)
+  CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_ONLY_CAYLEY
+                           "use hash only for determinants in Cayley space" ON
+                           "RESPOL_USE_HASHED_DET" ON)
+  option ( RESPOL_VOL "compute the volume of the output polytope" OFF )
+  option ( RESPOL_DET_TIME "output the determinant computation time" OFF )
+  #option ( RESPOL_USE_LINBOX "use LinBox to compute determinants" OFF )
+  #option ( RESPOL_USE_MAPLE "use Maple to check convex hulls" OFF )
+  #set ( RESPOL_USE_MAPLE_EXEC
+  #      "/opt/maple13/bin/maple"
+  #      CACHE
+  #      FILEPATH
   #      "path to Maple executable" )
-  #option ( RESPOL_USE_LINBOX "use LinBox to compute determinants" FALSE )
+  option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
+
+  # INCLUDES
+  ######################################################################
 
   include( ${CGAL_USE_FILE} )
-
   include( CGAL_CreateSingleSourceCGALProgram )
-
   include_directories (BEFORE ../external/triangulation/include)
   include_directories (BEFORE ../external/spatial_sorting/include)
   include_directories (BEFORE ../external/extreme_points_d/include)
   include_directories (BEFORE ../external/kernel_d/include)
-
   include_directories (BEFORE ../include)
   include_directories (BEFORE ../patches/include)
 
-  add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
+  # OTHER COMPILATION DEFINITIONS
+  ######################################################################
+
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CGAL_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_SORTED_INDICES")
+  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_GAUSSIAN_ELIMINATION")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CLEAR_DET_HASH")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ONLY_CAYLEY_DET_HASH")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EXTREME_SPECIALIZED_POINTS_ONLY")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRESTRICTED_RES")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRANDOM_RES")
+
+  # CMAKE OPTIONS PROCESSING
+  ######################################################################
+
+  if( RESPOL_PRINT_INFO )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
+  endif( RESPOL_PRINT_INFO )
+
+  if( RESPOL_USE_HASHED_DET )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
+  endif( RESPOL_USE_HASHED_DET )
+
+  if( RESPOL_HASH_STATS )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
+  endif( RESPOL_HASH_STATS )
+
+  if( RESPOL_HASH_SORTED_INDICES )
+    message(WARNING "sorted indices support is buggy!")
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_SORTED_INDICES")
+  endif( RESPOL_HASH_SORTED_INDICES )
+
+if( RESPOL_HASH_CLEAR )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CLEAR_DET_HASH")
+    set ( RESPOL_HASH_CLEAR_DETS 1000000 CACHE INTEGER
+          "clear the hash when it stores this amount of determinants" FORCE )
+    add_definitions(${CMAKE_CXX_FLAGS}
+                    "-DCLEAR_DET_NUMBER=${RESPOL_HASH_CLEAR_DETS}")
+  else( RESPOL_HASH_CLEAR )
+    # this is to hide the option when RESPOL_HASH_CLEAR is unset
+    set ( RESPOL_HASH_CLEAR_DETS 1 CACHE INTERNAL "disabled option" )
+  endif( RESPOL_HASH_CLEAR )
+
+  if( RESPOL_HASH_ONLY_CAYLEY )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ONLY_CAYLEY_DET_HASH")
+  endif( RESPOL_HASH_ONLY_CAYLEY )
+
+  if ( RESPOL_VOL )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DCOMPUTE_VOL")
+  endif ( RESPOL_VOL )
+
+  if( RESPOL_DET_TIME )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DLOG_DET_TIME")
+  endif( RESPOL_DET_TIME )
 
   if( RESPOL_USE_LINBOX )
     include_directories (BEFORE /home/vissarion/src/LinBox/include)
@@ -84,6 +147,9 @@ if ( CGAL_FOUND )
                            "lrs_functions.c")
     create_single_source_cgal_program("test_lrs.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_USE_LRS )
+
+  # COMPILATION
+  ######################################################################
 
   create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
 

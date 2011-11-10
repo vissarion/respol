@@ -327,7 +327,7 @@ class FastHashedDeterminant{
 #endif // USE_SORTED_INDICES
         determinant(const Index &idx){
 #ifdef USE_CLEAR_DET_HASH
-                if(number_of_hashed_determinants==1000000){
+                if(number_of_hashed_determinants==CLEAR_DET_NUMBER){
 #ifdef PRINT_INFO
                         std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
 #endif // PRINT_INFO
