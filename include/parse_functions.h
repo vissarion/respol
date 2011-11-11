@@ -16,6 +16,7 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#include <cassert>
 #include <iostream>
 #include <print_functions.h>
 
@@ -88,6 +89,14 @@ std::vector<int> proj_all(const int &m){
 ///////////////////////////////////////////////////////////
 // input functions
 
+// This function reads the input from stdin and stores the wanted
+// projection in the vector proj. Possible return values are:
+// 1 when the problem is implicitization (when the pipe symbol is omitted
+// in the second line),
+// 2 when the problem is to compute arbitrary projections (specified after
+// the pipe symbol) and
+// 3 when the problem is computing the generic resultant polytope (when
+// there are no projections specified after the pipe symbol).
 template <class NT_>
 int read_pointset(std::vector<std::vector<NT_> >& pointset,
                   std::vector<int>& mi,
@@ -97,7 +106,7 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
 #ifdef RESTRICTED_RES
         std::cin >> restricted_num_Res;
 #endif
-        int d;
+        int d,ret=0;
         std::cin >> d;
         //TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
         D=d;
@@ -116,7 +125,9 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
                 mi.push_back(mi_temp);
         }
         if (mi.size() != d+1){
-                std::cout << "mi.size() != d+1. The number of polynomials must me one more than the dimension!" << std::endl;
+                std::cout << "mi.size() != d+1. The number of " <<
+                        "polynomials must me one more than the dimension!" <<
+                        std::endl;
                 exit(-1);
         }
 
@@ -150,12 +161,15 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
                         }
                         num.push_back(temp);
                 }while(temp != '\n');
+                ret = 2;
                 // if there is nothing after '|'
                 if (!start){
                         proj = proj_all(m);
+                        ret = 3;
                 }
         }else{ // use a default projection
                 proj = proj_first_coord(D+1,m,mi);
+                ret = 1;
         }
         PD = proj.size(); //this is the dimension of the projection
         sort(proj.begin(),proj.end());
@@ -192,5 +206,6 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
                 std::cout << "Input error" << std::endl;
                 exit(-1);
         }
-        return 0;
+        assert(ret!=0);
+        return ret;
 }
