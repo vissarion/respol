@@ -33,18 +33,26 @@
 // this will be enough for SRvertex and Resvertex, which are respectively
 // vector<Field> and vector<SRvertex>
 template <class T>
-std::ostream& operator<<(std::ostream& ost, const std::vector<T> &V) {
-  for (typename std::vector<T>::const_iterator it=V.begin(); it!=V.end(); it++)
-    ost << *it << ",";
+std::ostream& operator<<(std::ostream& ost,const std::vector<T> &V){
+  if(!V.size())
+    return ost;
+  typename std::vector<T>::const_iterator it=V.begin();
+  std::cout<<(*it++);
+  for(;it!=V.end();it++)
+    ost<<","<<(*it);
   return ost;
 }
 #endif
 
 // this will be enough for Polytope, which is set<SRvertex>
 template <class T>
-std::ostream& operator<<(std::ostream& ost, const std::set<T> &V) {
-  for (typename std::set<T>::const_iterator it=V.begin(); it!=V.end(); it++)
-    ost << *it << ",";
+std::ostream& operator<<(std::ostream& ost,const std::set<T> &V){
+  if(!V.size())
+    return ost;
+  typename std::set<T>::const_iterator it=V.begin();
+  std::cout<<(*it++);
+  for(;it!=V.end();it++)
+    ost<<","<<(*it);
   return ost;
 }
 
@@ -195,11 +203,10 @@ int compute_extreme_res_vertices_maple(const Triang &Res){
 #endif
 }
 
-
 template <class Triang>
 void print_res_facets_number(const Triang &Res){
-  typedef typename Triang::Full_cell_handle             Simplex;
-  typedef typename Triang::Facet_const_iterator         FCI;
+  typedef typename Triang::Full_cell_handle                     Simplex;
+  typedef typename Triang::Facet_const_iterator                 FCI;
   // print the vertices of the res polytope
   int number_of_facets = 0;
   for (FCI vit = Res.facets_begin(); vit != Res.facets_end(); vit++)
@@ -207,7 +214,7 @@ void print_res_facets_number(const Triang &Res){
   std::cout << number_of_facets << std::endl;
 
   int number_of_inf_simplicies = 0;
-  typedef std::vector<Simplex>                          Simplices;
+  typedef std::vector<Simplex>                                  Simplices;
   Simplices inf_simplices;
   std::back_insert_iterator<Simplices> out(inf_simplices);
   Res.incident_full_cells(Res.infinite_vertex(), out);
@@ -216,20 +223,21 @@ void print_res_facets_number(const Triang &Res){
 
 template <class Triang>
 void f_vector(Triang &Res){
-  typedef typename Triang::Full_cell_handle             Simplex;
-  typedef std::vector<Simplex> Simplices;
-  typedef typename Triang::Vertex_iterator        VCI;
-  
+  typedef typename Triang::Full_cell_handle                     Simplex;
+  typedef std::vector<Simplex>                                  Simplices;
+  typedef typename Triang::Vertex_iterator                      VCI;
+  typedef typename Triang::Finite_full_cell_const_iterator      PS_FCI;
+
   Simplices inf_simplices;
   std::back_insert_iterator<Simplices> out(inf_simplices);
   Res.incident_full_cells(Res.infinite_vertex(), out);
   size_t finite_cells=0;
-  for (PSimplex_finite_const_iterator cit=Res.finite_full_cells_begin();
+  for (PS_FCI cit=Res.finite_full_cells_begin();
              cit!=Res.finite_full_cells_end();
              cit++){
     ++finite_cells;
   }
-  
+
   //for(typename Simplices::const_iterator sit = inf_simplices.begin();
   //    sit != inf_simplices.end();
   //    ++sit )
@@ -244,25 +252,25 @@ void f_vector(Triang &Res){
 		Res.incident_faces(vit, 1, out); // collect edges
 		total_edges += edges.size();
 		edges.clear();
-	}	
+	}
 	int dim = Res.current_dimension();
 	int facets = inf_simplices.end() - inf_simplices.begin();
-	
+
 	std::cout << "(cells" << ","
 	          << "facets" << ","
 	          << "edges" << ","
 	          //<< "boundary edges" << ","
-	          << "vertices)=";            
+	          << "vertices)=";
 	std::cout << finite_cells << " "
 	          << facets << " "
 	          << total_edges/2 << " "
-	          << Res.number_of_vertices() 
+	          << Res.number_of_vertices()
             << std::endl;
 }
 
 template <class Triang>
 void print_polymake_testfile(const Triang &Res,
-														 std::string ch_algo, 
+														 std::string ch_algo,
 														 std::ostream& os){
   // print the vertices of the res polytope
   int number_of_vertices = 0;
@@ -311,12 +319,12 @@ template <class Triang>
 void generate_polymake_scripts(const Triang &Res){
 	std::ofstream polymakefile1;
   polymakefile1.open("test_cdd.polymake");
-  print_polymake_testfile(Res,"cdd",polymakefile1); 
-  
+  print_polymake_testfile(Res,"cdd",polymakefile1);
+
   std::ofstream polymakefile2;
   polymakefile2.open("test_lrs.polymake");
   print_polymake_testfile(Res,"lrs",polymakefile2);
-  
+
   std::ofstream polymakefile3;
   polymakefile3.open("test_bb.polymake");
   print_polymake_testfile(Res,"beneath_beyond",polymakefile3);
