@@ -1181,6 +1181,7 @@ double compute_Res_offline(HD& Pdets,
 }
 
 Field volume(const Triangulation& Res, HD& Pdets){
+#ifdef COMPUTE_VOL
 	Field vol=0;
 	for (PSimplex_finite_const_iterator cit=Res.finite_full_cells_begin();
              cit!=Res.finite_full_cells_end();
@@ -1196,6 +1197,9 @@ Field volume(const Triangulation& Res, HD& Pdets){
 	}
 	vol*=(1/factorial(Res.current_dimension()));
 	return vol;
+#else
+  return Field(-1);
+#endif
 }
 
 

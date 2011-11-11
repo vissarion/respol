@@ -34,7 +34,7 @@ if ( CGAL_FOUND )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_ONLY_CAYLEY
                            "use hash only for determinants in Cayley space" ON
                            "RESPOL_USE_HASHED_DET" OFF )
-  option ( RESPOL_VOL "compute the volume of the output polytope" OFF )
+  option ( RESPOL_VOL "compute the volume of the output polytope" ON )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_DET_TIME
                            "output the determinant computation time" OFF 
                            "RESPOL_USE_HASHED_DET" OFF )
