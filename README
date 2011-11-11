@@ -19,8 +19,8 @@ download the precompiled library (this software has been tested with CGAL
 Follow the CGAL installation manual. It states that CGAL requires the Boost
 libraries. In particular the header files and the threading library
 binaries. Version 1.39 (or higher) are needed. Having GMP version 4.2 or
-higher and MPFR version 2.2.1 or higher installed is recommended. Once you
-fulfill these requirements, execute:
+higher and MPFR version 2.2.1 or higher installed is recommended by CGAL
+but needed by ResPol. Once you have installed these libraries, execute:
 
 $ cmake .
 $ make
@@ -56,11 +56,10 @@ ResPol supports:
   (b) computations of arbitrary projections
   (c) generic resultant polytope computations
 
-The 2nd line of the input file defines the projection and actually selects
-one of the above options.  (a) is supported by not defining any projection
-(ommit '|'), (b) by defining an arbitrary projection and (c) by providing
-only the symbol '|'.
-
+The second line of the input file defines the projection and actually
+selects one of the above options.  (a) is supported by not defining any
+projection (omitting '|'), (b) by defining an arbitrary projection and (c)
+by providing only the symbol '|'.
 
 Input example:
 
