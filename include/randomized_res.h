@@ -226,7 +226,7 @@ std::pair<int,int>
 
 
 ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///! DRAFT PAGE
+///! UNIFORM RANDOM
 ///!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 // test function 
 /*
@@ -253,7 +253,8 @@ int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 								 HD& Pdets,
 								 Triangulation& Res,
 								 const CTriangulation& T,
-								 size_t num_of_rand_vec){
+								 size_t num_of_rand_vec,
+								 Field vol){
 
 	int num_of_triangs=0;
 	#ifdef PRINT_INFO
@@ -264,14 +265,20 @@ int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
   normal_list_d.random_initialize(num_of_rand_vec);
 
   // compute trinagulations using normals as liftings until we  run out of  normal vectors
-	
 	while(!normal_list_d.empty()){
+		#ifdef PRINT_INFO
 		std::cout << "normal=" << normal_list_d.back() << std::endl;
+		#endif
 		std::vector<Field> new_vertex =
       compute_res_vertex(pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d);
 		//Res_vertices.insert(new_vertex);
-		if (Pdets.find(new_vertex) == -1)
+		if (Pdets.find(new_vertex) == -1){
 		  Pdets.add_column(new_vertex);
+			PPoint_d p(PD,new_vertex.begin(),new_vertex.end());
+			p.set_hash(&Pdets);
+			p.set_index(Res.number_of_vertices());
+			Res.insert(p);
+		}
 		num_of_triangs++;
 		#ifdef PRINT_INFO
 			normal_list_d.print();
@@ -279,8 +286,71 @@ int random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 							 << Pdets.size()
 							 << std::endl;
 		#endif
+		if (num_of_triangs%10==0 && Res.current_dimension()==PD){
+			print_statistics_rand(CD-1, 
+		                         PD,
+		                         Res.current_dimension(),
+		                         vol,
+		                         -1,
+		                         num_of_triangs,
+		                         Res.number_of_vertices(),
+		                         -1,
+		                         -1, // overall time
+		                         -1, // Res convex hull time
+		                         -1, // Res convex hull offline time
+		                         CGAL::to_double(volume(Res,Pdets)/vol), 
+		                         volume(Res,Pdets));
+	  }
 	}
 	return num_of_triangs;
+}
+
+void computeQ_outer_approximation(const std::vector<std::vector<Field> >& pointset,
+														 const std::vector<int>& mi,
+														 int RD,
+														 const std::vector<int>& proj,
+														 HD& dets,
+														 HD& Pdets,
+														 Triangulation& Res,
+														 const CTriangulation& T){
+	
+	typedef Triangulation::Full_cell_handle             Simplex;
+  typedef std::vector<Simplex>                        Simplices;
+	
+	Simplices inf_simplices;
+	std::back_insert_iterator<Simplices> out(inf_simplices);
+	Res.incident_full_cells(Res.infinite_vertex(), out);
+	std::vector<std::vector<PHyperplane_d> > Hrep;
+	
+	for (Simplices::iterator sit=inf_simplices.begin();
+		  										 sit!=inf_simplices.end();++sit){
+		
+		std::vector<PPoint_d> facet_points;
+		for (int i=0; i<=Res.current_dimension(); i++){
+			if(!Res.is_infinite((*sit)->vertex(i))){
+			  facet_points.push_back((*sit)->vertex(i)->point());
+			  //std::cout << (*sit)->vertex(i)->point() << " ";
+			}
+		}
+		//std::cout << std::endl;
+		PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+		// compute a hyperplane which has in its negative side the opposite point
+		PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
+		PVector_d current_vector = hp.orthogonal_direction();
+				
+		std::vector<Field> new_vertex =
+      compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector);
+    
+    PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
+    PHyperplane_d hp_out(new_point,-current_vector);
+    std::cout << *(hp_out.coefficients_begin()) << std::endl;
+    //for (CGAL::Coefficient_const_iterator cit=hp_out.coefficients_begin();
+    //     cit=hp_out.coefficients_end();++cit){
+		//	std::cout << *cit << " ";
+		//}
+		PVector_d vec = hp_out.orthogonal_direction();
+    std::cout << vec << std::endl;
+  }
 }
 
 ////////////////////////////////////////////////////////////
@@ -294,16 +364,23 @@ std::pair<int,int> compute_res_rand_uniform(
         HD& dets,
         HD& Pdets,
         Triangulation& Res,
-        size_t num_of_rand_vec){
+        size_t num_of_rand_vec,
+        Field vol){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
-  
+
   // construct an initial triangulation of the points that will not be projected
   CTriangulation T(CD);
   StaticTriangulation(pointset,proj,T,dets);
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
-
-  int start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,num_of_rand_vec);
+  
+  // start by computing a simplex
+  int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  
+  computeQ_outer_approximation(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  
+  //int start_triangs=0;
+  //start_triangs = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,num_of_rand_vec,vol);
   std::pair<int,int> num_of_triangs(start_triangs,0);
 
   return num_of_triangs;

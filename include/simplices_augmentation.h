@@ -18,6 +18,8 @@
 
 // compute simplices that are innerQ until it compute all Q vertices
 
+#include <stack>
+
 int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
 										 const std::vector<int>& mi,
 										 int RD,
@@ -35,16 +37,22 @@ int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
   typedef std::vector<Simplex>                        Simplices;
   size_t step=0;
   
-  Triangulation Res_temp(Res);
-  Triangulation Res2(PD);
+  std::stack<Triangulation> Res_stack;
+  Res_stack.push(Res);
   
-  	Simplices inf_simplices;
-    std::back_insert_iterator<Simplices> out(inf_simplices);
-    Res_temp.incident_full_cells(Res_temp.infinite_vertex(), out);
+  while(1){
+	  Triangulation Res_temp = Res_stack.top();
+		Res_stack.pop();
+		Triangulation Res_new(PD);
+			
+		Simplices inf_simplices;
+		std::back_insert_iterator<Simplices> out(inf_simplices);
+		Res_temp.incident_full_cells(Res_temp.infinite_vertex(), out);
 		std::vector<std::vector<Field> > new_vertices;
 		
 		for (Simplices::iterator sit=inf_simplices.begin();
 			  										 sit!=inf_simplices.end();++sit){
+			
 			std::vector<PPoint_d> facet_points;
 			for (int i=0; i<=Res_temp.current_dimension(); i++){
 				if(!Res_temp.is_infinite((*sit)->vertex(i))){
@@ -75,8 +83,10 @@ int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
 		  } else {
 		    p.set_index(idx);
 		  }
-		  Res2.insert(p);
+		  Res_new.insert(p);
 	  }
+	  Res_stack.push(Res_new);
+	}
 }
 
 ////////////////////////////////////////////////////////////

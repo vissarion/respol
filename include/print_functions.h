@@ -391,5 +391,38 @@ void print_statistics_small(int Cdim,
             ;
 }
 
+template <class Vol>
+void print_statistics_rand(int Cdim,
+                            int Pdim,
+                            int current_dim,
+                            const Vol &total_vol,
+                            int num_of_input_points,
+                            int numoftriangs,
+                            int numofvertices,
+                            int numofextremevertices,
+                            double timeall,
+                            double timehull,
+                            double timeofflinehull,
+                            double timedet,
+                            const Vol &volume){
+  std::cout << Cdim << " "
+            << Pdim << " "
+            << current_dim << " "
+            << total_vol << " "
+            << num_of_input_points << " "
+            << numoftriangs  << " "
+            << numofvertices  << " "
+            << numofextremevertices << " "
+            << timeall << " "
+            << timehull << " "
+            << timeofflinehull  << " "
+            << timedet << " "
+            << volume
+#ifndef RESTRICTED_RES
+            << std::endl
+#endif
+            ;
+}
+
 #endif // PRINT_FUNCTIONS_H
 // vim: ts=2:expandtab
