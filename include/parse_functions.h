@@ -44,7 +44,7 @@ std::vector<int> proj_all_from_last_support(const int &d,
                                              const std::vector<int>& mi){
         std::vector<int> proj(d);
         int mm=0;
-        for (typename std::vector<int>::const_iterator mit=mi.begin();
+        for (std::vector<int>::const_iterator mit=mi.begin();
              mit!=mi.end()-1;
              mit++)
                 mm+=*mit;
@@ -65,7 +65,7 @@ std::vector<int> proj_more_coord(const int &d,
         std::vector<int> proj;
         int a = (d/nplus1)-1;
         int b = d%nplus1;
-        for(typename std::vector<int>::iterator pit=proj_first.begin();
+        for(std::vector<int>::iterator pit=proj_first.begin();
             pit!=proj_first.end();
             pit++){
                 proj.push_back(*pit);
