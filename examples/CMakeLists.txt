@@ -159,6 +159,7 @@ if ( CGAL_FOUND )
   # COMPILATION
   ######################################################################
 
+  create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
   create_single_source_cgal_program("res_enum_d_rand.cpp" ${RESPOL_AUX_PROGS})
 
 else()
