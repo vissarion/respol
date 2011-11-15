@@ -17,6 +17,7 @@
 // <http://www.gnu.org/licenses/>.
 
 #include <CGAL/Gmpz.h>
+#include <CGAL/Gmpq.h>
 #include <lrs_cgal.h>
 
 // Example:
@@ -25,10 +26,10 @@
 // -normal vectors to the convex hull are (-1,-1), (0,-1) and (1,0),
 // respectively
 int main(){
-        typedef CGAL::Gmpz                                      NT;
+        typedef long                                            NT;
         typedef std::vector<NT>                                 Point;
         typedef std::vector<Point>                              Points;
-        typedef std::set<std::vector<NT> >                      Normals;
+        typedef std::set<std::vector<NT> >                      Hyperplanes;
 
         // construct the input, the points and the vector containing them
         Point p(2),q(2),r(2),s(2);
@@ -38,10 +39,14 @@ int main(){
         s[0]=NT(1);s[1]=NT(2);
         Points input(4);
         input[0]=p;input[1]=q;input[2]=r;input[3]=s;
+        // create a LRS_CH object
+        LRS_CH<NT> ch_object(input);
         // compute the convex hull
-        Normals output=lrs_ch(input);
-        std::cout<<"normal vectors:\n";
-        for(typename Normals::const_iterator i=output.begin();
+        ch_object.compute_h_rep();
+        // output it
+        Hyperplanes output=ch_object.get_h_rep();
+        std::cout<<"hyperplanes:\n";
+        for(typename Hyperplanes::const_iterator i=output.begin();
             i!=output.end();
             ++i){
                 std::cout<<"[ ";
