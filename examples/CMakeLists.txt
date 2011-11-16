@@ -46,6 +46,9 @@ if ( CGAL_FOUND )
   #      FILEPATH
   #      "path to Maple executable" )
   option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
+  CMAKE_DEPENDENT_OPTION ( RESPOL_LRS_DEBUG
+                           "print debug information for LRS" OFF 
+                           "RESPOL_USE_LRS" OFF )
 
   # INCLUDES
   ######################################################################
@@ -141,7 +144,6 @@ if ( CGAL_FOUND )
   endif( RESPOL_USE_MAPLE )
 
   if( RESPOL_USE_LRS )
-    message(WARNING "LRS support is buggy!")
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
     add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
     add_definitions(${CMAKE_CXX_FLAGS} "-DSIGNALS")
@@ -151,10 +153,13 @@ if ( CGAL_FOUND )
     endif ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
     include_directories (BEFORE ../external/lrslib-042c/include)
     set ( RESPOL_AUX_PROGS "../external/lrslib-042c/include/lrslib.c"
-                           "../external/lrslib-042c/include/lrsgmp.c"
-                           "lrs_functions.c")
+                           "../external/lrslib-042c/include/lrsgmp.c")
     create_single_source_cgal_program("test_lrs.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_USE_LRS )
+
+  if( RESPOL_LRS_DEBUG )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DLRS_DEBUG")
+  endif( RESPOL_LRS_DEBUG )
 
   # COMPILATION
   ######################################################################

@@ -161,7 +161,7 @@ int main(const int argc, const char** argv) {
   #endif
   
   #ifdef USE_LRSLIB
-  ch();
+  // TODO: call LRS functions, see test_lrs.cpp for an example
   #endif
 
   return 0;

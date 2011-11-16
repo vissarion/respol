@@ -2,7 +2,7 @@
 
 #include <lrs_functions.h>
 
-#define MAXCOL 1000     /* maximum number of colums */
+#define MAX_COL 1000     /* maximum number of colums */
 
 int ch ()
 {
@@ -100,8 +100,8 @@ void makecyclic (lrs_dic *P, lrs_dat *Q)
 /* generate vertices of a cyclic polytope */
 /* (t, t^2, ..., t^n-1 ), t=1..m             */
 {
-  long num[MAXCOL];
-  long den[MAXCOL];
+  long num[MAX_COL];
+  long den[MAX_COL];
   long row, j, t;
   long m=Q->m;
   long n=Q->n;
