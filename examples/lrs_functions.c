@@ -1,4 +1,8 @@
-// code borrowed from LRS's chdemo.c, copyright David Avis 2001
+/* This file contains two functions, that show how to use lrslib. There is
+ * no need to compile this, the functions to link with respol are in
+ * include/lrs_cgal.h.
+ * This code was borrowed from LRS's chdemo.c, copyright David Avis 2001.
+ */
 
 #include <lrs_functions.h>
 

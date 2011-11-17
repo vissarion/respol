@@ -145,7 +145,6 @@ if ( CGAL_FOUND )
 
   if( RESPOL_USE_LRS )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
-    add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
     add_definitions(${CMAKE_CXX_FLAGS} "-DSIGNALS")
     add_definitions(${CMAKE_CXX_FLAGS} "-DGMP")
     if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
@@ -158,6 +157,7 @@ if ( CGAL_FOUND )
   endif( RESPOL_USE_LRS )
 
   if( RESPOL_LRS_DEBUG )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
     add_definitions(${CMAKE_CXX_FLAGS} "-DLRS_DEBUG")
   endif( RESPOL_LRS_DEBUG )
 
