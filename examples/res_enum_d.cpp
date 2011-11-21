@@ -147,10 +147,12 @@ int main(const int argc, const char** argv) {
                          volume(Res,Pdets));
   //#endif
   
+  #ifdef PRINT_INFO
   //std::cout << "convex hull time = " << conv_time << std::endl;
+
+  // we print for debugging purposes the matrix of the hashed points
   Pdets.print_matrix(std::cout);
   
-  #ifdef PRINT_INFO
     //recompute_Res(Res);
   #endif
   

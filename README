@@ -78,3 +78,26 @@ i.e. generic resultant polytope.
 To run ResPol with this input execute:
 
 $ ./res_enum_d < inputs/cayley4_small_implic.tmp
+
+
+----------------
+4. ResPol output
+----------------
+
+The output of the program has this form:
+6 4 4 12 12 31 19 -1 0.74 0.05 0 -2 109800/1
+
+The meaning of each value follows (the notation on the paper is used).
+-column 1: Cayley dimension (d in the paper)
+-column 2: ambient dimension of Q (m in the paper)
+-column 3: dimension of Q
+-column 4: cardinality of A
+-column 5: cardinality of A after preprocessing
+-column 6: number of computed triangulations
+-column 7: number of vertices of Q
+-column 8: number of extreme vertices of Q (or -1 if not computed)
+-column 9: overall time
+-column 10: time spent in the computation of convex hull of Q
+-column 11: time spent in the offline computation of Q
+-column 12: total time spent in determinant computations
+-column 13: volume of Q (or -1 if not computed)
