@@ -126,7 +126,7 @@ class FastHashedDeterminant{
         _c_determinants(),
 #endif
 #ifdef USE_ONLY_CAYLEY_DET_HASH
-        _hashed(true),
+        _hashed(false),
 #endif 
         number_of_hashed_determinants(0)
         {};
@@ -182,7 +182,7 @@ class FastHashedDeterminant{
         _h_determinants(),
         
 #ifdef USE_ONLY_CAYLEY_DET_HASH
-        _hashed(false),
+        _hashed(true),
 #endif        
 #ifdef USE_ORIENTATION_DET
         _o_determinants(),
@@ -476,7 +476,7 @@ class FastHashedDeterminant{
 
         NT homogeneous_determinant(const Index &idx,const Row &r){
 #ifdef USE_ONLY_CAYLEY_DET_HASH
-          if (!_hashed){      
+          if (_hashed){      
 #endif
                 assert(idx.size()==r.size());
 #ifdef LOG_DET_TIME
