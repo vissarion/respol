@@ -92,6 +92,7 @@ typedef CGAL::Cartesian_d<Field>									PK;
 typedef CGAL::Triangulation_vertex<CK>								tv;
 typedef CGAL::Triangulation_full_cell<CK,bool>						tc;
 typedef CGAL::Triangulation_data_structure<CGAL::Dynamic_dimension_tag,tv,tc > tds;
+//typedef CGAL::Triangulation_data_structure<CGAL::Dimension_tag<12>,tv,tc > tds;
 typedef CGAL::Triangulation<PK,tds> 							Triangulation;
 //typedef CGAL::Delaunay_triangulation<PK,tds> 							Triangulation;
 //typedef CGAL::Triangulation<PK> 								Triangulation;
@@ -995,7 +996,7 @@ std::pair<int,int> compute_res(
 // misc
 
 template <class Triang>
-void recompute_Res(const Triang &Res){
+double recompute_Res(const Triang &Res){
   std::vector<PPoint_d> Res_points;
   for (typename Triang::Vertex_const_iterator vit = 
        Res.vertices_begin(); 
@@ -1006,12 +1007,14 @@ void recompute_Res(const Triang &Res){
 	tstart = (double)clock()/(double)CLOCKS_PER_SEC;
   Res2.insert(Res_points.begin(),Res_points.end());
   tstop = (double)clock()/(double)CLOCKS_PER_SEC;
-  std::cout << "CH Res offline time= " << tstop - tstart << std::endl;
+  //std::cout << "CH Res offline time= " << tstop - tstart << std::endl;
+  return tstop - tstart;
 }
 
 double compute_Res_offline(HD& Pdets,
                            Triangulation& Res){
   //Res.clear();
+  Triangulation Res2(PD);
   std::vector<PPoint_d> Res_points;
   for (HD::iterator Pit=Pdets.begin(); 
                            Pit!=Pdets.end(); ++Pit){
@@ -1019,11 +1022,11 @@ double compute_Res_offline(HD& Pdets,
 		p.set_hash(&Pdets);
 		p.set_index(Pit-Pdets.begin());
 		Res_points.push_back(p);
-		Res.insert(p);
+		//Res.insert(p);
   }
   double tstart, tstop;
 	tstart = (double)clock()/(double)CLOCKS_PER_SEC;
-  //Res.insert(Res_points.begin(),Res_points.end());
+  Res2.insert(Res_points.begin(),Res_points.end());
   tstop = (double)clock()/(double)CLOCKS_PER_SEC;
   return tstop - tstart;
 }

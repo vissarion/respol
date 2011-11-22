@@ -87,6 +87,9 @@ int main(const int argc, const char** argv) {
 	std::pair<int,int> num_of_triangs =
     compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
+	//std::pair<int,int> num_of_triangs =
+  //RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  
   //std::pair<int,int> num_of_triangs =
   //InnerQwithsimplices(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
@@ -101,7 +104,8 @@ int main(const int argc, const char** argv) {
 	// stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
   
-  double recompute_time = compute_Res_offline(Pdets,Res);
+  //double recompute_time = compute_Res_offline(Pdets,Res);
+  double recompute_time = recompute_Res(Res);
   
 	// print the result i.e. the proj of the Resultant polytope
  	//#ifdef PRINT_INFO	
@@ -111,22 +115,12 @@ int main(const int argc, const char** argv) {
   generate_polymake_scripts(Res);
   
   // print some statistics
-/*  #ifdef PRINT_INFO
-  print_statistics (Res.current_dimension(),
-                   num_of_triangs.first, 
-                   num_of_triangs.second,
-                   Res.number_of_vertices(), 
-#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
-                   count_extreme_vertices(Res),
-#else
-                   -1,
-#endif                   
-                   tstopall-tstartall, // overall time
-                   dets.get_determinant_time()+
-                   Pdets.get_determinant_time(), // determinant time
-                   volume(Res,Pdets));
-  #else
-*/
+  #ifdef PRINT_INFO
+   std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
+             << "num_of_input_points, numoftriangs, numofvertices,"  
+             << "numofextremevertices, timeall, timehull, timeofflinehull,"
+             << "timedet, volume" << std::endl;
+  #endif                   
   print_statistics_small(CD-1, 
                          PD,
                          Res.current_dimension(),
@@ -144,7 +138,8 @@ int main(const int argc, const char** argv) {
                          recompute_time, // Res convex hull offline time
                          dets.get_determinant_time()+
                          Pdets.get_determinant_time(), // determinant time
-                         volume(Res,Pdets));
+                         -1,//volume(Res,Pdets)
+                         Res);
   //#endif
   
   #ifdef PRINT_INFO

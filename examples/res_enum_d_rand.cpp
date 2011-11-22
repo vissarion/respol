@@ -43,6 +43,9 @@ int main(const int argc, const char** argv) {
 
 	double tstart1, tstop1, tstart2, tstop2, tstartall, tstopall;
 
+  	// start clocking
+	tstartall = (double)clock()/(double)CLOCKS_PER_SEC;
+	
 	// mi will be the cardinalities of the support sets
 	// n is sum{mi}
  	// construct an empty pointset
@@ -75,9 +78,6 @@ int main(const int argc, const char** argv) {
 	// the beginning and we add the points when they are computed
 	HD Pdets;
 	
-	// start clocking
-	tstartall = (double)clock()/(double)CLOCKS_PER_SEC;
-	
 	// the data structure to hold the res polytope
 	int numof_triangs=0, numof_init_Res_vertices;
   Triangulation Res(PD);
@@ -88,6 +88,9 @@ int main(const int argc, const char** argv) {
 	std::pair<int,int> num_of_triangs =
     compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
+  // stop clocking
+	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
+  
   //std::pair<int,int> num_of_triangs =
   //InnerQwithsimplices(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
@@ -97,14 +100,11 @@ int main(const int argc, const char** argv) {
   Triangulation Res2(PD);
   HD Pdets2;
   num_of_triangs =
-  compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets2,Res2,1000,
-                            volume(Res,Pdets));
-  
+  compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets2,Res2,1200,
+    volume(Res,Pdets),tstopall-tstartall,pointset.size(),Res.number_of_vertices());
   
   //////////////////////////////////////////////////////////////////////
   
-	// stop clocking
-	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
   
   double recompute_time = compute_Res_offline(Pdets,Res);
   
@@ -113,7 +113,7 @@ int main(const int argc, const char** argv) {
 	//print_res_vertices(Res,std::cout);
   //#endif
 	//print_res_facets_number(Res);
-  //generate_polymake_scripts(Res);
+  generate_polymake_scripts(Res);
   
   // print some statistics
 /*  #ifdef PRINT_INFO

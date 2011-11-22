@@ -253,16 +253,36 @@ void f_vector(Triang &Res){
 		total_edges += edges.size();
 		edges.clear();
 	}
+	//compute facets of Res polytope (not triangulated) 
 	int dim = Res.current_dimension();
 	int facets = inf_simplices.end() - inf_simplices.begin();
-
+	NV_ds Res_facets;
+	for (typename std::vector<Simplex>::iterator sit=inf_simplices.begin(); 
+	     sit!=inf_simplices.end();++sit){
+		std::vector<PPoint_d> facet_points;
+		for (int i=1; i<=Res.current_dimension(); i++){
+			facet_points.push_back((*sit)->vertex(i)->point());
+			//std::cout << (*sit)->vertex(i)->point() << " ";
+		}
+		//std::cout << std::endl;
+		PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+		// compute a hyperplane which has in its negative side the opposite point
+		PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
+		//is_neg=true;
+		PVector_d current_vector = hp.orthogonal_direction();
+		Res_facets.insert(current_vector);
+	}
+#ifdef PRINT_INFO
 	std::cout << "(cells" << ","
+	          << "triang_facets" << ","
 	          << "facets" << ","
 	          << "edges" << ","
 	          //<< "boundary edges" << ","
 	          << "vertices)=";
+#endif
 	std::cout << finite_cells << " "
 	          << facets << " "
+	          << Res_facets.size() << " "
 	          << total_edges/2 << " "
 	          << Res.number_of_vertices()
             << std::endl;
@@ -330,6 +350,37 @@ void generate_polymake_scripts(const Triang &Res){
   print_polymake_testfile(Res,"beneath_beyond",polymakefile3);
 }
 
+void print_polymake_volume_file(std::vector< std::vector<Field> >& Hrep,
+														    std::ostream& os){
+  typedef std::vector<Field> Ineq;
+  typedef std::vector<Ineq> Ineqs;
+  // print the vertices of the res polytope
+  //int number_of_vertices = 0;
+  //typedef typename Triang::Vertex_const_iterator        VCI;
+  //typedef typename Triang::Point_d                      P;
+  //typedef typename P::Cartesian_const_iterator          PCCI;
+  //os << "dim=" << Res.current_dimension() << std::endl;
+	os << "use application 'polytope';\n";
+	os << "my $inequalities=new Matrix<Rational>([\n";
+	for (Ineqs::iterator iit = Hrep.begin(); iit != Hrep.end(); iit++){
+    os << "[";
+    for (Ineq::iterator it = iit->begin(); it != iit->end(); it++){
+      if (it+1 != iit->end())
+        os << "\"" << *it << "\"" << ",";
+      else os << "\"" << *it << "\"";
+    }
+    if (iit+1 != Hrep.end())
+        os << "],\n";
+      else os << "]\n";
+  }
+	os << "]);\n";
+	os << "my $p=new Polytope<Rational>(INEQUALITIES=>$inequalities);\n";
+	os << "my $vol = $p->VOLUME;\n";
+	os << "print $vol;\n";
+  os << std::endl;
+}
+
+
 /////////////////////////////////////////////////////////////////
 // functions to print statistics
 
@@ -371,7 +422,8 @@ void print_statistics_small(int Cdim,
                             double timehull,
                             double timeofflinehull,
                             double timedet,
-                            const Vol &volume){
+                            const Vol &volume,
+                            Triangulation& Res){
   std::cout << Cdim << " "
             << Pdim << " "
             << current_dim << " "
@@ -384,11 +436,8 @@ void print_statistics_small(int Cdim,
             << timehull << " "
             << timeofflinehull  << " "
             << timedet << " "
-            << volume
-#ifndef RESTRICTED_RES
-            << std::endl
-#endif
-            ;
+            << volume << " ";
+  f_vector(Res);
 }
 
 template <class Vol>

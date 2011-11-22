@@ -22,6 +22,7 @@ if ( CGAL_FOUND )
   include ( CMakeDependentOption )
   option ( RESPOL_PRINT_INFO "show some information during execution" OFF )
   option ( RESPOL_USE_HASHED_DET "hash computed determinant minors" ON )
+  option ( RESPOL_USE_HACKED_KERNEL_ORIENTATION "to use hashed dets" ON )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_STATS
                            "print hashed determinants statistics" OFF
                            "RESPOL_USE_HASHED_DET" OFF )
@@ -46,10 +47,9 @@ if ( CGAL_FOUND )
   #      FILEPATH
   #      "path to Maple executable" )
   option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
-  CMAKE_DEPENDENT_OPTION ( RESPOL_LRS_DEBUG
-                           "print debug information for LRS" OFF 
-                           "RESPOL_USE_LRS" OFF )
-
+  option ( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY "preprocess the input" ON )
+    #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
+  
   # INCLUDES
   ######################################################################
 
@@ -68,13 +68,11 @@ if ( CGAL_FOUND )
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_CGAL_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
-  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_GAUSSIAN_ELIMINATION")
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EXTREME_SPECIALIZED_POINTS_ONLY")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRESTRICTED_RES")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DRANDOM_RES")
-
+  
   # CMAKE OPTIONS PROCESSING
   ######################################################################
 
@@ -86,6 +84,10 @@ if ( CGAL_FOUND )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
   endif( RESPOL_USE_HASHED_DET )
 
+  if( RESPOL_USE_HACKED_KERNEL_ORIENTATION )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
+  endif( RESPOL_USE_HACKED_KERNEL_ORIENTATION )
+   
   if( RESPOL_HASH_STATS )
     add_definitions(${CMAKE_CXX_FLAGS} "-DHASH_STATISTICS")
   endif( RESPOL_HASH_STATS )
@@ -94,7 +96,11 @@ if ( CGAL_FOUND )
     message(WARNING "sorted indices support is buggy!")
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_SORTED_INDICES")
   endif( RESPOL_HASH_SORTED_INDICES )
-
+  
+  if( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EXTREME_SPECIALIZED_POINTS_ONLY")
+  endif( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY )
+  
   # Set the default value of RESPOL_HASH_CLEAR_DETS or use the cached value
   # if it exists.
   if( RESPOL_HASH_CLEAR_DETS )
