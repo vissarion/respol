@@ -20,6 +20,8 @@ int D,CD,PD; // global variables needed by read_input
 #include <parse_functions.h>
 #include <CGAL/Gmpz.h>
 #include <vector>
+#include <algorithm>
+#include <cstring>
 #include <cassert>
 
 template <class NT_>
@@ -27,7 +29,7 @@ std::ostream& print_gfan_vectors(std::ostream &o,
                                  const std::vector<std::vector<NT_> > &points,
                                  const std::vector<int> &mi){
         assert(points.size());
-        std::cout<<"{\n{";
+        o<<"{{";
         size_t m_idx=0,m_total=mi[0]-1;
         for(size_t i=0;i<points.size()-1;++i){
                 o<<'('<<points[i]<<')';
@@ -35,13 +37,37 @@ std::ostream& print_gfan_vectors(std::ostream &o,
                         o<<"},\n{";
                         m_total+=mi[++m_idx];
                 }else{
-                        o<<',';
+                        o<<",\n";
                 }
         }
-        return o<<'('<<points[points.size()-1]<<")}\n}\n";
+        return o<<'('<<points[points.size()-1]<<")}}\n";
 }
 
-int main(){
+std::ostream& print_gfan_generic(std::ostream &o,int dimension){
+        assert(dimension>0);
+        o<<"(1";
+        for(size_t i=1;i<dimension;++i)
+                o<<",1";
+        return o<<')'<<std::endl;
+}
+
+std::ostream& print_gfan_projections(std::ostream &o,
+                                     const std::vector<int> &proj,
+                                     int dimension){
+        assert(proj.size());
+        o<<'(';
+        for(size_t i=0;i<dimension;++i){
+                if(i!=0)
+                        o<<',';
+                if(std::search_n(proj.begin(),proj.end(),1,i)==proj.end())
+                        o<<1;
+                else
+                        o<<0;
+        }
+        return o<<')'<<std::endl;
+}
+
+int main(int argc,char *argv[]){
         // NT is the number type of the input exp vectors
         typedef CGAL::Gmpz                              NT;
         // Pset is the set of the M_i
@@ -49,34 +75,92 @@ int main(){
         // Cset is a coordinate set (for the Mi's and the projections)
         typedef std::vector<int>                        Cset;
 
+        // process command-line
+        bool verbose=false;
+        bool valid;
+        for(int i=1;i<argc;++i){
+                valid=false;
+                if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"--verbose")==0){
+                        valid=true;
+                        verbose=true;
+                }
+                if(strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
+                        valid=true;
+                        std::cerr<<
+                                "This program transform a ResPol input"<<
+                                " read from stdin into a Gfan input, "<<
+                                "written to stdout.\nValid options "<<
+                                "are:\n-h, --help\tprint this help "<<
+                                "message\n-v, --verbose\tbe verbose "<<
+                                "(in stderr)"<<std::endl;
+                                exit(-1);
+                }
+                if(!valid){
+                        std::cerr<<"option "<<argv[i]<<" not recognized"<<
+                                std::endl;
+                        exit(-1);
+                }
+        }
+
         Pset points;
         Cset mi,proj;
         int m;
 
         switch(read_pointset(points,mi,proj,m)){
                 case 1:
-                        std::cerr<<"# implicitization"<<std::endl;
+                        // the pipe symbol is omitted
+                        // this is what we want to implement now
+                        if(verbose){
+                                std::cerr<<
+                                "# implicitization; like in ex. (g), "<<
+                                "run with:\n# (1) traversing tropical "<<
+                                "resultant, gfan _resultantfan "<<
+                                "--vectorinput --special (not working)\n"<<
+                                "# (2) normal "<<
+                                "fan from stable intersection, gfan "<<
+                                "_resultantfan --vectorinput --special "<<
+                                "--projection\n# (3) normal fan from "<<
+                                "tropical elimination, they say it is "<<
+                                "'missing'"<<std::endl;
+                        }
                         print_gfan_vectors(std::cout,points,mi);
+                        print_gfan_generic(std::cout,m);
                         break;
                 case 2:
-                        std::cout<<"# arbitrary projection"<<std::endl;
+                        // projections specified after the pipe
+                        if(verbose){
+                                std::cerr<<
+                                "# arbitrary projection"<<std::endl;
+                        }
+                        print_gfan_vectors(std::cout,points,mi);
+                        print_gfan_projections(std::cout,proj,m);
+                        std::cerr<<"not implemented"<<std::endl;
+                        exit(-1);
                         break;
                 case 3:
-                        std::cout<<"# generic polytope"<<std::endl;
+                        // pipe present, but no projections specified
+                        if(verbose){
+                                std::cerr<<
+                                        "# generic polytope"<<std::endl;
+                        }
+                        std::cerr<<"not implemented"<<std::endl;
+                        exit(-1);
                         break;
                 default:
+                        // it should never reach this point
                         std::cerr<<"I do not know how to handle this case!"
                                 <<std::endl;
                         exit(-1);
         }
 
-        std::cout<<"---------------\n";
+        /* std::cout<<"---------------\n";
         std::cout<<"points = {("<<points[0]<<')';
         for(size_t i=1;i<points.size();++i)
                 std::cout<<",("<<points[i]<<')';
         std::cout<<"}\nmi = ["<<mi<<
                 "]\nproj = ["<<proj<<
                 "]\nm = "<<m<<std::endl;;
+        */
 
         return 0;
 }

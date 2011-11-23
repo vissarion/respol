@@ -168,6 +168,7 @@ if ( CGAL_FOUND )
   if( RESPOL_BUILD_CONVERTERS )
     create_single_source_cgal_program("parse_input.cpp")
   endif( RESPOL_BUILD_CONVERTERS )
+
   if( RESPOL_BUILD_RANDOMIZED )
     create_single_source_cgal_program("res_enum_d_rand.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_BUILD_RANDOMIZED )
