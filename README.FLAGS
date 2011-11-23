@@ -7,12 +7,13 @@ the command line or the GUIs. They are:
 
 - RESPOL_USE_HASHED_DET: use the hashing determinants scheme, storing the
   computed determinants of the minors of matrices and reusing them when
-  needed (ON by default),
-- RESPOL_HASH_CLEAR: clears the hash table when a certain number of
+  needed (ON by default, use the CGAL determinants when this option is
+  off),
+- RESPOL_HASH_CLEAR: clear the hash table when a certain number of
   determinants was stored, to keep the memory consumption reasonable (ON by
   default),
-- RESPOL_HASH_CLEAR_DETS: the number of determinants that must be stored in
-  the table to clear it (1000000 by default),
+- RESPOL_HASH_CLEAR_DETS: clear the hash table when it stores this amount
+  of determinants (1000000 by default),
 - RESPOL_HASH_DET_TIME: print the total time spent in computing
   determinants (OFF by default),
 - RESPOL_HASH_ONLY_CAYLEY: only use hashed determinants in Cayley space (ON
@@ -25,7 +26,13 @@ the command line or the GUIs. They are:
 - RESPOL_PRINT_INFO: print information about what the algorithm is doing
   during the execution of the program (OFF by default),
 - RESPOL_USE_LRS: use LRS to compute convex hulls (OFF by default),
-- RESPOL_VOL: compute the volume of the output polytope (ON by default).
+- RESPOL_VOL: compute the volume of the output polytope (ON by default),
+- RESPOL_BUILD_CONVERTERS: build a converter to transform input files to
+  Gfan format (OFF by default),
+- RESPOL_BUILD_RANDOMIZED: also build the version with randomized
+  initialization (OFF by default),
+- RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY: preprocess the input (ON by
+  default).
 
 Other compilation options can be changed in CMakeLists.txt. This is
 dangerous, since these are mostly experimental.
