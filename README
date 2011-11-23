@@ -91,6 +91,7 @@ $ ./res_enum_d < inputs/cayley4_small_implic.tmp
 
 The output of the program has this form:
 6 4 4 12 12 31 19 -1 0.74 0.05 0 -2 109800/1
+--- suggestion: pretty print the output ---
 
 The meaning of each value follows (the notation on the paper is used).
 -column 1: Cayley dimension (d in the paper)
