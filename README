@@ -57,9 +57,14 @@ ResPol supports:
   (c) generic resultant polytope computations
 
 The second line of the input file defines the projection and actually
-selects one of the above options.  (a) is supported by not defining any
-projection (omitting '|'), (b) by defining an arbitrary projection and (c)
-by providing only the symbol '|'.
+selects one of the above options:
+(a) is supported by not defining any projection (omitting '|'),
+--- in this case, which are the specialized and which are the free coord's? ---
+--- input/u_resultant omits | but is not implicitization ---
+(b) by defining an arbitrary projection and
+--- the numbers after | correspond to specialized or free coeffs ? ---
+--- numbering starts at 0 or 1 ? I now guess 1, but i gave 0 and it didnt complain! ---
+(c) by providing only the symbol '|'.
 
 Input example:
 
