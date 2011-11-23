@@ -48,7 +48,8 @@ if ( CGAL_FOUND )
   #      "path to Maple executable" )
   option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
   option ( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY "preprocess the input" ON )
-    #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
+  option ( RESPOL_BUILD_RANDOMIZED "build randomized init version" OFF )
+  option ( RESPOL_BUILD_CONVERTERS "build input file converters" OFF )
   
   # INCLUDES
   ######################################################################
@@ -167,11 +168,17 @@ if ( CGAL_FOUND )
     add_definitions(${CMAKE_CXX_FLAGS} "-DLRS_DEBUG")
   endif( RESPOL_LRS_DEBUG )
 
+  if( RESPOL_BUILD_CONVERTERS )
+    create_single_source_cgal_program("parse_input.cpp")
+  endif( RESPOL_BUILD_CONVERTERS )
+  if( RESPOL_BUILD_RANDOMIZED )
+    create_single_source_cgal_program("res_enum_d_rand.cpp" ${RESPOL_AUX_PROGS})
+  endif( RESPOL_BUILD_RANDOMIZED )
+
   # COMPILATION
   ######################################################################
 
   create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
-  create_single_source_cgal_program("res_enum_d_rand.cpp" ${RESPOL_AUX_PROGS})
 
 else()
 
