@@ -25,6 +25,7 @@
 #include <set>
 #include <string>
 #include <CGAL/Gmpz.h>
+#include <normal_set_ds.h> // we need normals to compute f-vectors
 
 /////////////////////////////////////////////////////////////////
 // overload of << operators for various types
@@ -223,10 +224,16 @@ void print_res_facets_number(const Triang &Res){
 
 template <class Triang>
 void f_vector(Triang &Res){
+  typedef typename Triang::Geom_traits                          GT;
+  typedef typename GT::FT                                       FieldType;
+  typedef typename Triang::Point_d                              PP_d;
+  typedef typename GT::Direction_d                              PV_d;
+  typedef typename GT::Hyperplane_d                             PH_d;
   typedef typename Triang::Full_cell_handle                     Simplex;
   typedef std::vector<Simplex>                                  Simplices;
   typedef typename Triang::Vertex_iterator                      VCI;
   typedef typename Triang::Finite_full_cell_const_iterator      PS_FCI;
+  typedef Normal_Vector_ds<PV_d,FieldType>                      NV_ds;
 
   Simplices inf_simplices;
   std::back_insert_iterator<Simplices> out(inf_simplices);
@@ -253,25 +260,29 @@ void f_vector(Triang &Res){
 		total_edges += edges.size();
 		edges.clear();
 	}
-	//compute facets of Res polytope (not triangulated) 
+	//compute facets of Res polytope (not triangulated)
 	int dim = Res.current_dimension();
 	int facets = inf_simplices.end() - inf_simplices.begin();
 	NV_ds Res_facets;
-	for (typename std::vector<Simplex>::iterator sit=inf_simplices.begin(); 
+	for (typename std::vector<Simplex>::iterator sit=inf_simplices.begin();
 	     sit!=inf_simplices.end();++sit){
-		std::vector<PPoint_d> facet_points;
+		std::vector<PP_d> facet_points;
 		for (int i=1; i<=Res.current_dimension(); i++){
 			facet_points.push_back((*sit)->vertex(i)->point());
 			//std::cout << (*sit)->vertex(i)->point() << " ";
 		}
 		//std::cout << std::endl;
-		PPoint_d opposite_point = (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
-		// compute a hyperplane which has in its negative side the opposite point
-		PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
-		//is_neg=true;
-		PVector_d current_vector = hp.orthogonal_direction();
-		Res_facets.insert(current_vector);
-	}
+    PP_d opposite_point=
+      (*sit)->neighbor(0)->vertex((*sit)->mirror_index(0))->point();
+    // compute a hyperplane which has in its negative side the opposite point
+    PH_d hp(facet_points.begin(),
+            facet_points.end(),
+            opposite_point,
+            CGAL::ON_NEGATIVE_SIDE);
+    //is_neg=true;
+    PV_d current_vector = hp.orthogonal_direction();
+    Res_facets.insert(current_vector);
+  }
 #ifdef PRINT_INFO
 	std::cout << "(cells" << ","
 	          << "triang_facets" << ","
@@ -350,10 +361,11 @@ void generate_polymake_scripts(const Triang &Res){
   print_polymake_testfile(Res,"beneath_beyond",polymakefile3);
 }
 
+template <class Field>
 void print_polymake_volume_file(std::vector< std::vector<Field> >& Hrep,
-														    std::ostream& os){
-  typedef std::vector<Field> Ineq;
-  typedef std::vector<Ineq> Ineqs;
+                                std::ostream& os){
+  typedef typename std::vector<Field> Ineq;
+  typedef typename std::vector<Ineq> Ineqs;
   // print the vertices of the res polytope
   //int number_of_vertices = 0;
   //typedef typename Triang::Vertex_const_iterator        VCI;
@@ -362,9 +374,13 @@ void print_polymake_volume_file(std::vector< std::vector<Field> >& Hrep,
   //os << "dim=" << Res.current_dimension() << std::endl;
 	os << "use application 'polytope';\n";
 	os << "my $inequalities=new Matrix<Rational>([\n";
-	for (Ineqs::iterator iit = Hrep.begin(); iit != Hrep.end(); iit++){
+  for(typename Ineqs::iterator iit=Hrep.begin();
+      iit!=Hrep.end();
+      iit++){
     os << "[";
-    for (Ineq::iterator it = iit->begin(); it != iit->end(); it++){
+    for(typename Ineq::iterator it=iit->begin();
+        it!=iit->end();
+        it++){
       if (it+1 != iit->end())
         os << "\"" << *it << "\"" << ",";
       else os << "\"" << *it << "\"";
@@ -409,7 +425,7 @@ void print_statistics(int current_dim,
             << " ~ " <<  CGAL::to_double(volume) << std::endl;
 }
 
-template <class Vol>
+template <class Vol,class Triang>
 void print_statistics_small(int Cdim,
                             int Pdim,
                             int current_dim,
@@ -423,7 +439,7 @@ void print_statistics_small(int Cdim,
                             double timeofflinehull,
                             double timedet,
                             const Vol &volume,
-                            Triangulation& Res){
+                            Triang& Res){
   std::cout << Cdim << " "
             << Pdim << " "
             << current_dim << " "

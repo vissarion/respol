@@ -20,6 +20,7 @@
 #define NORMAL_VECTOR_DS_H
 
 #include <set>
+#include <CGAL/algorithm.h>
 #include <CGAL/Random.h>
 #include <CGAL/point_generators_d.h>
 //#include <algorithm>
