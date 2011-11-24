@@ -120,7 +120,8 @@ int main(const int argc, const char** argv) {
              << "num_of_input_points, numoftriangs, numofvertices,"  
              << "numofextremevertices, timeall, timehull, timeofflinehull,"
              << "timedet, volume" << std::endl;
-  #endif                   
+  #endif  
+  #ifndef PRETTY_PRINT                
   print_statistics_small(CD-1, 
                          PD,
                          Res.current_dimension(),
@@ -140,7 +141,27 @@ int main(const int argc, const char** argv) {
                          Pdets.get_determinant_time(), // determinant time
                          -1,//volume(Res,Pdets)
                          Res);
-  //#endif
+  #else
+  pretty_print_statistics(CD-1, 
+                         PD,
+                         Res.current_dimension(),
+                         initial_pointset_size,
+                         pointset.size(),
+                         num_of_triangs.first+num_of_triangs.second,
+                         Res.number_of_vertices(),
+#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
+                         count_extreme_vertices(Res),
+#else
+                         -1,
+#endif
+                         tstopall-tstartall, // overall time
+                         conv_time, // Res convex hull time
+                         recompute_time, // Res convex hull offline time
+                         dets.get_determinant_time()+
+                         Pdets.get_determinant_time(), // determinant time
+                         -1,//volume(Res,Pdets)
+                         Res);
+  #endif
   
   #ifdef PRINT_INFO
   //std::cout << "convex hull time = " << conv_time << std::endl;

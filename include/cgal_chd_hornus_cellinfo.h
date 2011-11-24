@@ -943,7 +943,12 @@ int augment_Res(const std::vector<std::vector<NT_> >& pointset,
   		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell);
 		}
 		#ifdef PRINT_INFO
-			f_vector(Res);
+			{
+				int cells, triang_facets, facets, edges, vertices;
+        f_vector(Res,cells, triang_facets, facets, edges, vertices);
+			  std::cout<<"("<<cells<<","<<triang_facets<<","
+			           <<facets<<","<<edges<<","<<vertices<<"\n";
+			}
 		#endif
 		#ifdef RESTRICTED_RES
 			if (Res.number_of_vertices() == restricted_num_Res){

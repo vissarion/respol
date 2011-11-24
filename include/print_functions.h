@@ -223,7 +223,12 @@ void print_res_facets_number(const Triang &Res){
 }
 
 template <class Triang>
-void f_vector(Triang &Res){
+void f_vector(Triang &Res,
+              int& cells,
+	            int& triang_facets,
+	            int& facets,
+	            int& edges,
+	            int& vertices){
   typedef typename Triang::Geom_traits                          GT;
   typedef typename GT::FT                                       FieldType;
   typedef typename Triang::Point_d                              PP_d;
@@ -262,7 +267,7 @@ void f_vector(Triang &Res){
 	}
 	//compute facets of Res polytope (not triangulated)
 	int dim = Res.current_dimension();
-	int facets = inf_simplices.end() - inf_simplices.begin();
+	int num_facets = inf_simplices.end() - inf_simplices.begin();
 	NV_ds Res_facets;
 	for (typename std::vector<Simplex>::iterator sit=inf_simplices.begin();
 	     sit!=inf_simplices.end();++sit){
@@ -291,12 +296,11 @@ void f_vector(Triang &Res){
 	          //<< "boundary edges" << ","
 	          << "vertices)=";
 #endif
-	std::cout << finite_cells << " "
-	          << facets << " "
-	          << Res_facets.size() << " "
-	          << total_edges/2 << " "
-	          << Res.number_of_vertices()
-            << std::endl;
+  cells=finite_cells;
+	triang_facets=num_facets;
+	facets=Res_facets.size();
+	edges=total_edges/2;
+	vertices=Res.number_of_vertices();
 }
 
 template <class Triang>
@@ -440,6 +444,8 @@ void print_statistics_small(int Cdim,
                             double timedet,
                             const Vol &volume,
                             Triang& Res){
+  int cells, triang_facets, facets, edges, vertices;
+  f_vector(Res,cells, triang_facets, facets, edges, vertices);
   std::cout << Cdim << " "
             << Pdim << " "
             << current_dim << " "
@@ -452,8 +458,53 @@ void print_statistics_small(int Cdim,
             << timehull << " "
             << timeofflinehull  << " "
             << timedet << " "
-            << volume << " ";
-  f_vector(Res);
+            << volume << " "
+            << cells << " "
+            << triang_facets << " "
+            << facets << " "
+            << edges << std::endl;  
+}
+
+
+template <class Vol,class Triang>
+void pretty_print_statistics(int Cdim,
+                            int Pdim,
+                            int current_dim,
+                            int init_num_of_input_points,
+                            int num_of_input_points,
+                            int numoftriangs,
+                            int numofvertices,
+                            int numofextremevertices,
+                            double timeall,
+                            double timehull,
+                            double timeofflinehull,
+                            double timedet,
+                            const Vol &volume,
+                            Triang& Res){
+  int cells, triang_facets, facets, edges, vertices;
+  f_vector(Res,cells, triang_facets, facets, edges, vertices);
+  std::cout << "dimension (Cayley(d),proj(m),Res): \t(" 
+            << Cdim << ","
+            << Pdim << ","
+            << current_dim << ")\n"
+            << "#(input points,prepreocessed):  \t(" 
+            << init_num_of_input_points << ","
+            << num_of_input_points << ")\n"
+            << "#(triangs,points boundary of Res):\t(" 
+            << numoftriangs << ","
+            << numofvertices  << ")\n"
+            << "f-vector Res (cells,\ntriang_facets,facets,edges,vertices):\t(" 
+            << cells << ","
+            << triang_facets << ","
+            << facets << ","
+            << edges << "," 
+            << numofextremevertices << ")\n"
+            << "time (total,CH,CH offline,dets):\t(" 
+            << timeall << ","
+            << timehull << ","
+            << timeofflinehull  << ","
+            << timedet << ")\n"
+            << "volume:\t\t\t\t\t" << volume << "\n";  
 }
 
 template <class Vol>

@@ -21,6 +21,7 @@ if ( CGAL_FOUND )
 
   include ( CMakeDependentOption )
   option ( RESPOL_PRINT_INFO "show some information during execution" OFF )
+  option ( RESPOL_PRETTY_PRINT "display pretty info" OFF)
   option ( RESPOL_USE_HASHED_DET "hash computed determinant minors" ON )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_STATS
                            "print hashed determinants statistics" OFF
@@ -75,6 +76,10 @@ if ( CGAL_FOUND )
 
   # CMAKE OPTIONS PROCESSING
   ######################################################################
+
+  if( RESPOL_PRETTY_PRINT )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DPRETTY_PRINT")
+  endif( RESPOL_PRETTY_PRINT )
 
   if( RESPOL_PRINT_INFO )
     add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
