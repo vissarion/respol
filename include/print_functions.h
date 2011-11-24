@@ -483,7 +483,7 @@ void pretty_print_statistics(int Cdim,
                             Triang& Res){
   int cells, triang_facets, facets, edges, vertices;
   f_vector(Res,cells, triang_facets, facets, edges, vertices);
-  std::cout << "dimension (Cayley(d),proj(m),Res): \t(" 
+  std::cout << "\ndimension (Cayley(d),proj(m),Res): \t(" 
             << Cdim << ","
             << Pdim << ","
             << current_dim << ")\n"
