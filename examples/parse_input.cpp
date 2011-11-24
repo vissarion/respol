@@ -37,7 +37,7 @@ std::ostream& print_gfan_vectors(std::ostream &o,
                         o<<"},\n{";
                         m_total+=mi[++m_idx];
                 }else{
-                        o<<",\n";
+                        o<<",";
                 }
         }
         return o<<'('<<points[points.size()-1]<<")}}\n";
@@ -115,8 +115,7 @@ int main(int argc,char *argv[]){
                                 "# implicitization; like in ex. (g), "<<
                                 "run with:\n# (1) traversing tropical "<<
                                 "resultant, gfan _resultantfan "<<
-                                "--vectorinput --special (not working)\n"<<
-                                "# (2) normal "<<
+                                "--vectorinput --special\n# (2) normal "<<
                                 "fan from stable intersection, gfan "<<
                                 "_resultantfan --vectorinput --special "<<
                                 "--projection\n# (3) normal fan from "<<
@@ -124,13 +123,21 @@ int main(int argc,char *argv[]){
                                 "'missing'"<<std::endl;
                         }
                         print_gfan_vectors(std::cout,points,mi);
-                        print_gfan_generic(std::cout,m);
+                        print_gfan_projections(std::cout,proj,m);
                         break;
                 case 2:
                         // projections specified after the pipe
                         if(verbose){
                                 std::cerr<<
-                                "# arbitrary projection"<<std::endl;
+                                "# arbitrary projection; like in ex. "<<
+                                "(d), run with:\n# (1) traversing "<<
+                                "tropical resultant, gfan _resultantfan "<<
+                                "--vectorinput --special\n# (2) normal "<<
+                                "fan from stable intersection, gfan "<<
+                                "_resultantfan --vectorinput --special "<<
+                                "--projection\n# (3) normal fan from "<<
+                                "tropical elimination, they say it is "<<
+                                "'missing'"<<std::endl;
                         }
                         print_gfan_vectors(std::cout,points,mi);
                         print_gfan_projections(std::cout,proj,m);
@@ -141,7 +148,14 @@ int main(int argc,char *argv[]){
                         // pipe present, but no projections specified
                         if(verbose){
                                 std::cerr<<
-                                        "# generic polytope"<<std::endl;
+                                "# generic polytope; like in ex. "<<
+                                "(a), run with:\n# (1) secondary fan, "<<
+                                "gfan _secondaryfan\n"<<
+                                "# (2) traversing tropical resultant, "<<
+                                "gfan _resultantfan --vectorinput\n"<<
+                                "# (3) normal fan from simple "<<
+                                "description, gfan _resultantfan "<<
+                                "--vectorinput --projection"<<std::endl;
                         }
                         std::cerr<<"not implemented"<<std::endl;
                         exit(-1);
@@ -153,7 +167,7 @@ int main(int argc,char *argv[]){
                         exit(-1);
         }
 
-        /* std::cout<<"---------------\n";
+        /*std::cout<<"---------------\n";
         std::cout<<"points = {("<<points[0]<<')';
         for(size_t i=1;i<points.size();++i)
                 std::cout<<",("<<points[i]<<')';
