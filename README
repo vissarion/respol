@@ -59,9 +59,8 @@ ResPol supports:
 The second line of the input file defines the projection and actually
 selects one of the above options:
 (a) is supported by not defining any projection (omitting '|'),
---- in this case, which are the specialized and which are the free coord's? ---
---- input/u_resultant omits | but is not implicitization ---
-(b) by defining an arbitrary projection, by giving the indices (starting at 1)
+in this case, the non specialized coord's are the first from each support
+(b) by defining an arbitrary projection, by giving the indices (starting at 0)
 of free parameters: those not included here are specialized,
 (c) by providing only the symbol '|'.
 

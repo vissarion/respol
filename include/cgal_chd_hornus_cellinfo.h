@@ -177,6 +177,7 @@ void cayley_trick(std::vector<std::vector<NT_> >& pointset,
 			cayley_vec.push_back(cayley_point);
 			i++;
 		}
+		//std::cout << cayley_vec << std::endl;
 		j++;
 	}
 	//std::cout << cayley_vec << std::endl;
