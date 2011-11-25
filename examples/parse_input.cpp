@@ -43,6 +43,16 @@ std::ostream& print_gfan_vectors(std::ostream &o,
         return o<<'('<<points[points.size()-1]<<")}}\n";
 }
 
+template <class NT_>
+std::ostream& print_gfan_cayley_vectors(std::ostream &o,
+                                        const std::vector<std::vector<NT_> >
+                                                &points,
+                                        const std::vector<int> &mi){
+        std::cerr<<"not implemented!"<<std::endl;
+        exit(-1);
+        return o;
+}
+
 std::ostream& print_gfan_generic(std::ostream &o,int dimension){
         assert(dimension>0);
         o<<"(1";
@@ -77,9 +87,14 @@ int main(int argc,char *argv[]){
 
         // process command-line
         bool verbose=false;
+        bool cayley=false;
         bool valid;
         for(int i=1;i<argc;++i){
                 valid=false;
+                if(strcmp(argv[i],"-c")==0||strcmp(argv[i],"--cayley")==0){
+                        valid=true;
+                        cayley=true;
+                }
                 if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"--verbose")==0){
                         valid=true;
                         verbose=true;
@@ -91,7 +106,10 @@ int main(int argc,char *argv[]){
                                 " read from stdin into a Gfan input, "<<
                                 "written to stdout.\nValid options "<<
                                 "are:\n-h, --help\tprint this help "<<
-                                "message\n-v, --verbose\tbe verbose "<<
+                                "message\n-c, --cayley\tcreate a "<<
+                                "homogeneous Cayley vector (only in "<<
+                                "the generic polytope case)\n"<<
+                                "-v, --verbose\tbe verbose "<<
                                 "(in stderr)"<<std::endl;
                                 exit(-1);
                 }
@@ -141,24 +159,30 @@ int main(int argc,char *argv[]){
                         }
                         print_gfan_vectors(std::cout,points,mi);
                         print_gfan_projections(std::cout,proj,m);
-                        std::cerr<<"not implemented"<<std::endl;
-                        exit(-1);
                         break;
                 case 3:
                         // pipe present, but no projections specified
                         if(verbose){
                                 std::cerr<<
                                 "# generic polytope; like in ex. "<<
-                                "(a), run with:\n# (1) secondary fan, "<<
-                                "gfan _secondaryfan\n"<<
-                                "# (2) traversing tropical resultant, "<<
-                                "gfan _resultantfan --vectorinput\n"<<
-                                "# (3) normal fan from simple "<<
-                                "description, gfan _resultantfan "<<
-                                "--vectorinput --projection"<<std::endl;
+                                "(a), run with:\n";
+                                if(cayley){
+                                        std::cerr<<"# (1) secondary fan, "<<
+                                        "gfan _secondaryfan"<<std::endl;
+                                }else{
+                                        std::cerr<<"# (2) traversing "<<
+                                        "tropical resultant, gfan "<<
+                                        "_resultantfan --vectorinput\n"<<
+                                        "# (3) normal fan from simple "<<
+                                        "description, gfan _resultantfan "<<
+                                        "--vectorinput --projection"<<
+                                        std::endl;
+                                }
                         }
-                        std::cerr<<"not implemented"<<std::endl;
-                        exit(-1);
+                        if(cayley)
+                                print_gfan_cayley_vectors(std::cout,points,mi);
+                        else
+                                print_gfan_vectors(std::cout,points,mi);
                         break;
                 default:
                         // it should never reach this point
@@ -166,15 +190,6 @@ int main(int argc,char *argv[]){
                                 <<std::endl;
                         exit(-1);
         }
-
-        /*std::cout<<"---------------\n";
-        std::cout<<"points = {("<<points[0]<<')';
-        for(size_t i=1;i<points.size();++i)
-                std::cout<<",("<<points[i]<<')';
-        std::cout<<"}\nmi = ["<<mi<<
-                "]\nproj = ["<<proj<<
-                "]\nm = "<<m<<std::endl;;
-        */
 
         return 0;
 }
