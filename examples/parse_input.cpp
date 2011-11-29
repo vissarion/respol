@@ -86,14 +86,19 @@ int main(int argc,char *argv[]){
         typedef std::vector<int>                        Cset;
 
         // process command-line
-        bool verbose=false;
         bool cayley=false;
+        bool type=false;
+        bool verbose=false;
         bool valid;
         for(int i=1;i<argc;++i){
                 valid=false;
                 if(strcmp(argv[i],"-c")==0||strcmp(argv[i],"--cayley")==0){
                         valid=true;
                         cayley=true;
+                }
+                if(strcmp(argv[i],"-t")==0||strcmp(argv[i],"--type")==0){
+                        valid=true;
+                        type=true;
                 }
                 if(strcmp(argv[i],"-v")==0||strcmp(argv[i],"--verbose")==0){
                         valid=true;
@@ -109,6 +114,9 @@ int main(int argc,char *argv[]){
                                 "message\n-c, --cayley\tcreate a "<<
                                 "homogeneous Cayley vector (only in "<<
                                 "the generic polytope case)\n"<<
+                                "-t, --type\tdo not output the Gfan "<<
+                                "input, display only the input case and "<<
+                                "how to run it\n"<<
                                 "-v, --verbose\tbe verbose "<<
                                 "(in stderr)"<<std::endl;
                                 exit(-1);
@@ -128,7 +136,7 @@ int main(int argc,char *argv[]){
                 case 1:
                         // the pipe symbol is omitted
                         // this is what we want to implement now
-                        if(verbose){
+                        if(verbose||type){
                                 std::cerr<<
                                 "# implicitization; like in ex. (g), "<<
                                 "run with:\n# (1) traversing tropical "<<
@@ -139,13 +147,20 @@ int main(int argc,char *argv[]){
                                 "--projection\n# (3) normal fan from "<<
                                 "tropical elimination, they say it is "<<
                                 "'missing'"<<std::endl;
+                                print_pointset_stats(std::cout,
+                                                     points,
+                                                     mi,
+                                                     proj,
+                                                     m);
                         }
-                        print_gfan_vectors(std::cout,points,mi);
-                        print_gfan_projections(std::cout,proj,m);
+                        if(!type){
+                                print_gfan_vectors(std::cout,points,mi);
+                                print_gfan_projections(std::cout,proj,m);
+                        }
                         break;
                 case 2:
                         // projections specified after the pipe
-                        if(verbose){
+                        if(verbose||type){
                                 std::cerr<<
                                 "# arbitrary projection; like in ex. "<<
                                 "(d), run with:\n# (1) traversing "<<
@@ -156,33 +171,53 @@ int main(int argc,char *argv[]){
                                 "--projection\n# (3) normal fan from "<<
                                 "tropical elimination, they say it is "<<
                                 "'missing'"<<std::endl;
+                                print_pointset_stats(std::cout,
+                                                     points,
+                                                     mi,
+                                                     proj,
+                                                     m);
                         }
-                        print_gfan_vectors(std::cout,points,mi);
-                        print_gfan_projections(std::cout,proj,m);
+                        if(!type){
+                                print_gfan_vectors(std::cout,points,mi);
+                                print_gfan_projections(std::cout,proj,m);
+                        }
                         break;
                 case 3:
                         // pipe present, but no projections specified
-                        if(verbose){
+                        if(verbose||type){
                                 std::cerr<<
                                 "# generic polytope; like in ex. "<<
                                 "(a), run with:\n";
-                                if(cayley){
+                                if(cayley||type){
                                         std::cerr<<"# (1) secondary fan, "<<
-                                        "gfan _secondaryfan"<<std::endl;
-                                }else{
+                                        "gfan _secondaryfan";
+                                        if(type)
+                                                std::cerr<<" (use --cayley)";
+                                        std::cerr<<std::endl;
+                                }
+                                if(!cayley||type){
                                         std::cerr<<"# (2) traversing "<<
                                         "tropical resultant, gfan "<<
                                         "_resultantfan --vectorinput\n"<<
                                         "# (3) normal fan from simple "<<
                                         "description, gfan _resultantfan "<<
-                                        "--vectorinput --projection"<<
-                                        std::endl;
+                                        "--vectorinput --projection";
+                                        std::cerr<<std::endl;
                                 }
+                                print_pointset_stats(std::cout,
+                                                     points,
+                                                     mi,
+                                                     proj,
+                                                     m);
                         }
-                        if(cayley)
-                                print_gfan_cayley_vectors(std::cout,points,mi);
-                        else
-                                print_gfan_vectors(std::cout,points,mi);
+                        if(!type){
+                                if(cayley)
+                                        print_gfan_cayley_vectors(std::cout,
+                                                                  points,
+                                                                  mi);
+                                else
+                                        print_gfan_vectors(std::cout,points,mi);
+                        }
                         break;
                 default:
                         // it should never reach this point

@@ -210,3 +210,17 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
         assert(ret!=0);
         return ret;
 }
+
+template <class NT_>
+std::ostream& print_pointset_stats(std::ostream &os,
+                                   const std::vector<std::vector<NT_> > &ps,
+                                   const std::vector<int> &mi,
+                                   const std::vector<int> &proj,
+                                   int m){
+        assert(ps.size()>0);
+        return os<<
+                "# |A|="<<ps.size()<<
+                "\n# m="<<proj.size()<<
+                "\n# n="<<ps[0].size()<<
+                std::endl;
+}
