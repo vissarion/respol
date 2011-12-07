@@ -51,10 +51,6 @@
 #include <CGAL/Cartesian_d.h>
 #endif
 
-#ifdef USE_EIGEN_DET
-#include <Eigen/Eigen>
-#endif
-
 #ifdef USE_SORTED_INDICES
 #include <sort_swap.h>
 #endif
@@ -541,16 +537,7 @@ class FastHashedDeterminant{
         }
 
 #ifdef USE_EIGEN_DET
-        inline NT eigendet(NT **m,const Index &idx3){
-                size_t n=idx3.size();
-                Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> mat(n,n);
-                for(size_t i=0;i<n;++i)
-                        mat.col(i)=Eigen::Map<
-                                                Eigen::Matrix<NT,
-                                                Eigen::Dynamic,
-                                                1> >(m[idx3[i]],n);
-                return mat.determinant();
-        }
+        inline NT eigendet(NT**,const Index&)const;
 #endif // USE_EIGEN_DET
 
 #ifdef USE_ORIENTATION_DET
@@ -752,126 +739,12 @@ class FastHashedDeterminant{
         // _points. The parameter idx is a vector of indices of the indices
         // of the columns which will form the submatrix. Inlining this
         // function is very important for efficiency reasons!
-#ifdef USE_LINBOX_DET
-        // this function is extremely inefficient for small matrices, since
-        // there is a big overhead in constructing the LinBox matrix
-        inline NT compute_determinant(const Index &idx)const{
-                typedef CGAL::Linbox_rational_field<NT>         Field;
-                typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
-                        size_t d=_points[0].size();
-                        LBMatrix M((int)d,(int)d);
-                        for(size_t row=0;row<d;++row)
-                                for(size_t column=0;column<d;++column)
-                                        M.setEntry(row,
-                                                   column,
-                                                   _points[idx[column]][row]);
-                        NT det(0);
-                        LinBox::det(det,
-                                      M,
-                                      LinBox::RingCategories::RationalTag(),
-                                      LinBox::Method::Hybrid());
-                        return det;
-        }
-#elif USE_CGAL_DET
-        inline NT compute_determinant(const Index &idx)const{
-                int d = idx.size();
-                //std::cout << first-last << "|" << d << std::endl;
-                typename LA::Matrix M(d);
-                //std::vector<CPoint_d>::iterator s = first;
-                for( int j = 0; j < d; ++j ){
-                        //std::cout << *s << std::endl;
-                        for( int i = 0; i < d; ++i ){
-                                //std::cout << i << "," << j;
-                                M(i,j) = _points[idx[i]][j];
-                                //std::cout << " -> " << M(i,j) << std::endl;
-                        }
-                }
-                return LA::determinant(M);
-        }
-#elif USE_CGAL_DET_2
-        inline NT compute_determinant(const Index &idx)const{
-                int d = idx.size();
-                //std::cout << first-last << "|" << d << std::endl;
-                typename LA::Matrix A(d/2);
-                typename LA::Matrix B(d/2);
-                typename LA::Matrix C(d/2);
-                typename LA::Matrix D(d/2);
-                //std::vector<CPoint_d>::iterator s = first;
-
-                for( int j = d/2; j < d; ++j ){
-                        //std::cout << *s << std::endl;
-                        for( int i = 0; i < d/2; ++i ){
-                                std::cout << i << "," << j;
-                                A(i,j-d/2) = _points[idx[i]][j];
-                                std::cout << " -> " << M(i,j) << std::endl;
-                        }
-                }
-                for( int j = d/2; j < d; ++j ){
-                        //std::cout << *s << std::endl;
-                        for( int i = d/2; i < d; ++i ){
-                                std::cout << i << "," << j;
-                                B(i-d/2,j-d/2) = _points[idx[i]][j];
-                                std::cout << " -> " << M(i,j) << std::endl;
-                        }
-                }
-                for( int j = 0; j < d/2; ++j ){
-                        //std::cout << *s << std::endl;
-                        for( int i = 0; i < d/2; ++i ){
-                                std::cout << i << "," << j;
-                                C(i,j) = _points[idx[i]][j];
-                                std::cout << " -> " << M(i,j) << std::endl;
-                        }
-                }
-                for( int j = 0; j < d/2; ++j ){
-                        //std::cout << *s << std::endl;
-                        for( int i = d/2; i < d; ++i ){
-                                std::cout << i << "," << j;
-                                A(i-d/2,j) = _points[idx[i]][j];
-                                std::cout << " -> " << M(i,j) << std::endl;
-                        }
-                }
-                exit(0);
-                return LA::determinant(M);
-        }
-#elif USE_EIGEN_DET
-        inline NT compute_determinant(const Index &idx){
-                size_t n=idx.size();
-                Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> mat(n,n);
-                for(size_t i=0;i<n;++i)
-                        mat.col(i)=Eigen::Map<
-                                                Eigen::Matrix<NT,
-                                                              Eigen::Dynamic,
-                                                              1> >
-                                        (&_points[idx[i]][0],n);
-                return mat.determinant();
-        }
-#else // USE_LINBOX_DET USE_CGAL_DET USE_CGAL_DET_2 USE_EIGEN_DET not defined
-        inline NT compute_determinant(const Index &idx)
-        #ifndef USE_HASHED_DETERMINANTS
-        const
-        #endif
-        {
-                Index idx2;
-                size_t n=idx.size();
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
-                assert(idx2.size()==idx.size()-1);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if(_points[idx[i]][n-1]!=0){
-                                if((i+n)%2)
-                                        det+=(_points[idx[i]][n-1]*
-                                              determinant(idx2));
-                                else
-                                        det-=(_points[idx[i]][n-1]*
-                                              determinant(idx2));
-                        }
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-                return det;
-        }
-#endif // USE_LINBOX_DET USE_CGAL_DET USE_CGAL_DET_2 USE_EIGEN_DET
+#if (defined USE_LINBOX_DET) || (defined USE_CGAL_DET) || \
+    (defined USE_CGAL_DET_2) || (!defined USE_HASHED_DETERMINANTS)
+        inline NT compute_determinant(const Index &idx)const;
+#else // USE_EIGEN_DET is defined and USE_HASHED_DETERMINANTS is not
+        inline NT compute_determinant(const Index &idx);
+#endif
 public:
         Column& operator[](size_t i) { 
 					CGAL_assertion(i>=0&&i<_points.size());
@@ -919,6 +792,8 @@ public:
 #endif // USE_ORIENTATION_DET
 #endif // HASH_STATISTICS
 };
+
+#include "fast_hashed_determinant_impl.h"
 
 #endif // FAST_HASHED_DETERMINANT_H
 // vim: ts=2
