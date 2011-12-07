@@ -47,6 +47,10 @@ if ( CGAL_FOUND )
   #      FILEPATH
   #      "path to Maple executable" )
   option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
+  CMAKE_DEPENDENT_OPTION ( RESPOL_LRS_DEBUG
+                           "show info about LRS execution" OFF
+                           "RESPOL_USE_LRS" OFF )
+  #option ( RESPOL_USE_EIGEN "use Eigen to compute determinants" OFF )
   option ( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY "preprocess the input" ON )
   option ( RESPOL_BUILD_RANDOMIZED "also build randomized init version" OFF )
   option ( RESPOL_BUILD_CONVERTERS "build input file converters" OFF )
@@ -66,7 +70,6 @@ if ( CGAL_FOUND )
   # OTHER COMPILATION DEFINITIONS
   ######################################################################
 
-  #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_ORIENTATION_DET")
   add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION")
   #add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HACKED_KERNEL_ORIENTATION_FOR_CONVEX_HULL")
@@ -164,6 +167,10 @@ if ( CGAL_FOUND )
                            "../external/lrslib-042c/include/lrsgmp.c")
     create_single_source_cgal_program("test_lrs.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_USE_LRS )
+
+  if ( RESPOL_USE_EIGEN )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
+  endif ( RESPOL_USE_EIGEN )
 
   if( RESPOL_LRS_DEBUG )
     add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
