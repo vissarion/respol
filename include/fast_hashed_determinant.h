@@ -445,10 +445,12 @@ class FastHashedDeterminant{
                 start_all=clock();
                 det_old=determinant_time;
 #endif // LOG_DET_TIME
+#if (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
                 if(_h_determinants.count(idx)!=0){
                         assert(_h_determinants.count(idx)==1);
                         return _h_determinants[idx];
                 }
+#endif // (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
 #ifdef HASH_STATISTICS
                 number_of_computed_hom_determinants+=1;
 #endif // HASH_STATISTICS
@@ -465,9 +467,9 @@ class FastHashedDeterminant{
                         // update the index array
                         idx2[i]=idx[i];
                 }
-#ifdef USE_HASHED_DETERMINANTS
+#if (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
                 _h_determinants[idx]=det;
-#endif // USE_HASHED_DETERMINANTS
+#endif // (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
 #ifdef LOG_DET_TIME
                 determinant_time=det_old+(clock()-start_all);
 #endif // LOG_DET_TIME

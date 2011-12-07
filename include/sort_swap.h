@@ -20,7 +20,8 @@
 #define SORT_SWAP_H
 
 #include <cassert>
-#include <boost/range/algorithm_ext/is_sorted.hpp>
+//#include <boost/range/algorithm_ext/is_sorted.hpp>
+#include <boost/detail/algorithm.hpp>
 
 // This function takes as parameter an index vector v (usually, a
 // std::vector<size_t>) and returns a pair, containing the sorted vector s
