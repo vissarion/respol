@@ -41,12 +41,6 @@
 #include <ctime>
 #endif
 
-#ifdef USE_LINBOX_DET
-#include <CGAL/LinBox/mpq_class_field.h>
-#include <CGAL/LinBox/dense_matrix.h>
-#include <linbox/solutions/det.h>
-#endif
-
 #ifdef USE_CGAL_DET
 #include <CGAL/Cartesian_d.h>
 #endif
@@ -67,7 +61,7 @@ template <class _NT>
 class FastHashedDeterminant{
         public:
         typedef _NT                                     NT;
-#ifdef  USE_CGAL_DET 
+#ifdef USE_CGAL_DET
         typedef CGAL::Cartesian_d<NT>                   CK;
         typedef typename CK::LA                         LA;
 #endif
@@ -123,7 +117,7 @@ class FastHashedDeterminant{
 #endif
 #ifdef USE_ONLY_CAYLEY_DET_HASH
         _hashed(false),
-#endif 
+#endif
         number_of_hashed_determinants(0)
         {};
 
@@ -176,10 +170,10 @@ class FastHashedDeterminant{
         _points(),
         _determinants(),
         _h_determinants(),
-        
+
 #ifdef USE_ONLY_CAYLEY_DET_HASH
         _hashed(true),
-#endif        
+#endif
 #ifdef USE_ORIENTATION_DET
         _o_determinants(),
         _c_determinants(),
@@ -194,121 +188,25 @@ class FastHashedDeterminant{
                 }
         }
 
-        ~FastHashedDeterminant(){
-#ifdef HASH_STATISTICS
-#ifdef USE_ORIENTATION_DET
-        std::cerr<<"hash statistics:\n"<<
-                _points.size()<<" hashed points, of max dim "<<dimension<<
-                '\n'<<number_of_computed_determinants<<
-                " determinants computed, out of "<<
-                number_of_determinant_calls<<
-                '\n'<<number_of_computed_determinants<<
-                " matrices computed in "<<
-                (double)matrix_time/CLOCKS_PER_SEC<<" seconds\n"<<
-                (double)full_determinant_time/CLOCKS_PER_SEC<<
-                " seconds spent in all determinant computations"<<
-                std::endl;
-#else // USE_ORIENTATION_DET is not defined
-        // collect non-homogeneous hash statistics
-        size_t nh_collisions=0,nh_bad_buckets=0,nh_biggest_bucket=0;
-        for(size_t bucket=0;bucket!=_determinants.bucket_count();++bucket)
-                if(_determinants.bucket_size(bucket)>1){
-                        nh_collisions+=(_determinants.bucket_size(bucket)-1);
-                        if(_determinants.bucket_size(bucket)>nh_biggest_bucket)
-                                nh_biggest_bucket=
-                                        _determinants.bucket_size(bucket);
-                        ++nh_bad_buckets;
-                }
-        // collect homogeneous hash statistics
-        size_t h_collisions=0,h_bad_buckets=0,h_biggest_bucket=0;
-        for(size_t bucket=0;
-            bucket!=_h_determinants.bucket_count();
-            ++bucket)
-                if(_h_determinants.bucket_size(bucket)>1){
-                        h_collisions+=(_h_determinants.bucket_size(bucket)-1);
-                        if(_h_determinants.bucket_size(bucket)>h_biggest_bucket)
-                                h_biggest_bucket=
-                                        _h_determinants.bucket_size(bucket);
-                        ++h_bad_buckets;
-                }
-        std::cerr<<
-                "hash statistics:\n"<<
-                _points.size()<<" hashed points, of max dim "<<dimension<<
-                "\nnon-hom hash: "<<
-                _determinants.bucket_count()<<" buckets, "<<
-                nh_collisions<<" collisions (" <<
-                ((double)nh_collisions/
-                 (double)number_of_computed_determinants)*100<<
-                "%) in "<<nh_bad_buckets<<
-                " buckets of max size "<<nh_biggest_bucket<<
-                "\nnon-hom determinants: computed "<<
-                number_of_computed_determinants<<" out of "<<
-                number_of_determinant_calls<<
-                "\n load_factor()="<<_determinants.load_factor()<<
-                ",max_load_factor()="<<_determinants.max_load_factor()<<
-                "\ntime in non-hom full-dim determinant computations: "<<
-                (double)full_determinant_time/CLOCKS_PER_SEC<<
-                " seconds\nhom hash: "<<
-                _h_determinants.bucket_count()<<" buckets, "<<
-                h_collisions<<" collisions ("<<
-                ((double)h_collisions/
-                 (double)number_of_computed_hom_determinants)*100<<
-                "%) in "<<h_bad_buckets<<
-                " buckets of max size "<<h_biggest_bucket<<
-                "\nhom determinants: computed "<<
-                number_of_computed_hom_determinants<<
-                " out of "<<number_of_hom_determinants<<
-                "\n load_factor()="<<_h_determinants.load_factor()<<
-                ",max_load_factor()="<<_h_determinants.max_load_factor()<<
-                std::endl;
-#endif // USE_ORIENTATION_DET
-#endif // HASH_STATISTICS
-        }
+        ~FastHashedDeterminant();
 
         // Returns the total time spent in determinant computations.
-        double get_determinant_time(){
-#if defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
-#ifdef USE_ORIENTATION_DET
-                return (double)full_determinant_time/CLOCKS_PER_SEC;
-#else // USE_ORIENTATION_DET is not defined
-                return (double)determinant_time/CLOCKS_PER_SEC;
-#endif // USE_ORIENTATION_DET
-#else // (defined(LOG_DET_TIME) && defined(HASH_STATISTICS)) is false
-                return -1.;
-#endif // defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
-        }
+        double get_determinant_time();
 
         // This function sets a column of the matrix. This function must be
         // called before any determinant computation, since it will
         // invalidate the determinants which are hashed. The column i must
         // exist in the matrix.
-        void set_column(size_t i,const Column &c){
-                assert((i>=0)&&(i<_points.size()));
-#ifdef HASH_STATISTICS
-                if(c.size()>dimension)
-                        dimension=c.size();
-#endif
-                _points[i]=c;
-        }
+        void set_column(size_t,const Column&);
 
         // Push back a column, at the end of the matrix; returns the index
         // of this inserted element. In contrast with set_column, this
         // function will not invalidate hashed values.
-        size_t add_column(const Column &c){
-#ifdef HASH_STATISTICS
-                if(c.size()>dimension)
-                        dimension=c.size();
-#endif
-                _points.push_back(c);
-                return _points.size()-1;
-        }
+
+        size_t add_column(const Column&);
 
         // a linear search to Matrix to see if the Column c exists
-        int find(const Column &c)const{
-                typename Matrix::const_iterator result;
-                result=std::find(_points.begin(),_points.end(),c);
-                return (result==_points.end()?-1:result-_points.begin());
-        }
+        int find(const Column&)const;
 
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
@@ -474,7 +372,7 @@ class FastHashedDeterminant{
 
         NT homogeneous_determinant(const Index &idx,const Row &r){
 #ifdef USE_ONLY_CAYLEY_DET_HASH
-          if (_hashed){      
+          if(_hashed){
 #endif
                 assert(idx.size()==r.size());
 #ifdef LOG_DET_TIME
@@ -516,7 +414,7 @@ class FastHashedDeterminant{
 														//std::cout << " -> " << M(i,j) << std::endl;
 								//						std::cout //<< _points[idx[i]][j] << " " ;
 														//std::cout << "(" << _points[idx[i]][j] << "-"
-														//          << _points[idx[0]][j] << ") " 
+														//          << _points[idx[0]][j] << ") "
 							//							          << M(i-1,j) << " ";
 										}
 									//	std::cout << "\n" ;
@@ -525,7 +423,7 @@ class FastHashedDeterminant{
 										//std::cout << i << "," << j;
 										M(i-1,d-1) = r[i] - r[0];
 							//			std::cout //<< r[i] << " " ;
-										//std::cout << "(" << r[i] << "-" << r[0] << ") =" 
+										//std::cout << "(" << r[i] << "-" << r[0] << ") ="
 								//		          << r[i] - r[0] << " ";
 										//std::cout << " -> " << M(i,j) << std::endl;
 						}
@@ -706,33 +604,12 @@ class FastHashedDeterminant{
 #endif // USE_ORIENTATION_DET
 
         // This function prints the full matrix to an output stream.
-        std::ostream& print_matrix(std::ostream &o)const{
-                if(!_points.size())
-                        return o;
-                size_t s=_points[0].size();
-                for(size_t row=0;row<s;++row){
-                        o<<"[ ";
-                        for(size_t i=0;i<_points.size();++i)
-                                o<<_points[i][row]<<' ';
-                        o<<"]\n";
-                }
-                return o;
-        }
+        std::ostream& print_matrix(std::ostream&)const;
 
         // This function prints a square submatrix, formed by the first
         // elements of the columns whose indices are in idx, to an output
         // stream.
-        std::ostream& print_submatrix(const Index &idx,std::ostream &o)const{
-                for(size_t row=0;row<idx.size();++row){
-                        o<<"[ ";
-                        for(Index::const_iterator i=idx.begin();
-                            i!=idx.end();
-                            ++i)
-                                o<<_points[row][*i]<<' ';
-                        o<<"]\n";
-                }
-                return o;
-        }
+        std::ostream& print_submatrix(const Index&,std::ostream&)const;
 
         private:
         // This function computes the determinant of a submatrix of
@@ -741,28 +618,16 @@ class FastHashedDeterminant{
         // function is very important for efficiency reasons!
 #if (defined USE_LINBOX_DET) || (defined USE_CGAL_DET) || \
     (defined USE_CGAL_DET_2) || (!defined USE_HASHED_DETERMINANTS)
-        inline NT compute_determinant(const Index &idx)const;
+        inline NT compute_determinant(const Index&)const;
 #else // USE_EIGEN_DET is defined and USE_HASHED_DETERMINANTS is not
-        inline NT compute_determinant(const Index &idx);
+        inline NT compute_determinant(const Index&);
 #endif
 public:
-        Column& operator[](size_t i) { 
-					CGAL_assertion(i>=0&&i<_points.size());
-					return _points[i]; 
-			  }
-			  
-        typename Matrix::iterator begin(){
-					return  _points.begin();
-			  }
-			  
-			  typename Matrix::iterator end(){
-					return  _points.end();
-			  }
-			  
-			  int size(){
-					return  _points.size();
-			  }
-			  
+        Column& operator[](size_t);
+        typename Matrix::iterator begin();
+			  typename Matrix::iterator end();
+			  int size();
+
         private:
         Matrix _points;
         Determinants _determinants;
