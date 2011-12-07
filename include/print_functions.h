@@ -139,7 +139,7 @@ void print_res_vertices(const Triang &Res,
     for (PCCI cit=vit->point().cartesian_begin();
          cit != vit->point().cartesian_end();
          cit++){
-      os << *cit;
+      os << (*cit).numerator();
       if (cit - vit->point().cartesian_begin() != vit->point().dimension()-1)
         os << ",";
     }

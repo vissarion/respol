@@ -105,7 +105,7 @@ int main(const int argc, const char** argv) {
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
   
   //double recompute_time = compute_Res_offline(Pdets,Res);
-  double recompute_time = recompute_Res(Res);
+  double recompute_time =-1;//= recompute_Res(Res);
   
 	// print the result i.e. the proj of the Resultant polytope
  	//#ifdef PRINT_INFO	
@@ -165,9 +165,9 @@ int main(const int argc, const char** argv) {
   
   #ifdef PRINT_INFO
   //std::cout << "convex hull time = " << conv_time << std::endl;
-
   // we print for debugging purposes the matrix of the hashed points
-  Pdets.print_matrix(std::cout);
+  //Pdets.print_matrix(std::cout);
+  print_res_vertices(Res,std::cout);
   
     //recompute_Res(Res);
   #endif
@@ -175,7 +175,7 @@ int main(const int argc, const char** argv) {
   #ifdef USE_LRSLIB
   // TODO: call LRS functions, see test_lrs.cpp for an example
   #endif
-  
+    
   return 0;
 }
 // vim: ts=2:expandtab
