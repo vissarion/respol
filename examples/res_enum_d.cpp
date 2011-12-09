@@ -113,6 +113,9 @@ int main(const int argc, const char** argv) {
   //#endif
 	//print_res_facets_number(Res);
   generate_polymake_scripts(Res);
+  std::ofstream outfile;
+  outfile.open("res_vertices.txt");
+  print_output(Res,outfile);
   
   // print some statistics
   #ifdef PRINT_INFO

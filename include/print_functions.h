@@ -304,6 +304,32 @@ void f_vector(Triang &Res,
 }
 
 template <class Triang>
+void print_output(const Triang &Res,
+									std::ostream& os){
+  // print the vertices of the res polytope
+  int number_of_vertices = 0;
+  typedef typename Triang::Vertex_const_iterator        VCI;
+  typedef typename Triang::Point_d                      P;
+  typedef typename P::Cartesian_const_iterator          PCCI;
+  for (VCI vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
+    for (PCCI cit=vit->point().cartesian_begin();
+         cit != vit->point().cartesian_end();
+         cit++){
+      os << cit->numerator();
+      if (cit->denominator() != CGAL::Gmpz(1)){
+				std::cout << " NOT INTEGER coeff in RES pol";
+				exit(-1);
+			}
+      if (cit - vit->point().cartesian_begin() != vit->point().dimension()-1)
+        os << " ";
+    }
+    //os << "|" << vit->point().index();
+    os << "\n";
+  }
+	os << std::endl;
+}
+
+template <class Triang>
 void print_polymake_testfile(const Triang &Res,
 														 std::string ch_algo,
 														 std::ostream& os){
