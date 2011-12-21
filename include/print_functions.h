@@ -372,6 +372,7 @@ void print_polymake_testfile(const Triang &Res,
 	os << "my $f=$p->FACETS;\n";
 	os << "print tv_interval($t0,[gettimeofday]);\n";
 	os << "print ' ';\n";
+	os << "$p->SCHLEGEL;\n";
 	//os << "print \"\\n\";\n";
   os << std::endl;
 }
@@ -488,7 +489,14 @@ void print_statistics_small(int Cdim,
             << cells << " "
             << triang_facets << " "
             << facets << " "
-            << edges << std::endl;  
+            << edges << 
+            std::endl;  
+  if (!(numofvertices+facets >= numoftriangs)){
+		std::cout << "WRONG CONJECTURE\n";
+		std::cout << "WRONG CONJECTURE\n";
+		std::cout << "WRONG CONJECTURE\n";
+		std::cout << "WRONG CONJECTURE\n"; 
+  }
 }
 
 

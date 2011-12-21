@@ -427,13 +427,15 @@ std::pair<int,int> compute_res_rand_uniform(
   int steps=0;
   Field volIn = random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,num_of_rand_vec,real_vol,t,steps);
   t2 = (double)clock()/(double)CLOCKS_PER_SEC;
-  //Field volOut = computeQ_outer_approximation(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  Field volOut = computeQ_outer_approximation(pointset,mi,RD,proj,dets,Pdets,Res,T);
   t3 = (double)clock()/(double)CLOCKS_PER_SEC;
   
-  std::cout << PD << " " << in << " " << out << " "  << steps << " "
+  std::cout << PD << " " << in << " " << out << " "  
+            << Res.number_of_vertices() << " "
+            << steps << " "
             << CGAL::to_double(volIn/real_vol) << " "
-            //<< CGAL::to_double(volOut/real_vol) << " "                   
-            //<< CGAL::to_double(volIn/volOut) << " "
+            << CGAL::to_double(volOut/real_vol) << " "                   
+            << CGAL::to_double(volIn/volOut) << " "
             << t << " "
             << t3-t2 << " "
             << deterministic_time << " "                   
