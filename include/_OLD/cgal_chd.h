@@ -48,7 +48,7 @@
 #include <print_functions.h>
 
 // for fast determinant computation
-#include <../include/fast_hashed_determinant.h>
+#include "hashed_determinant.h"
 
 // future includes of TOPCOM
 //#include "../TOPCOM-0.16.0/lib-src/Field.hh"
@@ -96,7 +96,7 @@ typedef vector<set<int> > 										TriangSet;
 typedef vector<vector<Field> >								VertexSet;
 
 // big matrix determinants typedefs
-typedef FastHashedDeterminant<Field>            HD;
+typedef HashedDeterminant<Field>                        HD;
 
 /////////////////////////////////////////////////////////////////////
 // implimentations

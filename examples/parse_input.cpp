@@ -107,7 +107,7 @@ int main(int argc,char *argv[]){
                 if(strcmp(argv[i],"-h")==0||strcmp(argv[i],"--help")==0){
                         valid=true;
                         std::cerr<<
-                                "This program transform a ResPol input"<<
+                                "This program transforms a ResPol input"<<
                                 " read from stdin into a Gfan input, "<<
                                 "written to stdout.\nValid options "<<
                                 "are:\n-h, --help\tprint this help "<<

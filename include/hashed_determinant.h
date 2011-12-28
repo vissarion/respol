@@ -16,8 +16,8 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef FAST_HASHED_DETERMINANT_H
-#define FAST_HASHED_DETERMINANT_H
+#ifndef HASHED_DETERMINANT_H
+#define HASHED_DETERMINANT_H
 
 // Check Boost version. We use boost::functional and boost::unordered,
 // which appeared in versions 1.16.0 and 1.36.0, respectively. We give an
@@ -49,7 +49,7 @@
 #include <sort_swap.h>
 #endif
 
-// FastHashedDeterminant constructs a big matrix of columns and provides
+// HashedDeterminant constructs a big matrix of columns and provides
 // methods to compute and store determinants of matrices formed by columns
 // of this matrix. It takes one template parameter, _NT, which is the
 // number type of the matrix elements.Determinants are stored in a hash
@@ -58,7 +58,7 @@
 // computation of determinants of some matrices.
 
 template <class _NT>
-class FastHashedDeterminant{
+class HashedDeterminant{
         public:
         typedef _NT                                     NT;
 #ifdef USE_CGAL_DET
@@ -92,7 +92,7 @@ class FastHashedDeterminant{
         public:
         // constructor for incremental det table
         // (for the space of the projection of the Resultant i.e. PD)
-        FastHashedDeterminant():
+        HashedDeterminant():
 #ifdef LOG_DET_TIME
         determinant_time(0),
 #endif
@@ -122,7 +122,7 @@ class FastHashedDeterminant{
         {};
 
         //
-        FastHashedDeterminant(size_t columns):
+        HashedDeterminant(size_t columns):
 #ifdef LOG_DET_TIME
         determinant_time(0),
 #endif
@@ -151,7 +151,7 @@ class FastHashedDeterminant{
         // constructor for static det table
         // (for the space of the lifted Cayley pointset i.e. CD)
         template <class Iterator>
-        FastHashedDeterminant(Iterator begin,Iterator end):
+        HashedDeterminant(Iterator begin,Iterator end):
 #ifdef LOG_DET_TIME
         determinant_time(0),
 #endif
@@ -188,7 +188,7 @@ class FastHashedDeterminant{
                 }
         }
 
-        ~FastHashedDeterminant();
+        ~HashedDeterminant();
 
         // Returns the total time spent in determinant computations.
         double get_determinant_time();
@@ -658,7 +658,7 @@ public:
 #endif // HASH_STATISTICS
 };
 
-#include "fast_hashed_determinant_impl.h"
+#include "hashed_determinant_impl.h"
 
-#endif // FAST_HASHED_DETERMINANT_H
+#endif // HASHED_DETERMINANT_H
 // vim: ts=2

@@ -16,11 +16,11 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef FAST_HASHED_DETERMINANT_IMPL_H
-#define FAST_HASHED_DETERMINANT_IMPL_H
+#ifndef HASHED_DETERMINANT_IMPL_H
+#define HASHED_DETERMINANT_IMPL_H
 
 template <class _NT>
-FastHashedDeterminant<_NT>::~FastHashedDeterminant(){
+HashedDeterminant<_NT>::~HashedDeterminant(){
 #ifdef HASH_STATISTICS
 #ifdef USE_ORIENTATION_DET
         std::cerr<<"hash statistics:\n"<<
@@ -92,7 +92,7 @@ FastHashedDeterminant<_NT>::~FastHashedDeterminant(){
         }
 
 template <class _NT>
-double FastHashedDeterminant<_NT>::get_determinant_time(){
+double HashedDeterminant<_NT>::get_determinant_time(){
 #if defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
 #ifdef USE_ORIENTATION_DET
         return (double)full_determinant_time/CLOCKS_PER_SEC;
@@ -105,9 +105,9 @@ double FastHashedDeterminant<_NT>::get_determinant_time(){
 }
 
 template <class _NT>
-void FastHashedDeterminant<_NT>::set_column(
+void HashedDeterminant<_NT>::set_column(
                 size_t i,
-                const FastHashedDeterminant<_NT>::Column &c){
+                const HashedDeterminant<_NT>::Column &c){
         assert((i>=0)&&(i<_points.size()));
 #ifdef HASH_STATISTICS
         if(c.size()>dimension)
@@ -117,8 +117,8 @@ void FastHashedDeterminant<_NT>::set_column(
 }
 
 template <class _NT>
-size_t FastHashedDeterminant<_NT>::add_column(
-                const FastHashedDeterminant<_NT>::Column &c){
+size_t HashedDeterminant<_NT>::add_column(
+                const HashedDeterminant<_NT>::Column &c){
 #ifdef HASH_STATISTICS
         if(c.size()>dimension)
                 dimension=c.size();
@@ -128,15 +128,15 @@ size_t FastHashedDeterminant<_NT>::add_column(
 }
 
 template <class _NT>
-int FastHashedDeterminant<_NT>::find(
-                const FastHashedDeterminant<_NT>::Column &c)const{
+int HashedDeterminant<_NT>::find(
+                const HashedDeterminant<_NT>::Column &c)const{
         typename Matrix::const_iterator result;
         result=std::find(_points.begin(),_points.end(),c);
         return (result==_points.end()?-1:result-_points.begin());
 }
 
 template <class _NT>
-std::ostream& FastHashedDeterminant<_NT>::print_matrix(std::ostream &o)const{
+std::ostream& HashedDeterminant<_NT>::print_matrix(std::ostream &o)const{
         if(!_points.size())
                 return o;
         size_t s=_points[0].size();
@@ -150,8 +150,8 @@ std::ostream& FastHashedDeterminant<_NT>::print_matrix(std::ostream &o)const{
 }
 
 template <class _NT>
-std::ostream& FastHashedDeterminant<_NT>::print_submatrix(
-                const FastHashedDeterminant<_NT>::Index &idx,
+std::ostream& HashedDeterminant<_NT>::print_submatrix(
+                const HashedDeterminant<_NT>::Index &idx,
                 std::ostream &o)const{
         for(size_t row=0;row<idx.size();++row){
                 o<<"[ ";
@@ -165,26 +165,26 @@ std::ostream& FastHashedDeterminant<_NT>::print_submatrix(
 }
 
 template <class _NT>
-typename FastHashedDeterminant<_NT>::Column&
-FastHashedDeterminant<_NT>::operator[](size_t i){
+typename HashedDeterminant<_NT>::Column&
+HashedDeterminant<_NT>::operator[](size_t i){
         CGAL_assertion(i>=0&&i<_points.size());
         return _points[i];
 }
 
 template <class _NT>
-typename FastHashedDeterminant<_NT>::Matrix::iterator
-FastHashedDeterminant<_NT>::begin(){
+typename HashedDeterminant<_NT>::Matrix::iterator
+HashedDeterminant<_NT>::begin(){
         return _points.begin();
 }
 
 template <class _NT>
-typename FastHashedDeterminant<_NT>::Matrix::iterator
-FastHashedDeterminant<_NT>::end(){
+typename HashedDeterminant<_NT>::Matrix::iterator
+HashedDeterminant<_NT>::end(){
         return  _points.end();
 }
 
 template <class _NT>
-int FastHashedDeterminant<_NT>::size(){
+int HashedDeterminant<_NT>::size(){
         return  _points.size();
 }
 
@@ -198,9 +198,9 @@ int FastHashedDeterminant<_NT>::size(){
 // there is a big overhead in constructing the LinBox matrix
 template <class _NT>
 inline
-typename FastHashedDeterminant<_NT>::NT
-FastHashedDeterminant<_NT>::compute_determinant(
-                const typename FastHashedDeterminant<_NT>::Index &idx)const{
+typename HashedDeterminant<_NT>::NT
+HashedDeterminant<_NT>::compute_determinant(
+                const typename HashedDeterminant<_NT>::Index &idx)const{
         typedef CGAL::Linbox_rational_field<NT>         Field;
         typedef CGAL::Linbox_dense_matrix<Field>        LBMatrix;
         size_t d=_points[0].size();
@@ -222,9 +222,9 @@ FastHashedDeterminant<_NT>::compute_determinant(
 
 template <class _NT>
 inline
-typename FastHashedDeterminant<_NT>::NT
-FastHashedDeterminant<_NT>::compute_determinant(
-                const typename FastHashedDeterminant<_NT>::Index &idx)const{
+typename HashedDeterminant<_NT>::NT
+HashedDeterminant<_NT>::compute_determinant(
+                const typename HashedDeterminant<_NT>::Index &idx)const{
         int d = idx.size();
         //std::cout << first-last << "|" << d << std::endl;
         typename LA::Matrix M(d);
@@ -244,9 +244,9 @@ FastHashedDeterminant<_NT>::compute_determinant(
 
 template <class _NT>
 inline
-typename FastHashedDeterminant<_NT>::NT
-FastHashedDeterminant<_NT>::compute_determinant(
-                const typename FastHashedDeterminant<_NT>::Index &idx)const{
+typename HashedDeterminant<_NT>::NT
+HashedDeterminant<_NT>::compute_determinant(
+                const typename HashedDeterminant<_NT>::Index &idx)const{
         int d = idx.size();
         //std::cout << first-last << "|" << d << std::endl;
         typename LA::Matrix A(d/2);
@@ -297,10 +297,10 @@ FastHashedDeterminant<_NT>::compute_determinant(
 
 template <class _NT>
 inline
-typename FastHashedDeterminant<_NT>::NT
-FastHashedDeterminant<_NT>::eigendet(
-                typename FastHashedDeterminant<_NT>::NT **m,
-                const typename FastHashedDeterminant<_NT>::Index &idx3)const{
+typename HashedDeterminant<_NT>::NT
+HashedDeterminant<_NT>::eigendet(
+                typename HashedDeterminant<_NT>::NT **m,
+                const typename HashedDeterminant<_NT>::Index &idx3)const{
         size_t n=idx3.size();
         Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> mat(n,n);
         for(size_t i=0;i<n;++i)
@@ -313,9 +313,9 @@ FastHashedDeterminant<_NT>::eigendet(
 
 template <class _NT>
 inline
-typename FastHashedDeterminant<_NT>::NT
-FastHashedDeterminant<_NT>::compute_determinant(
-                const typename FastHashedDeterminant<_NT>::Index &idx){
+typename HashedDeterminant<_NT>::NT
+HashedDeterminant<_NT>::compute_determinant(
+                const typename HashedDeterminant<_NT>::Index &idx){
         size_t n=idx.size();
         Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> mat(n,n);
         for(size_t i=0;i<n;++i)
@@ -331,9 +331,9 @@ FastHashedDeterminant<_NT>::compute_determinant(
 
 template <class _NT>
 inline
-typename FastHashedDeterminant<_NT>::NT
-FastHashedDeterminant<_NT>::compute_determinant(
-                const typename FastHashedDeterminant<_NT>::Index &idx)
+typename HashedDeterminant<_NT>::NT
+HashedDeterminant<_NT>::compute_determinant(
+                const typename HashedDeterminant<_NT>::Index &idx)
 #ifndef USE_HASHED_DETERMINANTS
 const
 #endif
@@ -360,5 +360,5 @@ const
 }
 #endif // USE_LINBOX_DET USE_CGAL_DET USE_CGAL_DET_2 USE_EIGEN_DET
 
-#endif // FAST_HASHED_DETERMINANT_IMPL_H
+#endif // HASHED_DETERMINANT_IMPL_H
 // vim: ts=2

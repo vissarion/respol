@@ -38,7 +38,7 @@
 #include <CGAL/point_generators_d.h>
 
 // for fast determinant computation
-#include <../include/fast_hashed_determinant.h>
+#include "hashed_determinant.h"
 
 // for indexed points
 //#include <../include/indexed_point.h>
@@ -126,7 +126,7 @@ typedef std::vector<SRvertex>   Resvertex;
 typedef std::set<SRvertex>      Polytope;
 
 // big matrix determinants typedefs
-typedef FastHashedDeterminant<Field>             			HD;
+typedef HashedDeterminant<Field>                        HD;
 
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>

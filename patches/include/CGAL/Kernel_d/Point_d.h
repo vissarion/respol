@@ -30,7 +30,7 @@
 #include <CGAL/Dimension.h>
 
 // for fast determinant computation
-#include <../include/fast_hashed_determinant.h>
+#include <hashed_determinant.h>
 
 namespace CGAL {
 
@@ -45,11 +45,11 @@ private:
   typedef typename R::RT RT;
   typedef typename R::FT FT;
   typedef typename R::LA LA;
-  typedef FastHashedDeterminant<FT>     FHD;
+  typedef HashedDeterminant<FT>         HD;
 
 private:
   size_t _index;
-  FHD *_hash;
+  HD *_hash;
 
 public:
 
@@ -93,12 +93,12 @@ public:
         return oldi;
   }
 
-  FHD* hash()const{
+  HD* hash()const{
         return _hash;
   }
 
-  void set_hash(const FHD *h){
-        _hash=(FHD*)h;
+  void set_hash(const HD *h){
+        _hash=(HD*)h;
   }
 
   // TODO: for the moment, we don't care about _index and _hash when doing

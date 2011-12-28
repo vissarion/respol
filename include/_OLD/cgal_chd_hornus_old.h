@@ -35,7 +35,7 @@
 #include <print_functions.h>
 
 // for fast determinant computation
-#include <../include/fast_hashed_determinant.h>
+#include "hashed_determinant.h"
 #include <../include/normal_vector_ds.h>
 
 // for indexed points
@@ -84,7 +84,7 @@ typedef vector<SRvertex> 	Resvertex;
 typedef set<SRvertex> 		Polytope;
 
 // big matrix determinants typedefs
-typedef FastHashedDeterminant<Field,CD-1>        	HD;
+typedef HashedDeterminant<Field,CD-1>                   HD;
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
