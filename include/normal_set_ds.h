@@ -19,38 +19,54 @@
 #ifndef NORMAL_VECTOR_DS_H
 #define NORMAL_VECTOR_DS_H
 
+#ifdef USE_BOOST_FLAT_SET
+#include <boost/version.hpp>
+#if BOOST_VERSION < 104800
+#error Flat set needs Boost 1.48 or newer
+#endif
+#include <boost/container/flat_set.hpp>
+#else
 #include <set>
+#endif
+
 #include <CGAL/algorithm.h>
 #include <CGAL/Random.h>
 #include <CGAL/point_generators_d.h>
-//#include <algorithm>
 
 // comparison between data, needed to keep them sorted!
 template <class V>
-struct lv_compare
+struct lv_compare:
+public std::binary_function<V,V,bool>
 {
   bool operator()(const V& v1, const V& v2) const
   {
     return std::lexicographical_compare(v1.deltas_begin(),
-                                   v1.deltas_end(),
-                                   v2.deltas_begin(),
-                                   v2.deltas_end());
+                                        v1.deltas_end(),
+                                        v2.deltas_begin(),
+                                        v2.deltas_end());
   }
 };
 
 template <class V, class DT>
-class Normal_Vector_ds : public std::set<V,lv_compare<V> >
-//class Normal_Vector_ds : public std::vector<V>
+class Normal_Vector_ds:
+#ifdef USE_BOOST_FLAT_SET
+public boost::container::flat_set<V,lv_compare<V> >
+#else
+public std::set<V,lv_compare<V> >
+#endif
 {
 private:
 
   // typedefs
-  typedef V                                   data;
-  typedef std::set<V,lv_compare<V> >          base;
-  //typedef std::vector<V>                      base;
-  typedef typename base::const_iterator       base_const_iterator;
-  typedef typename base::iterator             base_iterator;
-  
+  typedef V                                             data;
+#ifdef USE_BOOST_FLAT_SET
+  typedef boost::container::flat_set<V,lv_compare<V> >  base;
+#else
+  typedef std::set<V,lv_compare<V> >                    base;
+#endif
+  typedef typename base::const_iterator                 base_const_iterator;
+  typedef typename base::iterator                       base_iterator;
+
 
 private:
   base _normal_list;
@@ -92,7 +108,7 @@ public:
     // Generate 1 random point
     std::vector<V> points;
     CGAL::copy_n(rand_it, k, std::back_inserter(points));
-    for (typename std::vector<V>::const_iterator it=points.begin(); 
+    for (typename std::vector<V>::const_iterator it=points.begin();
          it!=points.end();++it){
       //std::cout << "random point=" << V(*it) << std::endl;
       put(V(*it));
@@ -121,17 +137,17 @@ public:
     std::pair<base_iterator,bool> result = insert(d);
     return (result.second)?1:0;
   }
-  
+
   V back(){
-		base_iterator last = this->end();
-		last--;
-		return *last;
-	}
-	
-	void pop_back(){
-		erase(back());
-	}
-   
+    base_iterator last = this->end();
+    last--;
+    return *last;
+  }
+
+  void pop_back(){
+    erase(back());
+  }
+
   // insert data
   //int put(const data &d){
   //  if (find(this->begin(),this->end(),d) == this->end()){

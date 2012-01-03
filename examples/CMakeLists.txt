@@ -22,6 +22,7 @@ if ( CGAL_FOUND )
   include ( CMakeDependentOption )
   option ( RESPOL_PRINT_INFO "show some information during execution" OFF )
   option ( RESPOL_PRETTY_PRINT "display pretty info" OFF)
+  option ( RESPOL_USE_FLAT_SET "use boost flat set to store normals" OFF )
   option ( RESPOL_USE_HASHED_DET "hash computed determinant minors" ON )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_STATS
                            "print hashed determinants statistics" OFF
@@ -87,6 +88,10 @@ if ( CGAL_FOUND )
   if( RESPOL_PRINT_INFO )
     add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
   endif( RESPOL_PRINT_INFO )
+
+  if( RESPOL_USE_FLAT_SET )
+    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_BOOST_FLAT_SET")
+  endif( RESPOL_USE_FLAT_SET )
 
   if( RESPOL_USE_HASHED_DET )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_HASHED_DETERMINANTS")
