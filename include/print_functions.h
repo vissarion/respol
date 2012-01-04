@@ -491,12 +491,12 @@ void print_statistics_small(int Cdim,
             << facets << " "
             << edges << 
             std::endl;  
-  if (!(numofvertices+facets >= numoftriangs)){
-		std::cout << "WRONG CONJECTURE\n";
-		std::cout << "WRONG CONJECTURE\n";
-		std::cout << "WRONG CONJECTURE\n";
-		std::cout << "WRONG CONJECTURE\n"; 
-  }
+  //if (!(numofvertices+facets >= numoftriangs)){
+//		std::cout << "WRONG CONJECTURE\n";
+//		std::cout << "WRONG CONJECTURE\n";
+//		std::cout << "WRONG CONJECTURE\n";
+//		std::cout << "WRONG CONJECTURE\n"; 
+//  }
 }
 
 
