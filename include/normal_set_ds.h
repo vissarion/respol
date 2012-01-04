@@ -67,15 +67,7 @@ private:
   typedef typename base::const_iterator                 base_const_iterator;
   typedef typename base::iterator                       base_iterator;
 
-
-private:
-  base _normal_list;
-
 public:
-
-  //constructors
-  Normal_Vector_ds() : _normal_list() {
-  }
 
   // initialization of ds
   void initialize(){
