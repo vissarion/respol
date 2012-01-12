@@ -372,7 +372,7 @@ void print_polymake_testfile(const Triang &Res,
 	os << "my $f=$p->FACETS;\n";
 	os << "print tv_interval($t0,[gettimeofday]);\n";
 	os << "print ' ';\n";
-	os << "$p->SCHLEGEL;\n";
+	os << "print $p->F_VECTOR;\n";
 	//os << "print \"\\n\";\n";
   os << std::endl;
 }
