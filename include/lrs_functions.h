@@ -1,4 +1,5 @@
-/* Copyright 2011 National and Kapodistrian University of Athens, Greece.
+/* Copyright 2011-2012 National and Kapodistrian University of Athens,
+ * Greece.
  *
  * This file is part of respol.
  *
