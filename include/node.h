@@ -16,31 +16,47 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#ifndef NODE_H
+#define NODE_H
+
 #include <iostream>
 #include <vector>
-#include <map>
+
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 104800
+#  ifdef USE_BOOST_FLAT_MAP
+#    include <boost/container/flat_map.hpp>
+#    define NODE_MAP boost::container::flat_map
+#  else
+#    include <boost/container/map.hpp>
+#    define NODE_MAP boost::container::map
+#  endif
+#else
+#  include <map>
+#  define NODE_MAP std::map
+#endif
 
 namespace Trie{
 
 template <class _data_type>
 class Node:
-public std::map<std::size_t,Node<_data_type> >
+public NODE_MAP<std::size_t,Node<_data_type> >
 {
         public:
         typedef _data_type                                      data_type;
-        typedef std::map<std::size_t,Node<data_type> >          base;
+        typedef NODE_MAP<std::size_t,Node<data_type> >          base;
         typedef std::vector<std::size_t>                        key_type;
 
         public:
         Node(); // constructor
-        data_type& get();
+        data_type& get_data();
         unsigned lookups()const;
         void set_lookup_counter(unsigned);
         void decrease_lookup_counter(unsigned);
         unsigned size_subtree()const;
         Node& child(std::size_t);
         std::size_t children()const;
-        std::ostream& print_map(std::ostream&)const;
+        std::ostream& print_map(std::ostream&&)const;
 
         // the data stored in the node
         private:
@@ -51,3 +67,5 @@ public std::map<std::size_t,Node<_data_type> >
 } // namespace Trie
 
 #include "node_impl.h"
+
+#endif // NODE_H

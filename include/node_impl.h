@@ -16,6 +16,9 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#ifndef NODE_IMPL_H
+#define NODE_IMPL_H
+
 namespace Trie{
 
 // constructor
@@ -23,7 +26,7 @@ template <class _Data>
 Node<_Data>::Node():_num_lookups(0){}
 
 template <class _Data>
-typename Node<_Data>::data_type& Node<_Data>::get(){
+typename Node<_Data>::data_type& Node<_Data>::get_data(){
         ++_num_lookups;
         return _d;
 }
@@ -57,7 +60,7 @@ std::size_t Node<_Data>::children()const{
 }
 
 template <class _Data>
-std::ostream& Node<_Data>::print_map(std::ostream &o)const{
+std::ostream& Node<_Data>::print_map(std::ostream &&o)const{
         o<<'{';
         for(typename base::const_iterator i=this->begin();i!=this->end();++i){
                 if(i!=this->begin())
@@ -68,3 +71,5 @@ std::ostream& Node<_Data>::print_map(std::ostream &o)const{
 }
 
 } // namespace Trie
+
+#endif // NODE_IMPL_H

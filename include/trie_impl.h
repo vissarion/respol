@@ -16,6 +16,9 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#ifndef TRIE_IMPL_H
+#define TRIE_IMPL_H
+
 namespace Trie{
 
 // This function returns the a reference to the element associated with
@@ -29,7 +32,7 @@ Trie<_Data>::operator[](const typename Trie<_Data>::key_type &idx)const{
         node_type *n=const_cast<node_type*>(&root);
         for(std::size_t i=0;i<idx.size();++i)
                 n=&(n->child(idx[i]));
-        return n->get();
+        return n->get_data();
 }
 
 // This function returns 1 iff the node identified by idx exists. The trie
@@ -101,3 +104,5 @@ Trie<_Data>::clear(){
 }
 
 } // namespace Trie
+
+#endif // TRIE_IMPL_H

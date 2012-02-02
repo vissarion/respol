@@ -16,6 +16,9 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#ifndef TRIE_H
+#define TRIE_H
+
 #include "node.h"
 #include <vector>
 
@@ -43,3 +46,5 @@ class Trie{
 } // namespace Trie
 
 #include "trie_impl.h"
+
+#endif // TRIE_H
