@@ -29,11 +29,6 @@
 #include <CGAL/enum.h>
 #include <CGAL/Referenced_argument.h>
 
-#warning Using hacked function_objectsCd.h
-#ifdef USE_HACKED_GAUSSIAN_ELIMINATION
-#warning using hacked gaussian elimination
-#endif
-
 #undef CGAL_KD_TRACE
 #undef CGAL_KD_TRACEN
 #undef CGAL_KD_TRACEV

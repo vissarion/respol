@@ -25,8 +25,6 @@
 #define CGAL_POINT_D_H
 #define HACKED_CGAL_POINT_D_H
 
-#warning Using hacked Point_d interface
-
 #include <CGAL/Dimension.h>
 
 // for fast determinant computation
