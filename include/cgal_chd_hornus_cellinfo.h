@@ -38,11 +38,8 @@
 #include <CGAL/algorithm.h>
 #include <CGAL/point_generators_d.h>
 
-// for fast determinant computation
-#include "hashed_determinant.h"
-
 // for indexed points
-//#include <../include/indexed_point.h>
+//#include "indexed_point.h"
 
 // the kernel
 //#include <gmpxx.h>
@@ -126,22 +123,43 @@ typedef std::vector<SRvertex>   Resvertex;
 //typedef IntegerSet 			SRvertex;
 typedef std::set<SRvertex>      Polytope;
 
-// big matrix determinants typedefs
-typedef HashedDeterminant<Field>                        HD;
+// for fast determinant computation
+#ifdef USE_BIRD_DET
+  #include "hashed_determinant_bird.h"
+  typedef HashedDeterminantBird<Field>                  HD;
+#elif defined USE_CGAL_DET
+  #include "hashed_determinant_cgal.h"
+  typedef HashedDeterminantCGAL<Field>                  HD;
+#elif defined USE_CGAL_DET_2
+  #include "hashed_determinant_cgal_2.h"
+  typedef HashedDeterminantCGAL2<Field>                 HD;
+#elif defined USE_EIGEN_DET
+  #include "hashed_determinant_eigen.h"
+  typedef HashedDeterminantEigen<Field>                 HD;
+#elif defined USE_LINBOX_DET
+  #include "hashed_determinant_linbox.h"
+  typedef HashedDeterminantLinbox<Field>                HD;
+#elif defined USE_ORIENTATION_DET
+  #include "hashed_determinant_orientation.h"
+  typedef HashedDeterminantOrientation<Field>           HD;
+#else // by default, use Laplace determinants
+  #include "hashed_determinant.h"
+  typedef HashedDeterminant<Field>                      HD;
+#endif
 
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>
-#include <../include/normal_set_ds.h>
+#include "normal_set_ds.h"
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
 // functions for printing and parsing
-#include <print_functions.h>
-#include <parse_functions.h>
+#include "print_functions.h"
+#include "parse_functions.h"
 
 // lrslib includes
 #ifdef USE_LRSLIB
-#include <lrs_cgal.h>
+#include "lrs_cgal.h"
 #endif
 
 /////////////////////////////

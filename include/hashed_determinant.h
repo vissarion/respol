@@ -42,12 +42,13 @@
 #include <ctime>
 #endif
 
-#ifdef USE_CGAL_DET
-#include <CGAL/Cartesian_d.h>
+#ifdef USE_SORTED_INDICES
+#include "sort_swap.h"
 #endif
 
-#ifdef USE_SORTED_INDICES
-#include <sort_swap.h>
+#ifdef USE_ONLY_CAYLEY_DET_HASH
+template <class _NT> class HashedDeterminant;
+#include <CGAL/Cartesian_d.h>
 #endif
 
 // HashedDeterminant constructs a big matrix of columns and provides
@@ -62,22 +63,18 @@ template <class _NT>
 class HashedDeterminant{
         public:
         typedef _NT                                     NT;
-#ifdef USE_CGAL_DET
-        typedef CGAL::Cartesian_d<NT>                   CK;
-        typedef typename CK::LA                         LA;
-#endif
 #ifdef USE_ONLY_CAYLEY_DET_HASH
         typedef CGAL::Cartesian_d<NT>                   CK;
         typedef typename CK::LA                         LA;
 #endif
 
-				typedef std::vector<NT>                         Column;
+        typedef std::vector<NT>                         Column;
         typedef std::vector<NT>                         Row;
         typedef std::vector<size_t>                     Index;
         private:
         typedef std::vector<Column>                     Matrix;
         public:
-        typedef typename Matrix::iterator                     iterator;
+        typedef typename Matrix::iterator               iterator;
         private:
         typedef boost::unordered_map<Index,NT>          Determinants;
         typedef boost::unordered_map<Index,NT>          HDeterminants;
@@ -209,6 +206,9 @@ class HashedDeterminant{
         // a linear search to Matrix to see if the Column c exists
         int find(const Column&)const;
 
+        // A string describing the determinant algorithm.
+        const char* algorithm()const{return "Laplace\0";};
+
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
@@ -289,43 +289,26 @@ class HashedDeterminant{
 #endif // USE_SORTED_INDICES
         }
 #else // USE_HASHED_DETERMINANTS is not defined
-        // TODO: we can use here gaussian elimination or any O(n^3)
-        // factorization algorithm
         NT determinant(const Index &idx)
         #ifndef LOG_DET_TIME
         const
         #endif
         {
-                size_t n=idx.size();
-                if(n==1)
+#ifndef USE_HASHED_DETERMINANTS
+                if(idx.size()==1)
                         return _points[idx[0]][0];
+#endif
 #ifdef LOG_DET_TIME
                 clock_t start_all;
                 if(idx.size()==_points[0].size())
                         start_all=clock();
-#endif // LOG_DET_TIME
-                Index idx2;
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
-                assert(idx2.size()==idx.size()-1);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if(_points[idx[i]][n-1]!=0){
-                                if((i+n)%2)
-                                        det+=(_points[idx[i]][n-1]*
-                                              determinant(idx2));
-                                else
-                                        det-=(_points[idx[i]][n-1]*
-                                              determinant(idx2));
-                        }
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-#ifdef LOG_DET_TIME
+                NT det(compute_determinant(idx));
                 if(idx.size()==_points[0].size())
                         determinant_time+=clock()-start_all;
-#endif // LOG_DET_TIME
                 return det;
+#else // LOG_DET_TIME
+                return compute_determinant(idx);
+#endif // LOG_DET_TIME
         }
 #endif // USE_HASHED_DETERMINANTS
 
@@ -434,10 +417,6 @@ class HashedDeterminant{
 					}
 #endif // USE_ONLY_CAYLEY_DET_HASH
         }
-
-#ifdef USE_EIGEN_DET
-        inline NT eigendet(NT**,const Index&)const;
-#endif // USE_EIGEN_DET
 
 #ifdef USE_ORIENTATION_DET
         NT det_minor(NT **m,const Index &idx3,const Index &idx4){
@@ -556,32 +535,6 @@ class HashedDeterminant{
 #ifdef HASH_STATISTICS
                 matrix_time+=(clock()-matrix_start);
 #endif
-                // show matrix m
-                //for(size_t row=0;row<n;++row){
-                //        std::cout<<"[ ";
-                //        for(size_t col=0;col<n;++col)
-                //                std::cout<<m[col][row]<<' ';
-                //        std::cout<<"]\n";
-                //}
-#ifdef USE_EIGEN_DET
-                for(size_t col=0;col<n;++col){
-                        NT minor;
-                        if(_o_determinants.count(idx4)==0){
-                                minor=eigendet(m,idx3);
-                                _o_determinants[idx4]=minor;
-                        }else{
-                                minor=_o_determinants[idx4];
-                        }
-                        if(m[col][n-1]!=0){
-                                if((col+n)%2)
-                                        det+=m[col][n-1]*minor;
-                                else
-                                        det-=m[col][n-1]*minor;
-                        }
-                        idx3[col]=col;
-                        idx4[col]=idx[col];
-                }
-#else // USE_EIGEN_DET is not defined
                 for(size_t col=0;col<n;++col){
                         NT minor=det_minor(m,idx3,idx4);
                         if(m[col][n-1]!=0){
@@ -593,7 +546,6 @@ class HashedDeterminant{
                         idx3[col]=col;
                         idx4[col]=idx[col];
                 }
-#endif // USE_EIGEN_DET
                 for(size_t col=0;col<n;++col)
                         delete[] m[col];
                 free(m);
@@ -617,20 +569,20 @@ class HashedDeterminant{
         // _points. The parameter idx is a vector of indices of the indices
         // of the columns which will form the submatrix. Inlining this
         // function is very important for efficiency reasons!
-#if (defined USE_LINBOX_DET) || (defined USE_CGAL_DET) || \
-    (defined USE_CGAL_DET_2) || (!defined USE_HASHED_DETERMINANTS)
+#ifndef USE_HASHED_DETERMINANTS
         inline NT compute_determinant(const Index&)const;
-#else // USE_EIGEN_DET is defined and USE_HASHED_DETERMINANTS is not
+#else
         inline NT compute_determinant(const Index&);
 #endif
 public:
         Column& operator[](size_t);
         typename Matrix::iterator begin();
-			  typename Matrix::iterator end();
-			  int size();
+        typename Matrix::iterator end();
+        int size();
 
-        private:
+        protected:
         Matrix _points;
+        private:
         Determinants _determinants;
         HDeterminants _h_determinants;
 #ifdef USE_ONLY_CAYLEY_DET_HASH
