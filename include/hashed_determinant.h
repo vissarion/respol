@@ -26,22 +26,22 @@
 
 #ifdef USE_BIRD_DET
   #include "hashed_determinant_bird.h"
-  #define H_HD ashedDeterminantBird
+  #define _HD HashedDeterminantBird
 #elif defined USE_CGAL_DET
   #include "hashed_determinant_cgal.h"
-  #define H_HD ashedDeterminantCGAL
+  #define _HD HashedDeterminantCGAL
 #elif defined USE_CGAL_DET_2
   #include "hashed_determinant_cgal_2.h"
-  #define H_HD ashedDeterminantCGAL2
+  #define _HD HashedDeterminantCGAL2
 #elif defined USE_EIGEN_DET
   #include "hashed_determinant_eigen.h"
-  #define H_HD ashedDeterminantEigen
+  #define _HD HashedDeterminantEigen
 #elif defined USE_LINBOX_DET
   #include "hashed_determinant_linbox.h"
-  #define H_HD ashedDeterminantLinbox
+  #define _HD HashedDeterminantLinbox
 #elif defined USE_ORIENTATION_DET
   #include "hashed_determinant_orientation.h"
-  #define H_HD ashedDeterminantOrientation
+  #define _HD HashedDeterminantOrientation
 #else // by default, use Laplace determinants
   #include "hashed_determinant_laplace.h"
   #define _HD HashedDeterminantLaplace
