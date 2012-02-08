@@ -20,14 +20,14 @@
 #ifndef HASHED_DETERMINANT_EIGEN_H
 #define HASHED_DETERMINANT_EIGEN_H
 
-#include "hashed_determinant.h"
+#include "hashed_determinant_base.h"
 #include <Eigen/Eigen>
 
 template <class _NT>
-class HashedDeterminantEigen:public HashedDeterminant<_NT>{
+class HashedDeterminantEigen:public HashedDeterminantBase<_NT>{
         private:
         typedef _NT                                     NT;
-        typedef HashedDeterminant<NT>                   HD;
+        typedef HashedDeterminantBase<NT>               HD;
         typedef typename HD::Index                      Index;
         public:
         HashedDeterminantEigen():HD(){};

@@ -43,7 +43,7 @@ private:
   typedef typename R::RT RT;
   typedef typename R::FT FT;
   typedef typename R::LA LA;
-  typedef HashedDeterminant<FT>         HD;
+  typedef typename HashedDeterminant<FT>::Table         HD;
 
 private:
   size_t _index;

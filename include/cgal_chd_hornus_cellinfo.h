@@ -124,28 +124,8 @@ typedef std::vector<SRvertex>   Resvertex;
 typedef std::set<SRvertex>      Polytope;
 
 // for fast determinant computation
-#ifdef USE_BIRD_DET
-  #include "hashed_determinant_bird.h"
-  typedef HashedDeterminantBird<Field>                  HD;
-#elif defined USE_CGAL_DET
-  #include "hashed_determinant_cgal.h"
-  typedef HashedDeterminantCGAL<Field>                  HD;
-#elif defined USE_CGAL_DET_2
-  #include "hashed_determinant_cgal_2.h"
-  typedef HashedDeterminantCGAL2<Field>                 HD;
-#elif defined USE_EIGEN_DET
-  #include "hashed_determinant_eigen.h"
-  typedef HashedDeterminantEigen<Field>                 HD;
-#elif defined USE_LINBOX_DET
-  #include "hashed_determinant_linbox.h"
-  typedef HashedDeterminantLinbox<Field>                HD;
-#elif defined USE_ORIENTATION_DET
-  #include "hashed_determinant_orientation.h"
-  typedef HashedDeterminantOrientation<Field>           HD;
-#else // by default, use Laplace determinants
-  #include "hashed_determinant.h"
-  typedef HashedDeterminant<Field>                      HD;
-#endif
+#include "hashed_determinant.h"
+typedef typename HashedDeterminant<Field>::Table        HD;
 
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>

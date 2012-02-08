@@ -20,14 +20,14 @@
 #ifndef HASHED_DETERMINANT_BIRD_H
 #define HASHED_DETERMINANT_BIRD_H
 
-#include "hashed_determinant.h"
+#include "hashed_determinant_base.h"
 #include "bird.h"
 
 template <class _NT>
-class HashedDeterminantBird:public HashedDeterminant<_NT>{
+class HashedDeterminantBird:public HashedDeterminantBase<_NT>{
         private:
         typedef _NT                                     NT;
-        typedef HashedDeterminant<NT>                   HD;
+        typedef HashedDeterminantBase<NT>               HD;
         typedef typename HD::Index                      Index;
         public:
         HashedDeterminantBird():HD(){};

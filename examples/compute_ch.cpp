@@ -32,7 +32,7 @@
 #endif
 
 #ifdef USE_HASHED_DETERMINANTS
-typedef HashedDeterminant<CGAL::Gmpq>                           HD;
+typedef HashedDeterminant<CGAL::Gmpq>::Table                    HD;
 #endif
 typedef CGAL::Cartesian_d<CGAL::Gmpq>                           Kd;
 typedef Kd::Point_d                                             Point;
@@ -92,7 +92,8 @@ int main(int argc,char *argv[]){
                 //(double)elapsed_offline/CLOCKS_PER_SEC<<'\t'<<
                 .0<<'\t'<<
                 (double)elapsed_online/CLOCKS_PER_SEC<<'\t'<<
-                edges.size()<<
+                edges.size()<<'\t'<<
+                Pdets.algorithm()<<
                 std::endl;
         //edges.clear();
         return 0;

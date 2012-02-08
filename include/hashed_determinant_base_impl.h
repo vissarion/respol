@@ -17,11 +17,11 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
-#ifndef HASHED_DETERMINANT_IMPL_H
-#define HASHED_DETERMINANT_IMPL_H
+#ifndef HASHED_DETERMINANT_BASE_IMPL_H
+#define HASHED_DETERMINANT_BASE_IMPL_H
 
 template <class _NT>
-HashedDeterminant<_NT>::~HashedDeterminant(){
+HashedDeterminantBase<_NT>::~HashedDeterminantBase(){
 #ifdef HASH_STATISTICS
 #ifdef USE_ORIENTATION_DET
         std::cerr<<"hash statistics:\n"<<
@@ -93,7 +93,7 @@ HashedDeterminant<_NT>::~HashedDeterminant(){
         }
 
 template <class _NT>
-double HashedDeterminant<_NT>::get_determinant_time(){
+double HashedDeterminantBase<_NT>::get_determinant_time(){
 #if defined(LOG_DET_TIME) && defined(HASH_STATISTICS)
 #ifdef USE_ORIENTATION_DET
         return (double)full_determinant_time/CLOCKS_PER_SEC;
@@ -106,9 +106,9 @@ double HashedDeterminant<_NT>::get_determinant_time(){
 }
 
 template <class _NT>
-void HashedDeterminant<_NT>::set_column(
+void HashedDeterminantBase<_NT>::set_column(
                 size_t i,
-                const HashedDeterminant<_NT>::Column &c){
+                const HashedDeterminantBase<_NT>::Column &c){
         assert((i>=0)&&(i<_points.size()));
 #ifdef HASH_STATISTICS
         if(c.size()>dimension)
@@ -118,8 +118,8 @@ void HashedDeterminant<_NT>::set_column(
 }
 
 template <class _NT>
-size_t HashedDeterminant<_NT>::add_column(
-                const HashedDeterminant<_NT>::Column &c){
+size_t HashedDeterminantBase<_NT>::add_column(
+                const HashedDeterminantBase<_NT>::Column &c){
 #ifdef HASH_STATISTICS
         if(c.size()>dimension)
                 dimension=c.size();
@@ -129,15 +129,15 @@ size_t HashedDeterminant<_NT>::add_column(
 }
 
 template <class _NT>
-int HashedDeterminant<_NT>::find(
-                const HashedDeterminant<_NT>::Column &c)const{
+int HashedDeterminantBase<_NT>::find(
+                const HashedDeterminantBase<_NT>::Column &c)const{
         typename Matrix::const_iterator result;
         result=std::find(_points.begin(),_points.end(),c);
         return (result==_points.end()?-1:result-_points.begin());
 }
 
 template <class _NT>
-std::ostream& HashedDeterminant<_NT>::print_matrix(std::ostream &o)const{
+std::ostream& HashedDeterminantBase<_NT>::print_matrix(std::ostream &o)const{
         if(!_points.size())
                 return o;
         size_t s=_points[0].size();
@@ -151,8 +151,8 @@ std::ostream& HashedDeterminant<_NT>::print_matrix(std::ostream &o)const{
 }
 
 template <class _NT>
-std::ostream& HashedDeterminant<_NT>::print_submatrix(
-                const HashedDeterminant<_NT>::Index &idx,
+std::ostream& HashedDeterminantBase<_NT>::print_submatrix(
+                const HashedDeterminantBase<_NT>::Index &idx,
                 std::ostream &o)const{
         for(size_t row=0;row<idx.size();++row){
                 o<<"[ ";
@@ -166,34 +166,34 @@ std::ostream& HashedDeterminant<_NT>::print_submatrix(
 }
 
 template <class _NT>
-typename HashedDeterminant<_NT>::Column&
-HashedDeterminant<_NT>::operator[](size_t i){
+typename HashedDeterminantBase<_NT>::Column&
+HashedDeterminantBase<_NT>::operator[](size_t i){
         CGAL_assertion(i>=0&&i<_points.size());
         return _points[i];
 }
 
 template <class _NT>
-typename HashedDeterminant<_NT>::Matrix::iterator
-HashedDeterminant<_NT>::begin(){
+typename HashedDeterminantBase<_NT>::Matrix::iterator
+HashedDeterminantBase<_NT>::begin(){
         return _points.begin();
 }
 
 template <class _NT>
-typename HashedDeterminant<_NT>::Matrix::iterator
-HashedDeterminant<_NT>::end(){
+typename HashedDeterminantBase<_NT>::Matrix::iterator
+HashedDeterminantBase<_NT>::end(){
         return  _points.end();
 }
 
 template <class _NT>
-int HashedDeterminant<_NT>::size(){
+int HashedDeterminantBase<_NT>::size(){
         return  _points.size();
 }
 
 template <class _NT>
 inline
-typename HashedDeterminant<_NT>::NT
-HashedDeterminant<_NT>::compute_determinant(
-                const typename HashedDeterminant<_NT>::Index &idx)
+typename HashedDeterminantBase<_NT>::NT
+HashedDeterminantBase<_NT>::compute_determinant(
+                const typename HashedDeterminantBase<_NT>::Index &idx)
 #ifndef USE_HASHED_DETERMINANTS
 const
 #endif
@@ -217,5 +217,5 @@ const
         return det;
 }
 
-#endif // HASHED_DETERMINANT_IMPL_H
+#endif // HASHED_DETERMINANT_BASE_IMPL_H
 // vim: ts=2
