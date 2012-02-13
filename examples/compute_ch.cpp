@@ -31,6 +31,9 @@
 #warning NOT using hashing determinants for ch example
 #endif
 
+// NOTE: to compile the version without hashed determinants, the directory
+// ../patches/include must NOT be present in the include path.
+
 #ifdef USE_HASHED_DETERMINANTS
 typedef HashedDeterminant<CGAL::Gmpq>::Table                    HD;
 #endif
@@ -93,7 +96,11 @@ int main(int argc,char *argv[]){
                 .0<<'\t'<<
                 (double)elapsed_online/CLOCKS_PER_SEC<<'\t'<<
                 edges.size()<<'\t'<<
-                Pdets.algorithm()<<
+#ifdef USE_HASHED_DETERMINANTS
+                points[0].hash()->algorithm()<<
+#else
+                "no_hash"<<
+#endif
                 std::endl;
         //edges.clear();
         return 0;

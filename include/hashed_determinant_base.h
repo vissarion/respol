@@ -33,6 +33,7 @@
 #endif
 
 #include <vector>
+#include <set>
 #include <boost/functional/hash.hpp>
 #include <boost/unordered_map.hpp>
 #include <cassert>
