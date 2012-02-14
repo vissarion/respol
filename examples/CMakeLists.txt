@@ -104,7 +104,6 @@ if ( CGAL_FOUND )
   endif( RESPOL_HASH_STATS )
 
   if( RESPOL_HASH_SORTED_INDICES )
-    message(WARNING "sorted indices support is buggy!")
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_SORTED_INDICES")
   endif( RESPOL_HASH_SORTED_INDICES )
 
@@ -194,6 +193,7 @@ if ( CGAL_FOUND )
   ######################################################################
 
   create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
+  #create_single_source_cgal_program("compute_ch.cpp")
 
 else()
 

@@ -267,7 +267,13 @@ class HashedDeterminantBase{
                                 determinant_time+=clock()-start_all;
 #endif // LOG_DET_TIME
 #else // HASH_STATISTICS is not defined
-                        return
+#ifndef USE_SORTED_INDICES
+                        return (idxs.second?
+                                (_determinants[idxs.first]=
+                                    compute_determinant(idxs.first)):
+                                -(_determinants[idxs.first]=
+                                    compute_determinant(idxs.first)));
+#endif // USE_SORTED_INDICES
 #endif // HASH_STATISTICS
 #ifdef USE_SORTED_INDICES
                         (_determinants[idxs.first]=
@@ -319,109 +325,12 @@ class HashedDeterminantBase{
 
         // This function computes the determinant of a submatrix, enlarged
         // with row at the bottom full of ones.
-        NT homogeneous_determinant(const Index &idx){
-#ifdef HASH_STATISTICS
-                number_of_hom_determinants+=1;
-#endif // HASH_STATISTICS
-#ifdef LOG_DET_TIME
-                clock_t start_all,det_old;
-                start_all=clock();
-                det_old=determinant_time;
-#endif // LOG_DET_TIME
-#if (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
-                if(_h_determinants.count(idx)!=0){
-                        assert(_h_determinants.count(idx)==1);
-                        return _h_determinants[idx];
-                }
-#endif // (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
-#ifdef HASH_STATISTICS
-                number_of_computed_hom_determinants+=1;
-#endif // HASH_STATISTICS
-                Index idx2;
-                size_t n=idx.size();
-                for(size_t i=1;i<n;++i) idx2.push_back(idx[i]);
-                assert(idx2.size()==n-1);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if((i+n)%2)
-                                det+=determinant(idx2);
-                        else
-                                det-=determinant(idx2);
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-#if (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
-                _h_determinants[idx]=det;
-#endif // (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
-#ifdef LOG_DET_TIME
-                determinant_time=det_old+(clock()-start_all);
-#endif // LOG_DET_TIME
-                return det;
-        }
+        NT homogeneous_determinant(const Index&);
 
-        NT homogeneous_determinant(const Index &idx,const Row &r){
-#ifdef USE_ONLY_CAYLEY_DET_HASH
-          if(_hashed){
-#endif
-                assert(idx.size()==r.size());
-#ifdef LOG_DET_TIME
-                clock_t start_all,det_old;
-                start_all=clock();
-                det_old=determinant_time;
-#endif
-                Index idx2;
-                size_t n=idx.size();
-                for(size_t i=1;i<n;++i)
-                        idx2.push_back(idx[i]);
-                assert(idx2.size()==n-1);
-                NT det(0);
-                for(size_t i=0;i<n;++i){
-                        if(r[i]!=0){
-                                if((i+n)%2)
-                                        det-=r[i]*homogeneous_determinant(idx2);
-                                else
-                                        det+=r[i]*homogeneous_determinant(idx2);
-                        }
-                        // update the index array
-                        idx2[i]=idx[i];
-                }
-#ifdef LOG_DET_TIME
-                determinant_time=det_old+(clock()-start_all);
-#endif
-                return det;
-#ifdef USE_ONLY_CAYLEY_DET_HASH
-          } else {
-						int d = idx.size() - 1;
-						//std::cout << first-last << "|" << d << std::endl;
-						typename LA::Matrix M(d);
-						//std::vector<CPoint_d>::iterator s = first;
-						for( int j = 0; j < d-1; ++j ){
-										//std::cout << *s << std::endl;
-										for( int i = 1; i <= d; ++i ){
-														//std::cout << i << "," << j;
-														M(i-1,j) = _points[idx[i]][j] - _points[idx[0]][j];
-														//std::cout << " -> " << M(i,j) << std::endl;
-								//						std::cout //<< _points[idx[i]][j] << " " ;
-														//std::cout << "(" << _points[idx[i]][j] << "-"
-														//          << _points[idx[0]][j] << ") "
-							//							          << M(i-1,j) << " ";
-										}
-									//	std::cout << "\n" ;
-						}
-						for( int i = 1; i <= d; ++i ){
-										//std::cout << i << "," << j;
-										M(i-1,d-1) = r[i] - r[0];
-							//			std::cout //<< r[i] << " " ;
-										//std::cout << "(" << r[i] << "-" << r[0] << ") ="
-								//		          << r[i] - r[0] << " ";
-										//std::cout << " -> " << M(i,j) << std::endl;
-						}
-						//std::cout << std::endl;
-						//exit(0);
-						return LA::sign_of_determinant(M);
-					}
-#endif // USE_ONLY_CAYLEY_DET_HASH
-        }
+        // This function computes the determinant of a submatrix, enlarged
+        // with two rows at the bottom: one lifting row and a row full of
+        // ones.
+        NT homogeneous_determinant(const Index&,const Row&);
 
 #ifdef USE_ORIENTATION_DET
         NT det_minor(NT **m,const Index &idx3,const Index &idx4){

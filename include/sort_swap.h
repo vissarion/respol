@@ -21,8 +21,12 @@
 #define SORT_SWAP_H
 
 #include <cassert>
-//#include <boost/range/algorithm_ext/is_sorted.hpp>
+#include <boost/version.hpp>
+#if BOOST_VERSION < 104300
 #include <boost/detail/algorithm.hpp>
+#else
+#include <boost/range/algorithm_ext/is_sorted.hpp>
+#endif
 
 // This function takes as parameter an index vector v (usually, a
 // std::vector<size_t>) and returns a pair, containing the sorted vector s
@@ -30,22 +34,22 @@
 // number of swaps.
 // TODO: This function is naively implemented, it sorts using a bubble sort
 // and computes the number of swaps on the fly. It will be better to
-// implement a subquadratic algorithn that counts the swaps.
+// implement a subquadratic algorithm that counts the swaps.
 template <class Index>
 std::pair<Index,bool> sort_swap(const Index &v){
         typedef typename Index::value_type                      elt_t;
-        Index s(v); // the sorted vector
-        size_t swaps=0; // the number of swaps used
-        elt_t tmp; // the temporary for swaps
-        size_t min; // the temporary to store the minimum element
-        // bubble sort, n^2 but easy to implement
-        for(size_t i=0;i<s.size()-1;++i){
-                // find the minimum in v[i+1...]
+        Index s(v); // The sorted vector.
+        size_t swaps=0; // The number of swaps used.
+        elt_t tmp; // The temporary for swaps.
+        size_t min; // The temporary to store the minimum element.
+        // Bubble sort, O(n^2) but easy to implement.
+        for(size_t i=0;i+1<s.size();++i){
                 min=i;
+                // Find the minimum in v[i+1...].
                 for(size_t j=i+1;j<s.size();++j)
                         if(s[j]<s[min])
                                 min=j;
-                // swap s[i] and s[min], and update swaps if necessary
+                // Swap s[i] and s[min] and update swaps if necessary.
                 if(min!=i){
                         tmp=s[min];
                         s[min]=s[i];
@@ -54,6 +58,7 @@ std::pair<Index,bool> sort_swap(const Index &v){
                 }
         }
         assert(boost::is_sorted(s));
+        assert(s.size()==v.size());
         return std::make_pair(s,!(swaps%2));
 }
 
