@@ -28,6 +28,11 @@
 #include <CGAL/Gmpz.h>
 #include <normal_set_ds.h> // we need normals to compute f-vectors
 
+#ifdef LOG_MEMORY
+#include <cstdio>
+#include <proc/readproc.h>
+#endif
+
 /////////////////////////////////////////////////////////////////
 // overload of << operators for various types
 
@@ -457,6 +462,11 @@ void print_statistics(int current_dim,
   std::cout << "Determinant time \t\t\t\t\t\t" << timedet << std::endl;
   std::cout << "Volume   \t\t\t\t\t\t\t" << volume
             << " ~ " <<  CGAL::to_double(volume) << std::endl;
+#ifdef LOG_MEMORY
+  struct proc_t usage;
+  look_up_our_self(&usage);
+  std::cout << "Memory used\t\t\t\t\t\t" << usage.vsize << std::endl;
+#endif
 }
 
 template <class Vol,class Triang>
@@ -476,6 +486,10 @@ void print_statistics_small(int Cdim,
                             Triang& Res){
   int cells, triang_facets, facets, edges, vertices;
   f_vector(Res,cells, triang_facets, facets, edges, vertices);
+#ifdef LOG_MEMORY
+  struct proc_t usage;
+  look_up_our_self(&usage);
+#endif
   std::cout << Cdim << " "
             << Pdim << " "
             << current_dim << " "
@@ -493,6 +507,9 @@ void print_statistics_small(int Cdim,
             << triang_facets << " "
             << facets << " "
             << edges << 
+#ifdef LOG_MEMORY
+            ' ' << usage.vsize <<
+#endif
             std::endl;  
   //if (!(numofvertices+facets >= numoftriangs)){
 //		std::cout << "WRONG CONJECTURE\n";
@@ -542,6 +559,11 @@ void pretty_print_statistics(int Cdim,
             << timeofflinehull  << ","
             << timedet << ")\n"
             << "volume:\t\t\t\t\t" << volume << "\n";  
+#ifdef LOG_MEMORY
+  struct proc_t usage;
+  look_up_our_self(&usage);
+  std::cout << "memory used: " << usage.vsize << '\n';
+#endif
 }
 
 template <class Vol>
@@ -558,6 +580,10 @@ void print_statistics_rand(int Cdim,
                             double timeofflinehull,
                             double timedet,
                             const Vol &volume){
+#ifdef LOG_MEMORY
+  struct proc_t usage;
+  look_up_our_self(&usage);
+#endif
   std::cout << Cdim << " "
             << Pdim << " "
             << current_dim << " "
@@ -571,6 +597,9 @@ void print_statistics_rand(int Cdim,
             << timeofflinehull  << " "
             << timedet << " "
             << volume
+#ifdef LOG_MEMORY
+            << ' ' << usage.vsize
+#endif
 #ifndef RESTRICTED_RES
             << std::endl
 #endif

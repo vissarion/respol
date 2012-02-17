@@ -27,6 +27,7 @@
 #else
 #include <boost/range/algorithm_ext/is_sorted.hpp>
 #endif
+#include <boost/tuple/tuple.hpp>
 
 // This function takes as parameter an index vector v (usually, a
 // std::vector<size_t>) and returns a pair, containing the sorted vector s
@@ -38,15 +39,16 @@
 template <class Index>
 std::pair<Index,bool> sort_swap(const Index &v){
         typedef typename Index::value_type                      elt_t;
+        size_t n=v.size();
         Index s(v); // The sorted vector.
         size_t swaps=0; // The number of swaps used.
         elt_t tmp; // The temporary for swaps.
         size_t min; // The temporary to store the minimum element.
         // Bubble sort, O(n^2) but easy to implement.
-        for(size_t i=0;i+1<s.size();++i){
+        for(size_t i=0;i+1<n;++i){
                 min=i;
                 // Find the minimum in v[i+1...].
-                for(size_t j=i+1;j<s.size();++j)
+                for(size_t j=i+1;j<n;++j)
                         if(s[j]<s[min])
                                 min=j;
                 // Swap s[i] and s[min] and update swaps if necessary.
@@ -60,6 +62,41 @@ std::pair<Index,bool> sort_swap(const Index &v){
         assert(boost::is_sorted(s));
         assert(s.size()==v.size());
         return std::make_pair(s,!(swaps%2));
+}
+
+// This function does the same as the previous one. Additionally, it
+// returns a permutation vector showing the permutation of the indices of
+// the input vector.
+template <class Index>
+boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
+        typedef typename Index::value_type                      elt_t;
+        size_t n=v.size();
+        Index s(v),permutation;
+        permutation.reserve(n);
+        for(elt_t p=0;p<n;++p)
+                permutation.push_back(p);
+        size_t swaps=0;
+        elt_t tmp;
+        size_t min;
+        for(size_t i=0;i+1<n;++i){
+                min=i;
+                for(size_t j=i+1;j<n;++j)
+                        if(s[j]<s[min])
+                                min=j;
+                if(min!=i){
+                        tmp=s[min];
+                        s[min]=s[i];
+                        s[i]=tmp;
+                        ++swaps;
+                        tmp=permutation[min];
+                        permutation[min]=permutation[i];
+                        permutation[i]=tmp;
+                }
+        }
+        assert(boost::is_sorted(s));
+        assert(s.size()==v.size());
+        assert(permutation.size()==v.size());
+        return boost::make_tuple(s,!(swaps%2),permutation);
 }
 
 #endif // SORT_SWAP_H

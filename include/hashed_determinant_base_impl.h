@@ -172,7 +172,7 @@ std::ostream& HashedDeterminantBase<_NT>::print_submatrix(
 template <class _NT>
 typename HashedDeterminantBase<_NT>::Column&
 HashedDeterminantBase<_NT>::operator[](size_t i){
-        CGAL_assertion(i>=0&&i<_points.size());
+        assert(i>=0&&i<_points.size());
         return _points[i];
 }
 
@@ -195,6 +195,85 @@ int HashedDeterminantBase<_NT>::size(){
 
 template <class _NT>
 typename HashedDeterminantBase<_NT>::NT
+#ifdef USE_HASHED_DETERMINANTS
+& HashedDeterminantBase<_NT>::determinant(
+                const typename HashedDeterminantBase<_NT>::Index &idx){
+#ifdef USE_SORTED_INDICES
+        assert(boost::is_sorted(idx));
+#endif // USE_SORTED_INDICES
+#ifdef USE_CLEAR_DET_HASH
+        if(number_of_hashed_determinants==CLEAR_DET_NUMBER){
+#ifdef PRINT_INFO
+                std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
+#endif // PRINT_INFO
+                number_of_hashed_determinants=0;
+                _determinants.clear();
+        }
+#endif // USE_CLEAR_DET_HASH
+        if(idx.size()==1)
+                return _points[idx[0]][0];
+#ifdef LOG_DET_TIME
+        clock_t start_all;
+        if(idx.size()==_points[0].size())
+                start_all=clock();
+#endif // LOG_DET_TIME
+#ifdef HASH_STATISTICS
+        clock_t start;
+        if(idx.size()==dimension)
+                ++number_of_max_dimension_calls;
+        ++number_of_determinant_calls;
+#endif // HASH_STATISTICS
+        if(_determinants.count(idx)==0){
+                ++number_of_hashed_determinants;
+#ifdef HASH_STATISTICS
+                ++number_of_computed_determinants;
+                if(idx.size()==dimension){
+                        start=clock();
+                }
+#ifdef LOG_DET_TIME
+                if(idx.size()==_points[0].size())
+                        determinant_time+=clock()-start_all;
+#endif // LOG_DET_TIME
+#else // HASH_STATISTICS is not defined
+                return (_determinants[idx]=compute_determinant(idx));
+#endif // HASH_STATISTICS
+                _determinants[idx]=compute_determinant(idx);
+#ifdef HASH_STATISTICS
+                if(idx.size()==dimension)
+                        full_determinant_time+=(clock()-start);
+#endif // HASH_STATISTICS
+        }
+#ifdef LOG_DET_TIME
+        if(idx.size()==_points[0].size())
+                determinant_time+=clock()-start_all;
+#endif // LOG_DET_TIME
+        return _determinants[idx];
+}
+#else // USE_HASHED_DETERMINANTS is not defined
+HashedDeterminantBase<_NT>::determinant(
+                const typename HashedDeterminantBase<_NT>::Index &idx)
+#ifndef LOG_DET_TIME
+        const
+#endif
+{
+        if(idx.size()==1)
+                return _points[idx[0]][0];
+#ifdef LOG_DET_TIME
+        clock_t start_all;
+        if(idx.size()==_points[0].size())
+                start_all=clock();
+        NT det(compute_determinant(idx));
+        if(idx.size()==_points[0].size())
+                determinant_time+=clock()-start_all;
+        return det;
+#else // LOG_DET_TIME
+        return compute_determinant(idx);
+#endif // LOG_DET_TIME
+}
+#endif // USE_HASHED_DETERMINANTS
+
+template <class _NT>
+typename HashedDeterminantBase<_NT>::NT
 HashedDeterminantBase<_NT>::homogeneous_determinant(
                 const typename HashedDeterminantBase<_NT>::Index &idx){
 #ifdef HASH_STATISTICS
@@ -205,15 +284,55 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
         start_all=clock();
         det_old=determinant_time;
 #endif // LOG_DET_TIME
-#if (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
+
+#ifdef USE_SORTED_INDICES
+        SS idxs=sort_swap(idx);
+#ifdef USE_HASHED_DETERMINANTS
+        if(_h_determinants.count(idxs.first)!=0){
+                assert(_h_determinants.count(idxs.first)==1);
+                return (idxs.second?
+                        _h_determinants[idxs.first]:
+                        -_h_determinants[idxs.first]);
+        }
+#endif // USE_HASHED_DETERMINANTS
+#ifdef HASH_STATISTICS
+        number_of_computed_hom_determinants+=1;
+#endif // HASH_STATISTICS
+        // Compute the determinant of idxs.first.
+        Index idx2;
+        size_t n=idx.size();
+        for(size_t i=1;i<n;++i)
+                idx2.push_back(idxs.first[i]);
+        assert(idx2.size()==n-1);
+        NT det(0);
+        for(size_t i=0;i<n;++i){
+                if((i+n)%2)
+                        det+=determinant(idx2);
+                else
+                        det-=determinant(idx2);
+                // update the index array
+                idx2[i]=idxs.first[i];
+        }
+#if defined USE_HASHED_DETERMINANTS
+        _h_determinants[idxs.first]=det;
+#endif // USE_HASHED_DETERMINANTS
+#ifdef LOG_DET_TIME
+        determinant_time=det_old+(clock()-start_all);
+#endif // LOG_DET_TIME
+        return (idxs.second?det:-det);
+
+#else // USE_SORTED_INDICES
+
+#ifdef USE_HASHED_DETERMINANTS
         if(_h_determinants.count(idx)!=0){
                 assert(_h_determinants.count(idx)==1);
                 return _h_determinants[idx];
         }
-#endif // (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
+#endif // defined USE_HASHED_DETERMINANTS
 #ifdef HASH_STATISTICS
         number_of_computed_hom_determinants+=1;
 #endif // HASH_STATISTICS
+        // Compute the determinant of idx.
         Index idx2;
         size_t n=idx.size();
         for(size_t i=1;i<n;++i) idx2.push_back(idx[i]);
@@ -227,13 +346,14 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
                 // update the index array
                 idx2[i]=idx[i];
         }
-#if (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
+#ifdef USE_HASHED_DETERMINANTS
         _h_determinants[idx]=det;
-#endif // (defined USE_HASHED_DETERMINANTS) && (!defined USE_SORTED_INDICES)
+#endif // USE_HASHED_DETERMINANTS
 #ifdef LOG_DET_TIME
         determinant_time=det_old+(clock()-start_all);
 #endif // LOG_DET_TIME
         return det;
+#endif // USE_SORTED_INDICES
 }
 
 template <class _NT>
@@ -272,34 +392,14 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
         return det;
 #ifdef USE_ONLY_CAYLEY_DET_HASH
   } else {
-    int d = idx.size() - 1;
-    //std::cout << first-last << "|" << d << std::endl;
-    typename LA::Matrix M(d);
-    //std::vector<CPoint_d>::iterator s = first;
-    for( int j = 0; j < d-1; ++j ){
-            //std::cout << *s << std::endl;
-            for( int i = 1; i <= d; ++i ){
-                    //std::cout << i << "," << j;
-                    M(i-1,j) = _points[idx[i]][j] - _points[idx[0]][j];
-                    //std::cout << " -> " << M(i,j) << std::endl;
-        //						std::cout //<< _points[idx[i]][j] << " " ;
-                    //std::cout << "(" << _points[idx[i]][j] << "-"
-                    //          << _points[idx[0]][j] << ") "
-      //							          << M(i-1,j) << " ";
-            }
-          //	std::cout << "\n" ;
-    }
-    for( int i = 1; i <= d; ++i ){
-            //std::cout << i << "," << j;
-            M(i-1,d-1) = r[i] - r[0];
-      //			std::cout //<< r[i] << " " ;
-            //std::cout << "(" << r[i] << "-" << r[0] << ") ="
-        //		          << r[i] - r[0] << " ";
-            //std::cout << " -> " << M(i,j) << std::endl;
-    }
-    //std::cout << std::endl;
-    //exit(0);
-    return LA::sign_of_determinant(M);
+        int d=idx.size()-1;
+        typename LA::Matrix M(d);
+        for(int j=0;j<d-1;++j)
+                for(int i=1;i<=d;++i)
+                        M(i-1,j)=_points[idx[i]][j]-_points[idx[0]][j];
+        for(int i=1;i<=d;++i)
+                M(i-1,d-1)=r[i]-r[0];
+        return LA::sign_of_determinant(M);
   }
 #endif // USE_ONLY_CAYLEY_DET_HASH
 }
@@ -313,6 +413,9 @@ HashedDeterminantBase<_NT>::compute_determinant(
 const
 #endif
 {
+#ifdef USE_SORTED_INDICES
+        assert(boost::is_sorted(idx));
+#endif
         size_t n=idx.size();
         Index idx2;
         for(size_t i=1;i<n;++i)

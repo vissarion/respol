@@ -205,7 +205,6 @@ class HashedDeterminantBase{
         // Push back a column, at the end of the matrix; returns the index
         // of this inserted element. In contrast with set_column, this
         // function will not invalidate hashed values.
-
         size_t add_column(const Column&);
 
         // a linear search to Matrix to see if the Column c exists
@@ -214,125 +213,53 @@ class HashedDeterminantBase{
         // A string describing the determinant algorithm.
         const char* algorithm()const{return "Default\0";};
 
+        // This function prints the full matrix to an output stream.
+        std::ostream& print_matrix(std::ostream&)const;
+
+        // This function prints a square submatrix, formed by the first
+        // elements of the columns whose indices are in idx, to an output
+        // stream.
+        std::ostream& print_submatrix(const Index&,std::ostream&)const;
+
+        // The following functions deal with the columns of the points
+        // table.
+        Column& operator[](size_t);
+        typename Matrix::iterator begin();
+        typename Matrix::iterator end();
+
+        // This functions returns the number of points stored in the
+        // determinant table.
+        int size();
+
         // This function returns the determinant of a submatrix of _points.
         // This submatrix is formed by the columns whose indices are in
         // idx. If this determinant was already computed (i.e., it is in
         // the hash table), it is returned. Otherwise, the private function
         // compute_determinant is called.
+        private:
 #ifdef USE_HASHED_DETERMINANTS
-#ifdef USE_SORTED_INDICES
-        NT
-#else // USE_SORTED_INDICES is not defined
-        NT&
-#endif // USE_SORTED_INDICES
-        determinant(const Index &idx){
-#ifdef USE_CLEAR_DET_HASH
-                if(number_of_hashed_determinants==CLEAR_DET_NUMBER){
-#ifdef PRINT_INFO
-                        std::cout<<"CLEAR HASH!\n\n\n\n"<<std::endl;
-#endif // PRINT_INFO
-                        number_of_hashed_determinants=0;
-                        _determinants.clear();
-                }
-#endif // USE_CLEAR_DET_HASH
-                if(idx.size()==1)
-                        return _points[idx[0]][0];
-#ifdef LOG_DET_TIME
-                clock_t start_all;
-                if(idx.size()==_points[0].size())
-                        start_all=clock();
-#endif // LOG_DET_TIME
-#ifdef HASH_STATISTICS
-                clock_t start;
-                if(idx.size()==dimension)
-                        ++number_of_max_dimension_calls;
-                ++number_of_determinant_calls;
-#endif // HASH_STATISTICS
-#ifdef USE_SORTED_INDICES
-                SS idxs=sort_swap(idx);
-                // compute the determinant if it is not stored in the table
-                if(_determinants.count(idxs.first)==0)
-#else // USE_SORTED_INDICES is not defined
-                if(_determinants.count(idx)==0)
-#endif // USE_SORTED_INDICES
-                {
-                        ++number_of_hashed_determinants;
-#ifdef HASH_STATISTICS
-                        ++number_of_computed_determinants;
-                        if(idx.size()==dimension){
-                                start=clock();
-                        }
-#ifdef LOG_DET_TIME
-                        if(idx.size()==_points[0].size())
-                                determinant_time+=clock()-start_all;
-#endif // LOG_DET_TIME
-#else // HASH_STATISTICS is not defined
-#ifndef USE_SORTED_INDICES
-                        return (idxs.second?
-                                (_determinants[idxs.first]=
-                                    compute_determinant(idxs.first)):
-                                -(_determinants[idxs.first]=
-                                    compute_determinant(idxs.first)));
-#endif // USE_SORTED_INDICES
-#endif // HASH_STATISTICS
-#ifdef USE_SORTED_INDICES
-                        (_determinants[idxs.first]=
-                                compute_determinant(idxs.first));
-#else // USE_SORTED_INDICES is not defined
-                        (_determinants[idx]=compute_determinant(idx));
-#endif // USE_SORTED_INDICES
-#ifdef HASH_STATISTICS
-                        if(idx.size()==dimension)
-                                full_determinant_time+=(clock()-start);
-#endif // HASH_STATISTICS
-                }
-#ifdef LOG_DET_TIME
-                if(idx.size()==_points[0].size())
-                        determinant_time+=clock()-start_all;
-#endif // LOG_DET_TIME
-#ifdef USE_SORTED_INDICES
-                assert(_determinants.count(idxs.first)>0);
-                return (idxs.second?
-                        _determinants[idxs.first]:
-                        -_determinants[idxs.first]);
-#else // USE_SORTED_INDICES is not defined
-                return _determinants[idx];
-#endif // USE_SORTED_INDICES
-        }
-#else // USE_HASHED_DETERMINANTS is not defined
-        NT determinant(const Index &idx)
-        #ifndef LOG_DET_TIME
-        const
+        NT& determinant(const Index&);
+#else
+        #ifdef LOG_DET_TIME
+        NT determinant(const Index &idx);
+        #else
+        NT determinant(const Index &idx)const;
         #endif
-        {
-#ifndef USE_HASHED_DETERMINANTS
-                if(idx.size()==1)
-                        return _points[idx[0]][0];
 #endif
-#ifdef LOG_DET_TIME
-                clock_t start_all;
-                if(idx.size()==_points[0].size())
-                        start_all=clock();
-                NT det(compute_determinant(idx));
-                if(idx.size()==_points[0].size())
-                        determinant_time+=clock()-start_all;
-                return det;
-#else // LOG_DET_TIME
-                return compute_determinant(idx);
-#endif // LOG_DET_TIME
-        }
-#endif // USE_HASHED_DETERMINANTS
 
         // This function computes the determinant of a submatrix, enlarged
         // with row at the bottom full of ones.
+        public:
         NT homogeneous_determinant(const Index&);
 
         // This function computes the determinant of a submatrix, enlarged
         // with two rows at the bottom: one lifting row and a row full of
         // ones.
+        public:
         NT homogeneous_determinant(const Index&,const Row&);
 
 #ifdef USE_ORIENTATION_DET
+        private:
         NT det_minor(NT **m,const Index &idx3,const Index &idx4){
                 // idx3 contains the n indices of the columns of the matrix
                 // m whose determinant is to be computed. idx4 contains the
@@ -380,6 +307,7 @@ class HashedDeterminantBase{
                 return det;
         }
 
+        private:
         NT orientation(const Index &idx,const Row &r){
 #ifdef HASH_STATISTICS
                 clock_t start=clock();
@@ -470,29 +398,16 @@ class HashedDeterminantBase{
         }
 #endif // USE_ORIENTATION_DET
 
-        // This function prints the full matrix to an output stream.
-        std::ostream& print_matrix(std::ostream&)const;
-
-        // This function prints a square submatrix, formed by the first
-        // elements of the columns whose indices are in idx, to an output
-        // stream.
-        std::ostream& print_submatrix(const Index&,std::ostream&)const;
-
-        private:
         // This function computes the determinant of a submatrix of
         // _points. The parameter idx is a vector of indices of the indices
         // of the columns which will form the submatrix. Inlining this
         // function is very important for efficiency reasons!
+        private:
 #ifndef USE_HASHED_DETERMINANTS
         inline NT compute_determinant(const Index&)const;
 #else
         inline NT compute_determinant(const Index&);
 #endif
-public:
-        Column& operator[](size_t);
-        typename Matrix::iterator begin();
-        typename Matrix::iterator end();
-        int size();
 
         protected:
         Matrix _points;
