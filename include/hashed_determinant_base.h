@@ -43,10 +43,6 @@
 #include <ctime>
 #endif
 
-#ifdef USE_SORTED_INDICES
-#include "sort_swap.h"
-#endif
-
 #ifdef USE_ONLY_CAYLEY_DET_HASH
 template <class _NT> class HashedDeterminantBase;
 #include <CGAL/Cartesian_d.h>

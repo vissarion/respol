@@ -20,6 +20,10 @@
 #ifndef HASHED_DETERMINANT_BASE_IMPL_H
 #define HASHED_DETERMINANT_BASE_IMPL_H
 
+#ifdef USE_SORTED_INDICES
+#include "sort_swap.h"
+#endif
+
 template <class _NT>
 HashedDeterminantBase<_NT>::~HashedDeterminantBase(){
 #ifdef HASH_STATISTICS

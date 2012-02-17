@@ -145,7 +145,7 @@ int main(const int argc, const char** argv) {
                          Pdets.get_determinant_time(), // determinant time
                          -1,//volume(Res,Pdets)
                          Res);
-  #else
+  #else // PRETTY_PRINT
   pretty_print_statistics(CD-1, 
                          PD,
                          Res.current_dimension(),
@@ -165,7 +165,7 @@ int main(const int argc, const char** argv) {
                          Pdets.get_determinant_time(), // determinant time
                          -1,//volume(Res,Pdets)
                          Res);
-  #endif
+  #endif // PRETTY_PRINT
   
   #ifdef PRINT_INFO
   //std::cout << "convex hull time = " << conv_time << std::endl;

@@ -29,7 +29,6 @@
 #include <normal_set_ds.h> // we need normals to compute f-vectors
 
 #ifdef LOG_MEMORY
-#include <cstdio>
 #include <proc/readproc.h>
 #endif
 
@@ -465,7 +464,7 @@ void print_statistics(int current_dim,
 #ifdef LOG_MEMORY
   struct proc_t usage;
   look_up_our_self(&usage);
-  std::cout << "Memory used\t\t\t\t\t\t" << usage.vsize << std::endl;
+  std::cout << "Process vsize\t\t\t\t\t\t" << usage.vsize << std::endl;
 #endif
 }
 
@@ -562,7 +561,7 @@ void pretty_print_statistics(int Cdim,
 #ifdef LOG_MEMORY
   struct proc_t usage;
   look_up_our_self(&usage);
-  std::cout << "memory used: " << usage.vsize << '\n';
+  std::cout << "vsize: " << usage.vsize << '\n';
 #endif
 }
 
