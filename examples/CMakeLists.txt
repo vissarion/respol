@@ -28,7 +28,7 @@ if ( CGAL_FOUND )
                            "print hashed determinants statistics" OFF
                            "RESPOL_USE_HASHED_DET" OFF )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_SORTED_INDICES
-                           "used sorted indices in hash" OFF
+                           "used sorted indices in hash" ON
                            "RESPOL_USE_HASHED_DET" OFF )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_CLEAR
                            "clear the hash when memory consumption is high" ON
