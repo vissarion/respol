@@ -125,7 +125,7 @@ typedef std::set<SRvertex>      Polytope;
 
 // for fast determinant computation
 #include "hashed_determinant.h"
-typedef typename HashedDeterminant<Field>::Table        HD;
+typedef HashedDeterminant<Field>::Table                 HD;
 
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>
