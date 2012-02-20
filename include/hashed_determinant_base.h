@@ -84,8 +84,6 @@ class HashedDeterminantBase{
         typedef std::set<Index>                         CDeterminants;
 #endif // USE_ORIENTATION_DET
 #ifdef USE_SORTED_INDICES
-        // define the pair type to store a sorted index and a swap boolean
-        typedef std::pair<Index,bool>                   SS;
 #endif // USE_SORTED_INDICES
 
         public:
@@ -244,9 +242,11 @@ class HashedDeterminantBase{
 #endif
 
         // This function computes the determinant of a submatrix, enlarged
-        // with row at the bottom full of ones.
+        // with row at the bottom full of ones. The boolean indicates
+        // whether the index vector is sorted (this value is ignored when
+        // USE_SORTED_INDICES is not defined).
         public:
-        NT homogeneous_determinant(const Index&);
+        NT homogeneous_determinant(const Index&,bool=false);
 
         // This function computes the determinant of a submatrix, enlarged
         // with two rows at the bottom: one lifting row and a row full of

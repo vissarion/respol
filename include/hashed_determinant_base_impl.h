@@ -279,7 +279,8 @@ HashedDeterminantBase<_NT>::determinant(
 template <class _NT>
 typename HashedDeterminantBase<_NT>::NT
 HashedDeterminantBase<_NT>::homogeneous_determinant(
-                const typename HashedDeterminantBase<_NT>::Index &idx){
+                const typename HashedDeterminantBase<_NT>::Index &idx,
+                bool idx_is_sorted){
 #ifdef HASH_STATISTICS
         number_of_hom_determinants+=1;
 #endif // HASH_STATISTICS
@@ -290,23 +291,29 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
 #endif // LOG_DET_TIME
 
 #ifdef USE_SORTED_INDICES
-        SS idxs=sort_swap(idx);
+        boost::tuple<Index,bool> idxs;
+        if(idx_is_sorted){
+                assert(boost::is_sorted(idx));
+                idxs=boost::make_tuple(boost::ref(idx),true);
+        }else{
+                idxs=sort_swap(idx);
+        }
 #ifdef USE_HASHED_DETERMINANTS
-        if(_h_determinants.count(idxs.first)!=0){
-                assert(_h_determinants.count(idxs.first)==1);
-                return (idxs.second?
-                        _h_determinants[idxs.first]:
-                        -_h_determinants[idxs.first]);
+        if(_h_determinants.count(boost::get<0>(idxs))!=0){
+                assert(_h_determinants.count(boost::get<0>(idxs))==1);
+                return (boost::get<1>(idxs)?
+                        _h_determinants[boost::get<0>(idxs)]:
+                        -_h_determinants[boost::get<0>(idxs)]);
         }
 #endif // USE_HASHED_DETERMINANTS
 #ifdef HASH_STATISTICS
         number_of_computed_hom_determinants+=1;
 #endif // HASH_STATISTICS
-        // Compute the determinant of idxs.first.
+        // Compute the determinant of boost::get<0>(idxs).
         Index idx2;
         size_t n=idx.size();
         for(size_t i=1;i<n;++i)
-                idx2.push_back(idxs.first[i]);
+                idx2.push_back(boost::get<0>(idxs)[i]);
         assert(idx2.size()==n-1);
         NT det(0);
         for(size_t i=0;i<n;++i){
@@ -315,15 +322,15 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
                 else
                         det-=determinant(idx2);
                 // update the index array
-                idx2[i]=idxs.first[i];
+                idx2[i]=boost::get<0>(idxs)[i];
         }
 #if defined USE_HASHED_DETERMINANTS
-        _h_determinants[idxs.first]=det;
-#endif // USE_HASHED_DETERMINANTS
-#ifdef LOG_DET_TIME
-        determinant_time=det_old+(clock()-start_all);
-#endif // LOG_DET_TIME
-        return (idxs.second?det:-det);
+                _h_determinants[boost::get<0>(idxs)]=det;
+        #endif // USE_HASHED_DETERMINANTS
+        #ifdef LOG_DET_TIME
+                determinant_time=det_old+(clock()-start_all);
+        #endif // LOG_DET_TIME
+                return (boost::get<1>(idxs)?det:-det);
 
 #else // USE_SORTED_INDICES
 
@@ -374,6 +381,30 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
         start_all=clock();
         det_old=determinant_time;
 #endif
+
+#ifdef USE_SORTED_INDICES
+        boost::tuple<Index,bool,Index> ssp=sort_swap_permutation(idx);
+        Index idx2;
+        size_t n=idx.size();
+        for(size_t i=1;i<n;++i)
+                idx2.push_back(boost::get<0>(ssp)[i]);
+        assert(idx2.size()==n-1);
+        assert(boost::is_sorted(idx2));
+        NT det(0);
+        for(size_t i=0;i<n;++i){
+                if(r[boost::get<2>(ssp)[i]]!=0){
+                        if((i+n)%2)
+                                det-=r[boost::get<2>(ssp)[i]]*
+                                        homogeneous_determinant(idx2,true);
+                        else
+                                det+=r[boost::get<2>(ssp)[i]]*
+                                        homogeneous_determinant(idx2,true);
+                }
+                // update the index array
+                idx2[i]=boost::get<0>(ssp)[i];
+                assert(boost::is_sorted(idx2));
+        }
+#else // USE_SORTED_INDICES
         Index idx2;
         size_t n=idx.size();
         for(size_t i=1;i<n;++i)
@@ -390,10 +421,16 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
                 // update the index array
                 idx2[i]=idx[i];
         }
+#endif // USE_SORTED_INDICES
+
 #ifdef LOG_DET_TIME
         determinant_time=det_old+(clock()-start_all);
 #endif
+#ifdef USE_SORTED_INDICES
+        return (boost::get<1>(ssp)?det:-det);
+#else // USE_SORTED_INDICES
         return det;
+#endif // USE_SORTED_INDICES
 #ifdef USE_ONLY_CAYLEY_DET_HASH
   } else {
         int d=idx.size()-1;

@@ -37,14 +37,14 @@
 // sort and computes the number of swaps on the fly. It will be better to
 // implement a subquadratic algorithm that counts the swaps.
 template <class Index>
-std::pair<Index,bool> sort_swap(const Index &v){
+boost::tuple<Index,bool> sort_swap(const Index &v){
         typedef typename Index::value_type                      elt_t;
         size_t n=v.size();
         Index s(v); // The sorted vector.
-        size_t swaps=0; // The number of swaps used.
+        bool swaps=true; // The number of swaps used is even.
         elt_t tmp; // The temporary for swaps.
         size_t min; // The temporary to store the minimum element.
-        // Bubble sort, O(n^2) but easy to implement.
+        // Selection sort, O(n^2) but easy to implement.
         for(size_t i=0;i+1<n;++i){
                 min=i;
                 // Find the minimum in v[i+1...].
@@ -56,12 +56,12 @@ std::pair<Index,bool> sort_swap(const Index &v){
                         tmp=s[min];
                         s[min]=s[i];
                         s[i]=tmp;
-                        ++swaps;
+                        swaps=!swaps;
                 }
         }
         assert(boost::is_sorted(s));
         assert(s.size()==v.size());
-        return std::make_pair(s,!(swaps%2));
+        return boost::make_tuple(boost::ref(s),swaps);
 }
 
 // This function does the same as the previous one. Additionally, it
@@ -75,7 +75,7 @@ boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
         permutation.reserve(n);
         for(elt_t p=0;p<n;++p)
                 permutation.push_back(p);
-        size_t swaps=0;
+        bool swaps=true; // The number of swaps used is even.
         elt_t tmp;
         size_t min;
         for(size_t i=0;i+1<n;++i){
@@ -87,7 +87,7 @@ boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
                         tmp=s[min];
                         s[min]=s[i];
                         s[i]=tmp;
-                        ++swaps;
+                        swaps=!swaps;
                         tmp=permutation[min];
                         permutation[min]=permutation[i];
                         permutation[i]=tmp;
@@ -96,7 +96,7 @@ boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
         assert(boost::is_sorted(s));
         assert(s.size()==v.size());
         assert(permutation.size()==v.size());
-        return boost::make_tuple(s,!(swaps%2),permutation);
+        return boost::make_tuple(boost::ref(s),swaps,boost::ref(permutation));
 }
 
 // This function does the same as sort_swap, but it modifies the input.
@@ -104,10 +104,10 @@ template <class Index>
 bool sort_swap_inplace(Index &s){
         typedef typename Index::value_type                      elt_t;
         size_t n=s.size();
-        size_t swaps=0; // The number of swaps used.
+        bool swaps=true; // The number of swaps used is even.
         elt_t tmp; // The temporary for swaps.
         size_t min; // The temporary to store the minimum element.
-        // Bubble sort, O(n^2) but easy to implement.
+        // Selection sort, O(n^2) but easy to implement.
         for(size_t i=0;i+1<n;++i){
                 min=i;
                 // Find the minimum in v[i+1...].
@@ -119,11 +119,11 @@ bool sort_swap_inplace(Index &s){
                         tmp=s[min];
                         s[min]=s[i];
                         s[i]=tmp;
-                        ++swaps;
+                        swaps=!swaps;
                 }
         }
         assert(boost::is_sorted(s));
-        return !(swaps%2);
+        return swaps;
 }
 
 #endif // SORT_SWAP_H
