@@ -133,7 +133,7 @@ int main(int argc,char *argv[]){
         Cset mi,proj;
         int m;
 
-        switch(read_pointset(points,mi,proj,m)){
+        switch(read_pointset(std::cin,points,mi,proj,m)){
                 case 1:
                         // the pipe symbol is omitted
                         // this is what we want to implement now

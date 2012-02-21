@@ -100,16 +100,17 @@ std::vector<int> proj_all(const int &m){
 // 3 when the problem is computing the generic resultant polytope (when
 // there are no projections specified after the pipe symbol).
 template <class NT_>
-int read_pointset(std::vector<std::vector<NT_> >& pointset,
+int read_pointset(std::istream &is,
+                  std::vector<std::vector<NT_> >& pointset,
                   std::vector<int>& mi,
                   std::vector<int>& proj,
                   int& m){
         typedef NT_                                             Field;
 #ifdef RESTRICTED_RES
-        std::cin >> restricted_num_Res;
+        is >> restricted_num_Res;
 #endif
         int d,ret=0;
-        std::cin >> d;
+        is >> d;
         //TODO: change them!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
         D=d;
         CD = 2*D+1;             // this is the Cayley space + 1 for lifting
@@ -122,7 +123,7 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
         m=0;
         for(size_t i=0;i<d+1;++i){
                 int mi_temp;
-                std::cin >> mi_temp;
+                is >> mi_temp;
                 m += mi_temp;
                 mi.push_back(mi_temp);
         }
@@ -141,13 +142,13 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
         // or '\n'
         if (temp != ' '){
                 while(temp != '|' && temp != '\n'){
-                        temp = std::cin.get();
+                        temp = is.get();
                 }
         }
         // the projection is given by the input file
         if (temp == '|') {
                 do{
-                        temp = std::cin.get();
+                        temp = is.get();
                         // start collecting info in the first non-blank
                         // non-'\n' character
                         if (temp!=' ' && temp!='\n')
@@ -158,7 +159,7 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
                                 proj.push_back(numInt);
                                 num.clear();
                                 while(temp == ' '){
-                                        temp = std::cin.get();
+                                        temp = is.get();
                           }
                         }
                         num.push_back(temp);
@@ -184,7 +185,7 @@ int read_pointset(std::vector<std::vector<NT_> >& pointset,
 
         // construct pointset
         std::string point;
-        while(!std::getline(std::cin, point, ']').eof()) {
+        while(!std::getline(is, point, ']').eof()) {
                 std::vector<Field> ipoint;
                 point.erase( std::remove( point.begin(), point.end(), ' ' ),
                              point.end() );

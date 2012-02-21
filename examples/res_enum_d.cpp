@@ -17,6 +17,8 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#include <iostream>
+#include <fstream>
 #include <cassert>
 #include <ctime>
 
@@ -41,6 +43,31 @@ int PD;				//this is the dimension of the projection
 // main
 
 int main(const int argc, const char** argv) {
+
+  // Parse command-line options.
+  int verbose_level=1;
+  bool read_from_file=false;
+  bool output_f_vector=false;
+  std::ifstream inp;
+  for(int i=1;i<argc;++i){
+    if(!strcmp(argv[i],"-h")){
+      std::cout<<
+        "-f\toutput the f-vector (to file f-vector.polymake)\n"<<
+        "-h\tshow this message\n"<<
+        "-i file\tset input file (read input from stdin otherwise)\n"<<
+        "-v n\tset verbosity level to n (between 0 and 1, defaults to 1)\n";
+      exit(-1);
+    }
+    if(!strcmp(argv[i],"-f"))
+      output_f_vector=true;
+    if(!strcmp(argv[i],"-v"))
+      verbose_level=atoi(argv[++i]);
+    if(!strcmp(argv[i],"-i")){
+      read_from_file=true;
+      inp.open(argv[++i],std::ifstream::in);
+    }
+  }
+
 	double tstart1, tstop1, tstart2, tstop2, tstartall, tstopall;
 
 	// start clocking
@@ -55,7 +82,10 @@ int main(const int argc, const char** argv) {
  	
 	// initialize all the above
  	// read input (pointset, mi, n), apply cayley trick, define projection
- 	read_pointset(pointset, mi, proj, n);
+ 	if(read_from_file)
+    read_pointset(inp, pointset, mi, proj, n);
+  else
+    read_pointset(std::cin, pointset, mi, proj, n);
 	int initial_pointset_size = pointset.size();
 	
 	// remove spesialized redundant (non-extreme) points
@@ -126,47 +156,47 @@ int main(const int argc, const char** argv) {
              << "numofextremevertices, timeall, timehull, timeofflinehull,"
              << "timedet, volume" << std::endl;
   #endif  
-  #ifndef PRETTY_PRINT                
-  print_statistics_small(CD-1, 
-                         PD,
-                         Res.current_dimension(),
-                         initial_pointset_size,
-                         pointset.size(),
-                         num_of_triangs.first+num_of_triangs.second,
-                         Res.number_of_vertices(),
+  if(verbose_level==0){
+    print_statistics_small(CD-1, 
+                           PD,
+                           Res.current_dimension(),
+                           initial_pointset_size,
+                           pointset.size(),
+                           num_of_triangs.first+num_of_triangs.second,
+                           Res.number_of_vertices(),
 #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
-                         count_extreme_vertices(Res),
+                           count_extreme_vertices(Res),
 #else
-                         -1,
+                           -1,
 #endif
-                         tstopall-tstartall, // overall time
-                         conv_time, // Res convex hull time
-                         recompute_time, // Res convex hull offline time
-                         dets.get_determinant_time()+
-                         Pdets.get_determinant_time(), // determinant time
-                         -1,//volume(Res,Pdets)
-                         Res);
-  #else // PRETTY_PRINT
-  pretty_print_statistics(CD-1, 
-                         PD,
-                         Res.current_dimension(),
-                         initial_pointset_size,
-                         pointset.size(),
-                         num_of_triangs.first+num_of_triangs.second,
-                         Res.number_of_vertices(),
+                           tstopall-tstartall, // overall time
+                           conv_time, // Res convex hull time
+                           recompute_time, // Res convex hull offline time
+                           dets.get_determinant_time()+
+                           Pdets.get_determinant_time(), // determinant time
+                           -1,//volume(Res,Pdets)
+                           Res);
+  }else{
+    pretty_print_statistics(CD-1, 
+                           PD,
+                           Res.current_dimension(),
+                           initial_pointset_size,
+                           pointset.size(),
+                           num_of_triangs.first+num_of_triangs.second,
+                           Res.number_of_vertices(),
 #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
-                         count_extreme_vertices(Res),
+                           count_extreme_vertices(Res),
 #else
-                         -1,
+                           -1,
 #endif
-                         tstopall-tstartall, // overall time
-                         conv_time, // Res convex hull time
-                         recompute_time, // Res convex hull offline time
-                         dets.get_determinant_time()+
-                         Pdets.get_determinant_time(), // determinant time
-                         -1,//volume(Res,Pdets)
-                         Res);
-  #endif // PRETTY_PRINT
+                           tstopall-tstartall, // overall time
+                           conv_time, // Res convex hull time
+                           recompute_time, // Res convex hull offline time
+                           dets.get_determinant_time()+
+                           Pdets.get_determinant_time(), // determinant time
+                           -1,//volume(Res,Pdets)
+                           Res);
+  }
   
   #ifdef PRINT_INFO
   //std::cout << "convex hull time = " << conv_time << std::endl;
@@ -176,11 +206,12 @@ int main(const int argc, const char** argv) {
     //recompute_Res(Res);
   #endif
   
-  
-  std::ofstream polymakefile;
-  polymakefile.open("f_vector.polymake");
-  print_polymake_fvector(Res,polymakefile);
-  system ("polymake f_vector.polymake");
+  if(output_f_vector){
+    std::ofstream polymakefile;
+    polymakefile.open("f_vector.polymake");
+    print_polymake_fvector(Res,polymakefile);
+    system ("polymake f_vector.polymake");
+  }
   /*
   int cells, triang_facets, facets, edges, vertices;
   f_vector(Res,cells, triang_facets, facets, edges, vertices);
