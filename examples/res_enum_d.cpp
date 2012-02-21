@@ -119,6 +119,7 @@ int main(const int argc, const char** argv) {
   print_output(Res,outfile);
   
   // print some statistics
+  
   #ifdef PRINT_INFO
    std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
              << "num_of_input_points, numoftriangs, numofvertices,"  
@@ -172,10 +173,19 @@ int main(const int argc, const char** argv) {
   // we print for debugging purposes the matrix of the hashed points
   //Pdets.print_matrix(std::cout);
   print_res_vertices(Res,std::cout);
-  
     //recompute_Res(Res);
   #endif
   
+  
+  std::ofstream polymakefile;
+  polymakefile.open("f_vector.polymake");
+  print_polymake_fvector(Res,polymakefile);
+  system ("polymake f_vector.polymake");
+  /*
+  int cells, triang_facets, facets, edges, vertices;
+  f_vector(Res,cells, triang_facets, facets, edges, vertices);
+  std::cout << vertices << " " << facets << std::endl;
+  */
   #ifdef USE_LRSLIB
   // TODO: call LRS functions, see test_lrs.cpp for an example
   #endif
