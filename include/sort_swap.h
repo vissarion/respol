@@ -127,15 +127,14 @@ boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
 }
 
 // This function does the same as sort_swap_permutation, but it modifies
-// the input vector instead of returning a new one.
-template <class Index>
-boost::tuple<bool,Index> sort_swap_permutation_inplace(Index &v){
+// the input vectors instead of returning new ones. The permutation vector
+// should be empty.
+template <class Index,class PermutationVector>
+bool sort_swap_permutation_inplace(Index &v,PermutationVector &perm){
         typedef typename Index::value_type                      elt_t;
         size_t n=v.size();
-        Index permutation;
-        permutation.reserve(n);
         for(elt_t p=0;p<n;++p)
-                permutation.push_back(p);
+                perm.push_back(p);
         bool swaps=true; // The number of swaps used is even.
         elt_t tmp;
         size_t min;
@@ -149,14 +148,14 @@ boost::tuple<bool,Index> sort_swap_permutation_inplace(Index &v){
                         v[min]=v[i];
                         v[i]=tmp;
                         swaps=!swaps;
-                        tmp=permutation[min];
-                        permutation[min]=permutation[i];
-                        permutation[i]=tmp;
+                        tmp=perm[min];
+                        perm[min]=perm[i];
+                        perm[i]=tmp;
                 }
         }
         assert(boost::is_sorted(v));
-        assert(permutation.size()==v.size());
-        return boost::make_tuple(swaps,boost::ref(permutation));
+        assert(perm.size()==v.size());
+        return swaps;
 }
 
 #endif // SORT_SWAP_H

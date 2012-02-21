@@ -292,12 +292,11 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
 
 #ifdef USE_SORTED_INDICES
         boost::tuple<Index,bool> idxs;
-        if(idx_is_sorted){
-                assert(boost::is_sorted(idx));
+        if(idx_is_sorted)
                 idxs=boost::make_tuple(boost::ref(idx),true);
-        }else{
+        else
                 idxs=sort_swap(idx);
-        }
+        assert(boost::is_sorted(boost::get<0>(idxs)));
 #ifdef USE_HASHED_DETERMINANTS
         if(_h_determinants.count(boost::get<0>(idxs))!=0){
                 assert(_h_determinants.count(boost::get<0>(idxs))==1);
@@ -383,22 +382,24 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
 #endif
 
 #ifdef USE_SORTED_INDICES
-        boost::tuple<bool,Index> ssp=sort_swap_permutation_inplace(idx);
+        size_t n=idx.size();
+        Index perm;
+        perm.reserve(n);
+        bool swaps=sort_swap_permutation_inplace(idx,perm);
         assert(boost::is_sorted(idx));
         Index idx2;
-        size_t n=idx.size();
         for(size_t i=1;i<n;++i)
                 idx2.push_back(idx[i]);
         assert(idx2.size()==n-1);
         assert(boost::is_sorted(idx2));
         NT det(0);
         for(size_t i=0;i<n;++i){
-                if(r[boost::get<1>(ssp)[i]]!=0){
+                if(r[perm[i]]!=0){
                         if((i+n)%2)
-                                det-=r[boost::get<1>(ssp)[i]]*
+                                det-=r[perm[i]]*
                                         homogeneous_determinant(idx2,true);
                         else
-                                det+=r[boost::get<1>(ssp)[i]]*
+                                det+=r[perm[i]]*
                                         homogeneous_determinant(idx2,true);
                 }
                 // update the index array
@@ -428,7 +429,7 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
         determinant_time=det_old+(clock()-start_all);
 #endif
 #ifdef USE_SORTED_INDICES
-        return (boost::get<0>(ssp)?det:-det);
+        return (swaps?det:-det);
 #else // USE_SORTED_INDICES
         return det;
 #endif // USE_SORTED_INDICES
