@@ -370,7 +370,7 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
 template <class _NT>
 typename HashedDeterminantBase<_NT>::NT
 HashedDeterminantBase<_NT>::homogeneous_determinant(
-                const typename HashedDeterminantBase<_NT>::Index &idx,
+                typename HashedDeterminantBase<_NT>::Index &idx,
                 const typename HashedDeterminantBase<_NT>::Row &r){
 #ifdef USE_ONLY_CAYLEY_DET_HASH
   if(_hashed){
@@ -383,25 +383,26 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
 #endif
 
 #ifdef USE_SORTED_INDICES
-        boost::tuple<Index,bool,Index> ssp=sort_swap_permutation(idx);
+        boost::tuple<bool,Index> ssp=sort_swap_permutation_inplace(idx);
+        assert(boost::is_sorted(idx));
         Index idx2;
         size_t n=idx.size();
         for(size_t i=1;i<n;++i)
-                idx2.push_back(boost::get<0>(ssp)[i]);
+                idx2.push_back(idx[i]);
         assert(idx2.size()==n-1);
         assert(boost::is_sorted(idx2));
         NT det(0);
         for(size_t i=0;i<n;++i){
-                if(r[boost::get<2>(ssp)[i]]!=0){
+                if(r[boost::get<1>(ssp)[i]]!=0){
                         if((i+n)%2)
-                                det-=r[boost::get<2>(ssp)[i]]*
+                                det-=r[boost::get<1>(ssp)[i]]*
                                         homogeneous_determinant(idx2,true);
                         else
-                                det+=r[boost::get<2>(ssp)[i]]*
+                                det+=r[boost::get<1>(ssp)[i]]*
                                         homogeneous_determinant(idx2,true);
                 }
                 // update the index array
-                idx2[i]=boost::get<0>(ssp)[i];
+                idx2[i]=idx[i];
                 assert(boost::is_sorted(idx2));
         }
 #else // USE_SORTED_INDICES
@@ -427,7 +428,7 @@ HashedDeterminantBase<_NT>::homogeneous_determinant(
         determinant_time=det_old+(clock()-start_all);
 #endif
 #ifdef USE_SORTED_INDICES
-        return (boost::get<1>(ssp)?det:-det);
+        return (boost::get<0>(ssp)?det:-det);
 #else // USE_SORTED_INDICES
         return det;
 #endif // USE_SORTED_INDICES

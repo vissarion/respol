@@ -64,9 +64,36 @@ boost::tuple<Index,bool> sort_swap(const Index &v){
         return boost::make_tuple(boost::ref(s),swaps);
 }
 
-// This function does the same as the previous one. Additionally, it
-// returns a permutation vector showing the permutation of the indices of
-// the input vector.
+// This function does the same as sort_swap, but it modifies the input.
+template <class Index>
+bool sort_swap_inplace(Index &s){
+        typedef typename Index::value_type                      elt_t;
+        size_t n=s.size();
+        bool swaps=true; // The number of swaps used is even.
+        elt_t tmp; // The temporary for swaps.
+        size_t min; // The temporary to store the minimum element.
+        // Selection sort, O(n^2) but easy to implement.
+        for(size_t i=0;i+1<n;++i){
+                min=i;
+                // Find the minimum in v[i+1...].
+                for(size_t j=i+1;j<n;++j)
+                        if(s[j]<s[min])
+                                min=j;
+                // Swap s[i] and s[min] and update swaps if necessary.
+                if(min!=i){
+                        tmp=s[min];
+                        s[min]=s[i];
+                        s[i]=tmp;
+                        swaps=!swaps;
+                }
+        }
+        assert(boost::is_sorted(s));
+        return swaps;
+}
+
+// This function does the same as sort_swap. Additionally, it returns a
+// permutation vector showing the permutation of the indices of the input
+// vector.
 template <class Index>
 boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
         typedef typename Index::value_type                      elt_t;
@@ -99,31 +126,37 @@ boost::tuple<Index,bool,Index> sort_swap_permutation(const Index &v){
         return boost::make_tuple(boost::ref(s),swaps,boost::ref(permutation));
 }
 
-// This function does the same as sort_swap, but it modifies the input.
+// This function does the same as sort_swap_permutation, but it modifies
+// the input vector instead of returning a new one.
 template <class Index>
-bool sort_swap_inplace(Index &s){
+boost::tuple<bool,Index> sort_swap_permutation_inplace(Index &v){
         typedef typename Index::value_type                      elt_t;
-        size_t n=s.size();
+        size_t n=v.size();
+        Index permutation;
+        permutation.reserve(n);
+        for(elt_t p=0;p<n;++p)
+                permutation.push_back(p);
         bool swaps=true; // The number of swaps used is even.
-        elt_t tmp; // The temporary for swaps.
-        size_t min; // The temporary to store the minimum element.
-        // Selection sort, O(n^2) but easy to implement.
+        elt_t tmp;
+        size_t min;
         for(size_t i=0;i+1<n;++i){
                 min=i;
-                // Find the minimum in v[i+1...].
                 for(size_t j=i+1;j<n;++j)
-                        if(s[j]<s[min])
+                        if(v[j]<v[min])
                                 min=j;
-                // Swap s[i] and s[min] and update swaps if necessary.
                 if(min!=i){
-                        tmp=s[min];
-                        s[min]=s[i];
-                        s[i]=tmp;
+                        tmp=v[min];
+                        v[min]=v[i];
+                        v[i]=tmp;
                         swaps=!swaps;
+                        tmp=permutation[min];
+                        permutation[min]=permutation[i];
+                        permutation[i]=tmp;
                 }
         }
-        assert(boost::is_sorted(s));
-        return swaps;
+        assert(boost::is_sorted(v));
+        assert(permutation.size()==v.size());
+        return boost::make_tuple(swaps,boost::ref(permutation));
 }
 
 #endif // SORT_SWAP_H

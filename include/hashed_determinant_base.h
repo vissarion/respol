@@ -83,8 +83,6 @@ class HashedDeterminantBase{
         typedef boost::unordered_map<Index,NT>          ODeterminants;
         typedef std::set<Index>                         CDeterminants;
 #endif // USE_ORIENTATION_DET
-#ifdef USE_SORTED_INDICES
-#endif // USE_SORTED_INDICES
 
         public:
         // constructor for incremental det table
@@ -243,8 +241,7 @@ class HashedDeterminantBase{
 
         // This function computes the determinant of a submatrix, enlarged
         // with row at the bottom full of ones. The boolean indicates
-        // whether the index vector is sorted (this value is ignored when
-        // USE_SORTED_INDICES is not defined).
+        // whether the index vector is sorted.
         public:
         NT homogeneous_determinant(const Index&,bool=false);
 
@@ -252,7 +249,7 @@ class HashedDeterminantBase{
         // with two rows at the bottom: one lifting row and a row full of
         // ones.
         public:
-        NT homogeneous_determinant(const Index&,const Row&);
+        NT homogeneous_determinant(Index&,const Row&);
 
 #ifdef USE_ORIENTATION_DET
         private:
