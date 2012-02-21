@@ -45,7 +45,7 @@ public std::binary_function<V,V,bool>
                                         v1.deltas_end(),
                                         v2.deltas_begin(),
                                         v2.deltas_end());
-  }
+  } 
 };
 
 template <class V, class DT>
