@@ -20,7 +20,6 @@ if ( CGAL_FOUND )
   ######################################################################
 
   include ( CMakeDependentOption )
-  option ( RESPOL_PRINT_INFO "show some information during execution" OFF )
   option ( RESPOL_USE_FLAT_SET "use boost flat set to store normals" OFF )
   option ( RESPOL_USE_HASHED_DET "hash computed determinant minors" ON )
   CMAKE_DEPENDENT_OPTION ( RESPOL_HASH_STATS
@@ -46,10 +45,10 @@ if ( CGAL_FOUND )
   #      CACHE
   #      FILEPATH
   #      "path to Maple executable" )
-  option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
-  CMAKE_DEPENDENT_OPTION ( RESPOL_LRS_DEBUG
-                           "show info about LRS execution" OFF
-                           "RESPOL_USE_LRS" OFF )
+  #option ( RESPOL_USE_LRS "use LRS to compute convex hulls" OFF )
+  #CMAKE_DEPENDENT_OPTION ( RESPOL_LRS_DEBUG
+  #                         "show info about LRS execution" OFF
+  #                         "RESPOL_USE_LRS" OFF )
   #option ( RESPOL_USE_EIGEN "use Eigen to compute determinants" OFF )
   option ( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY "preprocess the input" ON )
   option ( RESPOL_BUILD_RANDOMIZED "also build randomized init version" OFF )
@@ -79,10 +78,6 @@ if ( CGAL_FOUND )
 
   # CMAKE OPTIONS PROCESSING
   ######################################################################
-
-  if( RESPOL_PRINT_INFO )
-    add_definitions(${CMAKE_CXX_FLAGS} "-DPRINT_INFO")
-  endif( RESPOL_PRINT_INFO )
 
   if( RESPOL_USE_FLAT_SET )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_BOOST_FLAT_SET")
@@ -154,27 +149,27 @@ if ( CGAL_FOUND )
                     "-DMAPLE_EXECUTABLE=${RESPOL_USE_MAPLE_EXEC}")
   endif( RESPOL_USE_MAPLE )
 
-  if( RESPOL_USE_LRS )
-    add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
-    add_definitions(${CMAKE_CXX_FLAGS} "-DSIGNALS")
-    add_definitions(${CMAKE_CXX_FLAGS} "-DGMP")
-    if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
-      add_definitions(${CMAKE_CXX_FLAGS} "-DB64")
-    endif ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
-    include_directories (BEFORE ../external/lrslib-042c/include)
-    set ( RESPOL_AUX_PROGS "../external/lrslib-042c/include/lrslib.c"
-                           "../external/lrslib-042c/include/lrsgmp.c")
-    create_single_source_cgal_program("test_lrs.cpp" ${RESPOL_AUX_PROGS})
-  endif( RESPOL_USE_LRS )
+  #if( RESPOL_USE_LRS )
+  #  add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_LRSLIB")
+  #  add_definitions(${CMAKE_CXX_FLAGS} "-DSIGNALS")
+  #  add_definitions(${CMAKE_CXX_FLAGS} "-DGMP")
+  #  if ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
+  #    add_definitions(${CMAKE_CXX_FLAGS} "-DB64")
+  #  endif ( ${CMAKE_SYSTEM_PROCESSOR} MATCHES ".*64.*" )
+  #  include_directories (BEFORE ../external/lrslib-042c/include)
+  #  set ( RESPOL_AUX_PROGS "../external/lrslib-042c/include/lrslib.c"
+  #                         "../external/lrslib-042c/include/lrsgmp.c")
+  #  create_single_source_cgal_program("test_lrs.cpp" ${RESPOL_AUX_PROGS})
+  #endif( RESPOL_USE_LRS )
 
   if ( RESPOL_USE_EIGEN )
     add_definitions(${CMAKE_CXX_FLAGS} "-DUSE_EIGEN_DET")
   endif ( RESPOL_USE_EIGEN )
 
-  if( RESPOL_LRS_DEBUG )
-    add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
-    add_definitions(${CMAKE_CXX_FLAGS} "-DLRS_DEBUG")
-  endif( RESPOL_LRS_DEBUG )
+  #if( RESPOL_LRS_DEBUG )
+  #  add_definitions(${CMAKE_CXX_FLAGS} "-DTIMES")
+  #  add_definitions(${CMAKE_CXX_FLAGS} "-DLRS_DEBUG")
+  #endif( RESPOL_LRS_DEBUG )
 
   if( RESPOL_BUILD_CONVERTERS )
     create_single_source_cgal_program("parse_input.cpp")

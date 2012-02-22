@@ -20,12 +20,9 @@ the command line or the GUIs. They are:
   by default),
 - RESPOL_HASH_SORTED_INDICES: sort the indices of the columns whose
   determinant is to be computed, in order to store less determinants in the
-  hash table (OFF by default),
+  hash table (ON by default),
 - RESPOL_HASH_STATS: collect and print statistics on hashed determinants
   (OFF by default),
-- RESPOL_PRINT_INFO: print information about what the algorithm is doing
-  during the execution of the program (OFF by default),
-- RESPOL_USE_LRS: use LRS to compute convex hulls (OFF by default),
 - RESPOL_VOL: compute the volume of the output polytope (ON by default),
 - RESPOL_BUILD_CONVERTERS: build a converter to transform input files to
   Gfan format (OFF by default),
