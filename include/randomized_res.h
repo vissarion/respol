@@ -48,7 +48,7 @@ VPolytope init_VRes(Triangulation& Res){
 	return VRes;
 }
 
-Cones construct_init_cones(Triangulation& Res,int verbose){
+Cones construct_init_cones(Triangulation& Res,const ResPol::config &conf){
 	typedef Triangulation::Full_cell_handle             Simplex;
   typedef std::vector<Simplex> Simplices;
 
@@ -68,7 +68,7 @@ Cones construct_init_cones(Triangulation& Res,int verbose){
 		}
 		C.insert(c);
   }
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << C << std::endl;
   }
   return C;
@@ -79,9 +79,9 @@ Cones construct_init_cones(Triangulation& Res,int verbose){
 Vector_d generate_random_vector(HD& Pdets,
                                 cone idx,
                                 PPoint_d inner_p,
-                                int verbose){
+                                const ResPol::config &conf){
 		CGAL::Random rng((double)clock());
-    if(verbose>1){
+    if(conf.verbose>1){
       //std::cout << PD << " " << (Pdets[0]).end()-(Pdets[0]).begin() << 
       //         " " << Pdets[0] << std::endl;
     }
@@ -92,7 +92,7 @@ Vector_d generate_random_vector(HD& Pdets,
 		  Vector_d v=p-inner_p;
 		  v*=Field(rng.get_int(0,1000));
 		  r+=v;
-      if(verbose>1){
+      if(conf.verbose>1){
         //std::cout << v << "-->" << r << std::endl;
       }
 		}
@@ -112,9 +112,9 @@ int augment_Res_rand(const std::vector<std::vector<Field> >& pointset,
                      const CTriangulation& T,
                      Cones& C,
                      VPolytope& VRes,
-                     int verbose){
+                     const ResPol::config &conf){
 
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << "\n\nRANDOMIZED AUGMENTING RESULTANT POLYTOPE" << std::endl;
   }
   
@@ -140,8 +140,8 @@ int augment_Res_rand(const std::vector<std::vector<Field> >& pointset,
 		cone c = *(cit);
 	  C.erase(*cit);
 	  for (size_t i=0; i<10; ++i){
-		  Vector_d v = generate_random_vector(Pdets,c,inner_p,verbose);
-      if(verbose>1){
+		  Vector_d v = generate_random_vector(Pdets,c,inner_p,conf);
+      if(conf.verbose>1){
         std::cout << "\nAUGmenting step " << ++step << std::endl;
         std::cout << "C.size()= " << C.size() << std::endl;
         std::cout << "current normal= " << v << std::endl;
@@ -149,7 +149,7 @@ int augment_Res_rand(const std::vector<std::vector<Field> >& pointset,
         std::cout << c << std::endl;
       }
 		  std::vector<Field> new_vertex =
-	     compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,v,verbose);
+	     compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res,T,v,conf);
 	    std::pair<VPolytope::iterator,bool> ret =  
 	      VRes.insert(new_vertex);
 	    if (ret.second == true){ //it is a truly new vertex
@@ -198,7 +198,7 @@ RandomizedInnerQ(const std::vector<std::vector<Field> >& pointset,
                  HD& dets,
                  HD& Pdets,
                  Triangulation& Res,
-                 int verbose){
+                 const ResPol::config &conf){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
 
@@ -209,16 +209,16 @@ RandomizedInnerQ(const std::vector<std::vector<Field> >& pointset,
   
   // start by computing a simplex
   int start_triangs=
-    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
+    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
 
   VPolytope VRes = init_VRes(Res);
   size_t num_VRes_init = VRes.size();
   
-  Cones C = construct_init_cones(Res,verbose);
+  Cones C = construct_init_cones(Res,conf);
   
   // augment simplex to compute the Res polytope
   int augment_triangs=
-    augment_Res_rand(pointset,mi,RD,proj,dets,Pdets,Res,T,C,VRes,verbose);
+    augment_Res_rand(pointset,mi,RD,proj,dets,Pdets,Res,T,C,VRes,conf);
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);
@@ -264,10 +264,10 @@ Field random_compute_Res(const std::vector<std::vector<Field> >& pointset,
                          Field vol,
                          double& t,
                          int& steps,
-                         int verbose){
+                         const ResPol::config &conf){
 
 	int num_of_triangs=0;
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << "dim=" << Res.current_dimension() << std::endl;
   }
   // make a stack (stl vector) with normals vectors and initialize
@@ -280,11 +280,11 @@ Field random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 	while(!normal_list_d.empty() && vol_ratio<0.9){
 		++steps;
 		t_temp1 = (double)clock()/(double)CLOCKS_PER_SEC;
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout << "normal=" << normal_list_d.back() << std::endl;
     }
     std::vector<Field> new_vertex=compute_res_vertex(pointset,mi,RD,proj,dets,
-      Pdets,Res,T,normal_list_d,verbose);
+      Pdets,Res,T,normal_list_d,conf);
 		//Res_vertices.insert(new_vertex);
 		if (Pdets.find(new_vertex) == -1){
 		  Pdets.add_column(new_vertex);
@@ -294,7 +294,7 @@ Field random_compute_Res(const std::vector<std::vector<Field> >& pointset,
 			Res.insert(p);
 		}
 		num_of_triangs++;
-    if(verbose>1){
+    if(conf.verbose>1){
       normal_list_d.print();
       std::cout<< "current number of Res vertices: "
               << Pdets.size()
@@ -332,7 +332,7 @@ Field computeQ_outer_approximation(
         HD& Pdets,
         Triangulation& Res,
         const CTriangulation& T,
-        int verbose){
+        const ResPol::config &conf){
 	
 	typedef Triangulation::Full_cell_handle             Simplex;
   typedef std::vector<Simplex>                        Simplices;
@@ -359,7 +359,7 @@ Field computeQ_outer_approximation(
 		PVector_d normal_vector = hp.orthogonal_direction();
 				
     std::vector<Field> new_vertex=compute_res_vertex2(
-            pointset,mi,RD,proj,dets,Pdets,Res,T,normal_vector,verbose);
+            pointset,mi,RD,proj,dets,Pdets,Res,T,normal_vector,conf);
     
     PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
     PHyperplane_d hp_out(new_point,-normal_vector);
@@ -420,7 +420,7 @@ std::pair<int,int> compute_res_rand_uniform(
         double deterministic_time,
         int in,
         int out,
-        int verbose){
+        const ResPol::config &conf){
 
 	double t1, t2, t3;
   // construct an initial triangulation of the points that will not be projected
@@ -437,10 +437,10 @@ std::pair<int,int> compute_res_rand_uniform(
   double t;
   int steps=0;
   Field volIn=random_compute_Res(pointset,mi,RD,proj,dets,Pdets,Res,
-    T,num_of_rand_vec,real_vol,t,steps,verbose);
+    T,num_of_rand_vec,real_vol,t,steps,conf);
   t2 = (double)clock()/(double)CLOCKS_PER_SEC;
   Field volOut=
-    computeQ_outer_approximation(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
+    computeQ_outer_approximation(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
   t3 = (double)clock()/(double)CLOCKS_PER_SEC;
   
   std::cout << PD << " " << in << " " << out << " "  

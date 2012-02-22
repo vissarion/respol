@@ -202,7 +202,7 @@ template <class NT_>
 void compute_extreme_points(std::vector<std::vector<NT_> >& pointset,
 														std::vector<int>& mi,
 														std::vector<int>& proj,
-                            int verbose){
+                            const ResPol::config &conf){
   typedef NT_                                           Field;
   std::vector<std::vector<Field> > extreme_pointset;
   std::vector<int> extreme_mi;
@@ -224,7 +224,7 @@ void compute_extreme_points(std::vector<std::vector<NT_> >& pointset,
 			if (std::find(proj.begin(), proj.end(), i)==proj.end()){
 				CPoint_d p(D,pointset[i].begin(),pointset[i].end());
 				points.push_back(p);
-        if(verbose>1)
+        if(conf.verbose>1)
 				  std::cout << p << "\n";
 			} else {
 				proj_updated.push_back(specialized_points_position);
@@ -251,7 +251,7 @@ void compute_extreme_points(std::vector<std::vector<NT_> >& pointset,
 				extreme_pointset_value.push_back(it->cartesian(i));
 			extreme_pointset.push_back(extreme_pointset_value);
 		}
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout<<"\nExtreme points=" << extreme_points.size()
         << "(out of" << points.size()
         << ")\n"<<std::endl;
@@ -259,7 +259,7 @@ void compute_extreme_points(std::vector<std::vector<NT_> >& pointset,
 		extreme_mi.push_back(extreme_points.size()+count_specialized_points);
 		current_start=current_end;
 	}
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << "mi= " << mi << " extreme_mi=" << extreme_mi << std::endl;
     std::cout << "proj= " << proj << " proj_updated=" << proj_updated <<
       std::endl;
@@ -492,7 +492,7 @@ std::vector<Field> project_upper_hull_r(const CTriangulation& pc,
                                         const std::vector<int>& mi,
                                         const std::vector<int>& proj,
                                         bool lower,
-                                        int verbose){
+                                        const ResPol::config &conf){
 	// the result vector
 	std::vector<Field> rho(PD,0);
 	// compute the infinite simplices
@@ -558,7 +558,7 @@ std::vector<Field> project_upper_hull_r(const CTriangulation& pc,
 		 // std::cout<<s<<std::endl;
 		  // if there are not full dimensional cells
 		  if (s.size() < CD){
-        if(verbose>1){
+        if(conf.verbose>1){
           std::cout <<
             "NOT a triangulation. Abort current computation..." << std::endl;
         }
@@ -567,41 +567,47 @@ std::vector<Field> project_upper_hull_r(const CTriangulation& pc,
 				return rho_empty;*/
         return std::vector<Field>();
 			}
-			//secondary case
-			for (std::set<int>::const_iterator it2=s.begin(); it2!=s.end(); it2++){
-				std::vector<int>::const_iterator pit=find(proj.begin(),proj.end(),*it2);
-		  	if (pit != proj.end()){
-		  		rho[pit-proj.begin()] += det;
-				}
-			}
-			//resultant case
-			/*
-			// check if the projection of the facet (i.e. a Minkowski cell)
-			// is mixed (i.e. has exactly one vertex summand)
-			int d = mi.size();
-		  std::vector<std::vector<int> > sets(d);
-		  int current_set=0, current_m=mi[0];
-		  for (std::set<int>::const_iterator it2=s.begin(); it2!=s.end(); it2++){
-				if (*it2 >= current_m)
-					current_m += mi[++current_set];
-				sets[current_set].push_back(*it2);
-		  }
-		  std::vector<int> mixed_vertices;
-		  for (int i=0; i<d; i++){
-		  	if (sets[i].size() == 1){
-		  	  mixed_vertices.push_back(i);
-		  	}
-		  }
-		  if (mixed_vertices.size() == 1){
-		  	// find where is the mixed vertex in the vector of projection coordinates
-		  	std::vector<int>::const_iterator pit =
-          find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
-		  	if (pit != proj.end()){
-		  		rho[pit-proj.begin()] += det;
-				}
-		  }
-		  */ 
-		}
+      //secondary case
+      if(conf.polytope_type==1){
+        for(std::set<int>::const_iterator it2=s.begin(); it2!=s.end(); it2++){
+          std::vector<int>::const_iterator pit=
+            find(proj.begin(),proj.end(),*it2);
+          if (pit != proj.end()){
+            rho[pit-proj.begin()] += det;
+          }
+        }
+      }else if(conf.polytope_type==0){
+        //resultant case
+        // check if the projection of the facet (i.e. a Minkowski cell)
+        // is mixed (i.e. has exactly one vertex summand)
+        int d = mi.size();
+        std::vector<std::vector<int> > sets(d);
+        int current_set=0, current_m=mi[0];
+        for (std::set<int>::const_iterator it2=s.begin(); it2!=s.end(); it2++){
+          if (*it2 >= current_m)
+            current_m += mi[++current_set];
+          sets[current_set].push_back(*it2);
+        }
+        std::vector<int> mixed_vertices;
+        for (int i=0; i<d; i++){
+          if (sets[i].size() == 1){
+            mixed_vertices.push_back(i);
+          }
+        }
+        if (mixed_vertices.size() == 1){
+          // find where is the mixed vertex in the vector of projection
+          // coordinates
+          std::vector<int>::const_iterator pit =
+                  find(proj.begin(),proj.end(),sets[mixed_vertices[0]][0]);
+          if (pit != proj.end()){
+            rho[pit-proj.begin()] += det;
+          }
+        }
+      }else{
+        std::cout<<"unknown polytope type"<<std::endl;
+        exit(-1);
+      }
+    }
 	}
 	// to compute the real volume we have to divide by d!
 	for (std::vector<Field>::iterator vit=rho.begin();
@@ -621,14 +627,14 @@ void insert_new_Rvertex(Triangulation& Res,
 												const NV_ds& normal_list,
 												const SRvertex& new_vertex,
 												HD& Pdets,
-                        int verbose){
+                        const ResPol::config &conf){
 	// insert the coordinates of the point as a column to the HashDeterminants matrix
 	Pdets.add_column(new_vertex);
 	// construct the new point
 	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
 	new_point.set_index(Res.number_of_vertices());
 	new_point.set_hash(&Pdets);
-  if(verbose>1){
+  if(conf.verbose>1){
     //std::cout << "one new R-vertex found !!! "<< std::endl;
   }
 	//insert it to the triangulation
@@ -661,14 +667,14 @@ void insert_new_Rvertex2(Triangulation& Res,
 												const SRvertex& new_vertex,
 												HD& Pdets,
 												PSimplex_d& near_cell,
-                        int verbose){
+                        const ResPol::config &conf){
 	// insert the coordinates of the point as a column to the HashDeterminants matrix
 	Pdets.add_column(new_vertex);
 	// construct the new point
 	PPoint_d new_point(PD,new_vertex.begin(),new_vertex.end());
 	new_point.set_index(Res.number_of_vertices());
 	new_point.set_hash(&Pdets);
-  if(verbose>1){
+  if(conf.verbose>1){
     //std::cout << "one new R-vertex found !!! "<< std::endl;
   }
 	int prev_dim = Res.current_dimension();
@@ -677,7 +683,7 @@ void insert_new_Rvertex2(Triangulation& Res,
 	PVertex_handle new_vert = Res.insert(new_point,near_cell);
   double tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
 	conv_time += tstopall - tstartall;
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << "insert in Res time= " <<  tstopall - tstartall << std::endl;
   }
 	int cur_dim = Res.current_dimension();
@@ -753,7 +759,7 @@ std::vector<NT_> compute_res_vertex(
         const Triangulation& Res,
         const CTriangulation& T,
         NV_ds& normal_list_d,
-        int verbose){
+        const ResPol::config &conf){
 
   typedef NT_                                           Field;
 	// take the first(last more efficient with vectors??) normal and remove it from normals stack
@@ -773,12 +779,12 @@ std::vector<NT_> compute_res_vertex(
 		// project Tl i.e. triangulation
 	  int dcur = Tl.current_dimension();
 	  std::vector<Field> new_vertex =
-	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,verbose);
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,conf);
 	
 	  // TODO: destroy here!
 	  Tl.clear();
 	
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout << "new Res vertex (up)= ( " << new_vertex << ")" << std::endl;
     }
 	  //std::cout << new_vertex << std::endl;
@@ -793,12 +799,12 @@ std::vector<NT_> compute_res_vertex(
 		// project Tl i.e. triangulation
 	  int dcur = Tl.current_dimension();
 	  std::vector<Field> new_vertex =
-	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,verbose);
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,conf);
 	
 	  // TODO: destroy here!
 	  Tl.clear();
 	
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout << "new Res vertex (up)= ( " << new_vertex << ")" << std::endl;
     }
 	  //std::cout << new_vertex << std::endl;
@@ -817,7 +823,7 @@ std::vector<NT_> compute_res_vertex2(
 				                 const Triangulation& Res,
 				                 const CTriangulation& T,
 				                 const PVector_d &nli,
-                         int verbose){
+                         const ResPol::config &conf){
 
   typedef NT_                                           Field;
 	// take the first(last more efficient with vectors??) normal and remove it from normals stack
@@ -837,12 +843,12 @@ std::vector<NT_> compute_res_vertex2(
 		// project Tl i.e. triangulation
 	  int dcur = Tl.current_dimension();
 	  std::vector<Field> new_vertex =
-	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,verbose);
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,conf);
 	
 	  // TODO: destroy here!
 	  Tl.clear();
 	
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout << "new Res vertex (up)= ( " << new_vertex << ")\n";
     }
 	  //std::cout << new_vertex << std::endl;
@@ -857,12 +863,12 @@ std::vector<NT_> compute_res_vertex2(
 		// project Tl i.e. triangulation
 	  int dcur = Tl.current_dimension();
 	  std::vector<Field> new_vertex =
-	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,verbose);
+	    project_upper_hull_r(Tl,dets,dcur,CD,mi,proj,false,conf);
 	
 	  // TODO: destroy here!
 	  Tl.clear();
 	
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout << "new Res vertex (up)= ( " << new_vertex << ")\n";
     }
 	  //std::cout << new_vertex << std::endl;
@@ -882,11 +888,11 @@ int initialize_Res(const std::vector<std::vector<NT_> >& pointset,
 								 HD& Pdets,
 								 Triangulation& Res,
 								 const CTriangulation& T,
-                 int verbose){
+                 const ResPol::config &conf){
 
   typedef NT_                                           Field;
 	int num_of_triangs=0;
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << "dim=" << Res.current_dimension() << std::endl;
   }
   // make a stack (stl vector) with normals vectors and initialize
@@ -900,12 +906,12 @@ int initialize_Res(const std::vector<std::vector<NT_> >& pointset,
   //std::cout << "minD:"<<minD<<"PD:"<<PD<<std::endl;
   while(Res.current_dimension()<minD && !normal_list_d.empty()){
     std::vector<Field> new_vertex=compute_res_vertex(
-      pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d,verbose);
+      pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d,conf);
 		// insert it in the complex Res (if it is not already there)
   	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
-  		insert_new_Rvertex(Res,normal_list_d,new_vertex,Pdets,verbose);
+  		insert_new_Rvertex(Res,normal_list_d,new_vertex,Pdets,conf);
 		num_of_triangs++;
-    if(verbose>1){
+    if(conf.verbose>1){
       normal_list_d.print();
       std::cout<<"current number of Res vertices: "
         <<Res.number_of_vertices()
@@ -927,11 +933,11 @@ int augment_Res(const std::vector<std::vector<NT_> >& pointset,
 								 HD& Pdets,
 								 Triangulation& Res,
 								 const CTriangulation& T,
-                 int verbose){
+                 const ResPol::config &conf){
 
   typedef NT_                                           Field;
 	int num_of_triangs=0;
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout << "\n\nAUGMENTING RESULTANT POLYTOPE" << std::endl;
     //print_res_vertices(Res);
     std::cout << "dim=" << Res.current_dimension() << std::endl;
@@ -946,27 +952,27 @@ int augment_Res(const std::vector<std::vector<NT_> >& pointset,
 	PSimplex_d near_cell;
   clock_t t_start;
   while(get_illegal_facet(Res,normal_list_d,current_vector,near_cell)){
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout << "\nAUGmenting step " << num_of_triangs << std::endl;
       std::cout << "current normal" << current_vector << std::endl;
       t_start=clock();
     }
 		std::vector<Field> new_vertex =
       compute_res_vertex2(
-        pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector,verbose);
-    if(verbose>1){
+        pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector,conf);
+    if(conf.verbose>1){
       std::cout << "Compute triang time= "<<
         ((double)(clock()-t_start))/CLOCKS_PER_SEC<<std::endl;
     }
 		
 		// insert it in the complex Res (if it is not already there)
   	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0){	
-  		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell,verbose);
+  		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell,conf);
 		}
-    if(verbose>1){
+    if(conf.verbose>1){
       {
         int cells, triang_facets, facets, edges, vertices;
-        f_vector(Res,cells,triang_facets,facets,edges,vertices,verbose);
+        f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
         std::cout<<"("<<cells<<","<<triang_facets<<","
           <<facets<<","<<edges<<","<<vertices<<"\n";
       }
@@ -996,7 +1002,7 @@ std::pair<int,int> compute_res(
         HD& dets,
         HD& Pdets,
         Triangulation& Res,
-        int verbose){
+        const ResPol::config &conf){
 
   typedef NT_                                           Field;
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
@@ -1008,11 +1014,11 @@ std::pair<int,int> compute_res(
 	
   // start by computing a simplex
   int start_triangs=
-    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
+    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
 
   // augment simplex to compute the Res polytope
   int augment_triangs=
-    augment_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
+    augment_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);
@@ -1138,13 +1144,13 @@ int num_of_simplices(const CTriangulation& T,
 void insert_new_Rvertex(Triangulation& ppc,
 												NV_ds& normal_list,
 												PPoint_d& new_point,
-                        int verbose){
+                        const ResPol::config &conf){
 	PLocate_type loc_type;
   PFace f(PD);
 	PFacet ft;
   ppc.locate(new_point,loc_type,f,ft);
   if (loc_type==4 || loc_type==5){ //replace with OUTSIDE_AFFINE_HULL OUTSIDE_CONVEX_HULL
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout<<"one new R-vertex found !!! loc_type="<<loc_type<<std::endl;
     }
 		PVertex_handle new_vert = ppc.insert(new_point);
@@ -1172,7 +1178,7 @@ void insert_new_Rvertex(Triangulation& ppc,
 												NV_ds& normal_list,
 												SRvertex& new_vertex,
 												HD& Pdets,
-                        int verbose){
+                        const ResPol::config &conf){
 	// insert the coordinates of the point as a column to the HashDeterminants matrix
 	Pdets.add_column(new_vertex);
 	// construct the new point
@@ -1188,7 +1194,7 @@ void insert_new_Rvertex(Triangulation& ppc,
 	PFacet ft;
   ppc.locate(new_point,loc_type,f,ft);
   if (loc_type==4 || loc_type==5){ //replace with OUTSIDE_AFFINE_HULL OUTSIDE_CONVEX_HULL
-    if(verbose>1){
+    if(conf.verbose>1){
       std::cout<<"one new R-vertex found !!! loc_type="<<loc_type<<std::endl;
     }
 		PVertex_handle new_vert = ppc.insert(new_point);
@@ -1218,7 +1224,7 @@ std::vector<std::set<int> > project_lower_upper_hull(CTriangulation& pc,
                                            int dcur,
                                            int dim,
                                            bool lower,
-                                           int verbose){
+                                           const ResPol::config &conf){
 	//std::cout << dim << "|" << pc.current_dimension() << std::endl;
 	//SimplicialComplex triang, triang2;
 	std::vector<std::set<int> > triang;
@@ -1259,7 +1265,7 @@ std::vector<std::set<int> > project_lower_upper_hull(CTriangulation& pc,
 			//if (s.card()==dim){
 			triang.push_back(s);
 			//}else{
-      //  if(verbose>1){
+      //  if(conf.verbose>1){
       //    std::cout<<"found a low dimensional simplex. possible ERROR\n"<<
       //      std::endl;
       //  }

@@ -17,6 +17,9 @@
 // Public License.  If you did not receive this file along with respol, see
 // <http://www.gnu.org/licenses/>.
 
+#include "respol_config.h"
+#include <iostream>
+#include <fstream>
 #include <cassert>
 #include <ctime>
 
@@ -43,25 +46,27 @@ int PD;				//this is the dimension of the projection
 int main(const int argc,const char** argv){
 
   // Parse command-line options.
-  int verbose_level=1;
-  bool read_from_file=false;
-  std::ifstream inp;
+  ResPol::config c;
+  c.verbose=1;
+  c.read_from_file=false;
+  c.output_f_vector=false;
+  c.polytope_type=0; // resultant polytope
   for(int i=1;i<argc;++i){
     bool correct=false;
     if(!strcmp(argv[i],"-h")||!strcmp(argv[i],"--help")){
       std::cerr<<
         "-h, --help\t\tshow this message\n"<<
         "-i, --input file\tset input file (read input from stdin otherwise)\n"<<
-        "-v, --verbose n\tset verbosity level to 0, 1 (default) or 2\n";
+        "-v, --verbose n\t\tset verbosity level to 0, 1 (default) or 2\n";
       exit(-1);
     }
-    if(!strcmp(argv[i],"-v")||!strcmp(argv[i],"--verbose")){
-      verbose_level=atoi(argv[++i]);
+    if(!strcmp(argv[i],"-i")||!strcmp(argv[i],"--input")){
+      c.read_from_file=true;
+      c.inp.open(argv[++i],std::ifstream::in);
       correct=true;
     }
-    if(!strcmp(argv[i],"-i")||!strcmp(argv[i],"--input")){
-      read_from_file=true;
-      inp.open(argv[++i],std::ifstream::in);
+    if(!strcmp(argv[i],"-v")||!strcmp(argv[i],"--verbose")){
+      c.verbose=atoi(argv[++i]);
       correct=true;
     }
     if(correct==false){
@@ -85,15 +90,15 @@ int main(const int argc,const char** argv){
  	
 	// initialize all the above
  	// read input (pointset, mi, n), apply cayley trick, define projection
- 	if(read_from_file)
-    read_pointset(inp, pointset, mi, proj, n);
+ 	if(c.read_from_file)
+    read_pointset(c.inp, pointset, mi, proj, n);
   else
     read_pointset(std::cin, pointset, mi, proj, n);
 	int initial_pointset_size = pointset.size();
 	
 	// remove spesialized redundant (non-extreme) points
 	#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
-	compute_extreme_points(pointset,mi,proj,verbose_level);
+	compute_extreme_points(pointset,mi,proj,c);
 	#endif
   
   // compute the cayley points set
@@ -119,7 +124,7 @@ int main(const int argc,const char** argv){
 	//COMPUTE THE RES POLYTOPE
 	
   std::pair<int,int> num_of_triangs =
-    compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res,verbose_level);
+    compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res,c);
   
   // stop clocking
 	tstopall = (double)clock()/(double)CLOCKS_PER_SEC;
@@ -135,7 +140,7 @@ int main(const int argc,const char** argv){
   num_of_triangs=
   compute_res_rand_uniform(pointset,n,mi,RD,proj,dets,Pdets2,Res2,1200,
     volume(Res,Pdets),tstopall-tstartall,pointset.size(),
-    Res.number_of_vertices(),verbose_level);
+    Res.number_of_vertices(),c);
 
   //////////////////////////////////////////////////////////////////////
   
@@ -187,7 +192,7 @@ int main(const int argc,const char** argv){
   //#endif
  */ 
   //std::cout << "convex hull time = " << conv_time << std::endl;
-  if(verbose_level>1){
+  if(c.verbose>1){
     Pdets.print_matrix(std::cout);
     //recompute_Res(Res);
   }

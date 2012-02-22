@@ -20,6 +20,7 @@
 #ifndef PRINT_FUNCTIONS_H
 #define PRINT_FUNCTIONS_H
 
+#include "respol_config.h"
 #include <ostream>
 #include <fstream>
 #include <vector>
@@ -236,7 +237,7 @@ void f_vector(Triang &Res,
 	            int& facets,
 	            int& edges,
 	            int& vertices,
-              int verbose){
+              const ResPol::config &conf){
   typedef typename Triang::Geom_traits                          GT;
   typedef typename GT::FT                                       FieldType;
   typedef typename Triang::Point_d                              PP_d;
@@ -296,7 +297,7 @@ void f_vector(Triang &Res,
     PV_d current_vector = hp.orthogonal_direction();
     Res_facets.insert(current_vector);
   }
-  if(verbose>1){
+  if(conf.verbose>1){
   std::cout << "(cells" << ","
             << "triang_facets" << ","
             << "facets" << ","
@@ -520,9 +521,9 @@ void print_statistics_small(int Cdim,
                             double timedet,
                             const Vol &volume,
                             Triang& Res,
-                            int verbose){
+                            const ResPol::config &conf){
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells,triang_facets,facets,edges,vertices,verbose);
+  f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
 #ifdef LOG_MEMORY
   struct proc_t usage;
   look_up_our_self(&usage);
@@ -572,9 +573,9 @@ void pretty_print_statistics(int Cdim,
                             double timedet,
                             const Vol &volume,
                             Triang& Res,
-                            int verbose){
+                            const ResPol::config &conf){
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells,triang_facets,facets,edges,vertices,verbose);
+  f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
   std::cout << "\ndimension (Cayley(d),proj(m),Res): \t(" 
             << Cdim << ","
             << Pdim << ","

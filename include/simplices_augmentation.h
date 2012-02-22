@@ -29,9 +29,9 @@ int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
                           HD& Pdets,
                           Triangulation& Res,
                           const CTriangulation& T,
-                          int verbose){
+                          const ResPol::config &conf){
 
-  if(verbose>1){
+  if(conf.verbose>1){
     std::cout<<"\n\nAUGMENTING RESULTANT POLYTOPE with Simplices"<<std::endl;
   }
   typedef Triangulation::Full_cell_handle             Simplex;
@@ -67,12 +67,12 @@ int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
 			PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
 			PVector_d current_vector = hp.orthogonal_direction();
 
-      if(verbose>1){
+      if(conf.verbose>1){
         std::cout << "\nAUGmenting step " << ++step << std::endl;
         std::cout << "number of vertices= " << Pdets.size() << std::endl;
       }
       std::vector<Field> new_vertex=compute_res_vertex2(
-        pointset,mi,RD,proj,dets,Pdets,Res_temp,T,current_vector,verbose);
+        pointset,mi,RD,proj,dets,Pdets,Res_temp,T,current_vector,conf);
 	    new_vertices.push_back(new_vertex);
 	    int idx = Pdets.find(new_vertex);
 	    PPoint_d p(PD,new_vertex.begin(),new_vertex.end());
@@ -101,7 +101,7 @@ InnerQwithsimplices(const std::vector<std::vector<Field> >& pointset,
                     HD& dets,
                     HD& Pdets,
                     Triangulation& Res,
-                    int verbose){
+                    const ResPol::config &conf){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
 
@@ -112,11 +112,11 @@ InnerQwithsimplices(const std::vector<std::vector<Field> >& pointset,
   
   // start by computing a simplex
   int start_triangs=
-    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
+    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
   
   // augment simplex to compute the Res polytope
   int augment_triangs=
-    augment_Res_simplices(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
+    augment_Res_simplices(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);
