@@ -565,6 +565,15 @@ std::vector<Field> project_upper_hull_r(const CTriangulation& pc,
 				return rho_empty;*/
         return std::vector<Field>();
 			}
+			//secondary case
+			for (std::set<int>::const_iterator it2=s.begin(); it2!=s.end(); it2++){
+				std::vector<int>::const_iterator pit=find(proj.begin(),proj.end(),*it2);
+		  	if (pit != proj.end()){
+		  		rho[pit-proj.begin()] += det;
+				}
+			}
+			//resultant case
+			/*
 			// check if the projection of the facet (i.e. a Minkowski cell)
 			// is mixed (i.e. has exactly one vertex summand)
 			int d = mi.size();
@@ -589,6 +598,7 @@ std::vector<Field> project_upper_hull_r(const CTriangulation& pc,
 		  		rho[pit-proj.begin()] += det;
 				}
 		  }
+		  */ 
 		}
 	}
 	// to compute the real volume we have to divide by d!
