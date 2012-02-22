@@ -22,18 +22,18 @@
 #include <stack>
 
 int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
-										 const std::vector<int>& mi,
-										 int RD,
-										 const std::vector<int>& proj,
-										 HD& dets,
-										 HD& Pdets,
-										 Triangulation& Res,
-										 const CTriangulation& T
-										 ){
+                          const std::vector<int>& mi,
+                          int RD,
+                          const std::vector<int>& proj,
+                          HD& dets,
+                          HD& Pdets,
+                          Triangulation& Res,
+                          const CTriangulation& T,
+                          int verbose){
 
-	#ifdef PRINT_INFO
-		std::cout << "\n\nAUGMENTING RESULTANT POLYTOPE with Simplices" << std::endl;
-  #endif
+  if(verbose>1){
+    std::cout<<"\n\nAUGMENTING RESULTANT POLYTOPE with Simplices"<<std::endl;
+  }
   typedef Triangulation::Full_cell_handle             Simplex;
   typedef std::vector<Simplex>                        Simplices;
   size_t step=0;
@@ -66,13 +66,13 @@ int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
 			// compute a hyperplane which has in its negative side the opposite point
 			PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
 			PVector_d current_vector = hp.orthogonal_direction();
-			
-			#ifdef PRINT_INFO
-			std::cout << "\nAUGmenting step " << ++step << std::endl;
-			std::cout << "number of vertices= " << Pdets.size() << std::endl;
-			#endif			
-			std::vector<Field> new_vertex =
-	      compute_res_vertex2(pointset,mi,RD,proj,dets,Pdets,Res_temp,T,current_vector);
+
+      if(verbose>1){
+        std::cout << "\nAUGmenting step " << ++step << std::endl;
+        std::cout << "number of vertices= " << Pdets.size() << std::endl;
+      }
+      std::vector<Field> new_vertex=compute_res_vertex2(
+        pointset,mi,RD,proj,dets,Pdets,Res_temp,T,current_vector,verbose);
 	    new_vertices.push_back(new_vertex);
 	    int idx = Pdets.find(new_vertex);
 	    PPoint_d p(PD,new_vertex.begin(),new_vertex.end());
@@ -93,14 +93,15 @@ int augment_Res_simplices(const std::vector<std::vector<Field> >& pointset,
 ////////////////////////////////////////////////////////////
 // the simplices algorithm
 std::pair<int,int> 
-     InnerQwithsimplices(const std::vector<std::vector<Field> >& pointset,
-							        int m,
-							        const std::vector<int>& mi,
-							        int RD,
-							        const std::vector<int>& proj,
-							        HD& dets,
-							        HD& Pdets,
-							        Triangulation& Res){
+InnerQwithsimplices(const std::vector<std::vector<Field> >& pointset,
+                    int m,
+                    const std::vector<int>& mi,
+                    int RD,
+                    const std::vector<int>& proj,
+                    HD& dets,
+                    HD& Pdets,
+                    Triangulation& Res,
+                    int verbose){
 
 	//std::cout << "cayley dim:" << CayleyTriangulation(pointset) << std::endl;
 
@@ -110,10 +111,12 @@ std::pair<int,int>
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
   
   // start by computing a simplex
-  int start_triangs = initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  int start_triangs=
+    initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
   
   // augment simplex to compute the Res polytope
-  int augment_triangs = augment_Res_simplices(pointset,mi,RD,proj,dets,Pdets,Res,T);
+  int augment_triangs=
+    augment_Res_simplices(pointset,mi,RD,proj,dets,Pdets,Res,T,verbose);
 
   // number of triangulations computed
   std::pair<int,int> num_of_triangs(start_triangs,augment_triangs);

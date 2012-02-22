@@ -235,7 +235,8 @@ void f_vector(Triang &Res,
 	            int& triang_facets,
 	            int& facets,
 	            int& edges,
-	            int& vertices){
+	            int& vertices,
+              int verbose){
   typedef typename Triang::Geom_traits                          GT;
   typedef typename GT::FT                                       FieldType;
   typedef typename Triang::Point_d                              PP_d;
@@ -295,14 +296,14 @@ void f_vector(Triang &Res,
     PV_d current_vector = hp.orthogonal_direction();
     Res_facets.insert(current_vector);
   }
-#ifdef PRINT_INFO
-	std::cout << "(cells" << ","
-	          << "triang_facets" << ","
-	          << "facets" << ","
-	          << "edges" << ","
-	          //<< "boundary edges" << ","
-	          << "vertices)=";
-#endif
+  if(verbose>1){
+  std::cout << "(cells" << ","
+            << "triang_facets" << ","
+            << "facets" << ","
+            << "edges" << ","
+            //<< "boundary edges" << ","
+            << "vertices)=";
+  }
   cells=finite_cells;
 	triang_facets=num_facets;
 	facets=Res_facets.size();
@@ -518,9 +519,10 @@ void print_statistics_small(int Cdim,
                             double timeofflinehull,
                             double timedet,
                             const Vol &volume,
-                            Triang& Res){
+                            Triang& Res,
+                            int verbose){
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells, triang_facets, facets, edges, vertices);
+  f_vector(Res,cells,triang_facets,facets,edges,vertices,verbose);
 #ifdef LOG_MEMORY
   struct proc_t usage;
   look_up_our_self(&usage);
@@ -569,9 +571,10 @@ void pretty_print_statistics(int Cdim,
                             double timeofflinehull,
                             double timedet,
                             const Vol &volume,
-                            Triang& Res){
+                            Triang& Res,
+                            int verbose){
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells, triang_facets, facets, edges, vertices);
+  f_vector(Res,cells,triang_facets,facets,edges,vertices,verbose);
   std::cout << "\ndimension (Cayley(d),proj(m),Res): \t(" 
             << Cdim << ","
             << Pdim << ","

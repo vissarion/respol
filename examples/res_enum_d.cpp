@@ -42,7 +42,7 @@ int PD;				//this is the dimension of the projection
 //////////////////////////////////////////////////////////////////
 // main
 
-int main(const int argc, const char** argv) {
+int main(const int argc,const char** argv){
 
   // Parse command-line options.
   int verbose_level=1;
@@ -50,21 +50,32 @@ int main(const int argc, const char** argv) {
   bool output_f_vector=false;
   std::ifstream inp;
   for(int i=1;i<argc;++i){
-    if(!strcmp(argv[i],"-h")){
-      std::cout<<
-        "-f\toutput the f-vector (to file f-vector.polymake)\n"<<
-        "-h\tshow this message\n"<<
-        "-i file\tset input file (read input from stdin otherwise)\n"<<
-        "-v n\tset verbosity level to n (between 0 and 1, defaults to 1)\n";
+    bool correct=false;
+    if(!strcmp(argv[i],"-h")||!strcmp(argv[i],"--help")){
+      std::cerr<<
+        "-f, --f-vector\t\toutput the f-vector (to file f-vector.polymake)\n"<<
+        "-h, --help\t\tshow this message\n"<<
+        "-i, --input file\tset input file (read input from stdin otherwise)\n"<<
+        "-v, --verbose n\tset verbosity level to 0, 1 (default) or 2\n";
       exit(-1);
     }
-    if(!strcmp(argv[i],"-f"))
+    if(!strcmp(argv[i],"-f")||!strcmp(argv[i],"--f-vector")){
       output_f_vector=true;
-    if(!strcmp(argv[i],"-v"))
+      correct=true;
+    }
+    if(!strcmp(argv[i],"-v")||!strcmp(argv[i],"--verbose")){
       verbose_level=atoi(argv[++i]);
-    if(!strcmp(argv[i],"-i")){
+      correct=true;
+    }
+    if(!strcmp(argv[i],"-i")||!strcmp(argv[i],"--input")){
       read_from_file=true;
       inp.open(argv[++i],std::ifstream::in);
+      correct=true;
+    }
+    if(correct==false){
+      std::cerr<<"unknown parameter \'"<<argv[i]<<
+        "\', try "<<argv[0]<<" --help"<<std::endl;
+      exit(-2);
     }
   }
 
@@ -90,7 +101,7 @@ int main(const int argc, const char** argv) {
 	
 	// remove spesialized redundant (non-extreme) points
 	#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
-	compute_extreme_points(pointset,mi,proj);
+	compute_extreme_points(pointset,mi,proj,verbose_level);
 	#endif
   
   // compute the cayley points set
@@ -115,14 +126,14 @@ int main(const int argc, const char** argv) {
   //////////////////////////////////////////////////////////////////////
 	//COMPUTE THE RES POLYTOPE
 	
-	std::pair<int,int> num_of_triangs =
-    compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  std::pair<int,int> num_of_triangs =
+    compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res,verbose_level);
   
 	//std::pair<int,int> num_of_triangs =
   //RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
   //std::pair<int,int> num_of_triangs =
-  //InnerQwithsimplices(pointset,n,mi,RD,proj,dets,Pdets,Res);
+  //InnerQwithsimplices(pointset,n,mi,RD,proj,dets,Pdets,Res,verbose_level);
   
 	//std::pair<int,int> num_of_triangs =
   //RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
@@ -150,12 +161,12 @@ int main(const int argc, const char** argv) {
   
   // print some statistics
   
-  #ifdef PRINT_INFO
-   std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
-             << "num_of_input_points, numoftriangs, numofvertices,"  
-             << "numofextremevertices, timeall, timehull, timeofflinehull,"
-             << "timedet, volume" << std::endl;
-  #endif  
+  if(verbose_level>1){
+    std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
+              << "num_of_input_points, numoftriangs, numofvertices,"  
+              << "numofextremevertices, timeall, timehull, timeofflinehull,"
+              << "timedet, volume" << std::endl;
+  }
   if(verbose_level==0){
     print_statistics_small(CD-1, 
                            PD,
@@ -175,7 +186,8 @@ int main(const int argc, const char** argv) {
                            dets.get_determinant_time()+
                            Pdets.get_determinant_time(), // determinant time
                            -1,//volume(Res,Pdets)
-                           Res);
+                           Res,
+                           verbose_level);
   }else{
     pretty_print_statistics(CD-1, 
                            PD,
@@ -195,17 +207,18 @@ int main(const int argc, const char** argv) {
                            dets.get_determinant_time()+
                            Pdets.get_determinant_time(), // determinant time
                            -1,//volume(Res,Pdets)
-                           Res);
+                           Res,
+                           verbose_level);
   }
-  
-  #ifdef PRINT_INFO
-  //std::cout << "convex hull time = " << conv_time << std::endl;
-  // we print for debugging purposes the matrix of the hashed points
-  //Pdets.print_matrix(std::cout);
-  print_res_vertices(Res,std::cout);
+
+  if(verbose_level>1){
+    //std::cout << "convex hull time = " << conv_time << std::endl;
+    // we print for debugging purposes the matrix of the hashed points
+    //Pdets.print_matrix(std::cout);
+    print_res_vertices(Res,std::cout);
     //recompute_Res(Res);
-  #endif
-  
+  }
+
   if(output_f_vector){
     std::ofstream polymakefile;
     polymakefile.open("f_vector.polymake");
@@ -214,7 +227,7 @@ int main(const int argc, const char** argv) {
   }
   /*
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells, triang_facets, facets, edges, vertices);
+  f_vector(Res,cells, triang_facets, facets, edges, vertices,verbose_level);
   std::cout << vertices << " " << facets << std::endl;
   */
   #ifdef USE_LRSLIB
