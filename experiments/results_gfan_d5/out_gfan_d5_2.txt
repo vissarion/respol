@@ -1,0 +1,18 @@
+10 0.00
+10 0.00
+11 0.00
+11 0.00
+12 0.01
+12 0.01
+13 Command exited with non-zero status 1
+13 0.11
+14 Command exited with non-zero status 1
+14 Command exited with non-zero status 1
+15 Command exited with non-zero status 1
+15 Command exited with non-zero status 1
+16 Command exited with non-zero status 143
+16 Command exited with non-zero status 1
+17 Command exited with non-zero status 1
+17 Command exited with non-zero status 143
+18 Command exited with non-zero status 137
+18 

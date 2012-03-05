@@ -1,0 +1,19 @@
+    |\^/|     Maple 13 (X86 64 LINUX)
+._|\|   |/|_. Copyright (c) Maplesoft, a division of Waterloo Maple Inc. 2009
+ \  MAPLE  /  All rights reserved. Maple is a trademark of
+ <____ ____>  Waterloo Maple Inc.
+      |       Type ? for help.
+> with(convex):
+Convex version 1.1.3, Copyright (C) 1999-2009 Matthias Franz
+This package is distributed under the GNU General Public License,
+see http://www-fourier.ujf-grenoble.fr/~franz/convex/ for more information.
+> points:=[0,0,1],[4,4,0],[4,0,0],[0,4,0],[0,0,4],[1,0,0],[0,1,0],[0,0,1]
+> :
+> P1 := convhull(points);
+                           P1 := POLYTOPE(3, 3, 7, 6)
+
+> nops(vertices(P1));
+                                       7
+
+> quit
+memory used=2.4MB, alloc=2.3MB, time=0.02
