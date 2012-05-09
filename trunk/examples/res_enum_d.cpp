@@ -46,6 +46,10 @@ int PD;				//this is the dimension of the projection
 int main(const int argc,const char** argv){
 
   // Parse command-line options.
+  //if (argc==1){
+//		std::cerr<<"Use -h option to see how to use respol."<<std::endl;
+//		exit(-1);
+//	}		
   ResPol::config c;
   c.verbose=1;
   c.read_from_file=false;
@@ -55,12 +59,13 @@ int main(const int argc,const char** argv){
     bool correct=false;
     if(!strcmp(argv[i],"-h")||!strcmp(argv[i],"--help")){
       std::cerr<<
-        "-f, --f-vector\t\toutput the f-vector (to file f-vector.polymake)\n"<<
+        "-f, --f-vector\t\toutput the f-vector\n"<<
         "-h, --help\t\tshow this message\n"<<
         "-i, --input file\tset input file (read input from stdin otherwise)\n"<<
         "-r, --resultant\t\tcompute the resultant polytope (default)\n"<<
         "-s, --secondary\t\tcompute the secondary polytope\n"<<
-        "-v, --verbose n\t\tset verbosity level to 0, 1 (default) or 2\n";
+        "-v, --verbose n\t\tset verbosity level to 0, 1 (default), 2, 3,"<<
+        " 4(returns the vertices of computed polytope)\n";
       exit(-1);
     }
     if(!strcmp(argv[i],"-f")||!strcmp(argv[i],"--f-vector")){
@@ -173,14 +178,39 @@ int main(const int argc,const char** argv){
   
   // print some statistics
   
-  if(c.verbose>1){
-    std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
+  switch (c.verbose) {
+		case 0:
+		  break;
+    case 1:
+      print_statistics_small(CD-1, 
+                           PD,
+                           Res.current_dimension(),
+                           initial_pointset_size,
+                           pointset.size(),
+                           num_of_triangs.first+num_of_triangs.second,
+                           Res.number_of_vertices(),
+         #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
+                           count_extreme_vertices(Res),
+         #else
+                           -1,
+         #endif
+                           tstopall-tstartall, // overall time
+                           conv_time, // Res convex hull time
+                           recompute_time, // Res convex hull offline time
+                           dets.get_determinant_time()+
+                           Pdets.get_determinant_time(), // determinant time
+                           -1,//volume(Res,Pdets)
+                           Res,
+                           c);
+       break;
+    case 2:
+      std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
               << "num_of_input_points, numoftriangs, numofvertices,"  
               << "numofextremevertices, timeall, timehull, timeofflinehull,"
               << "timedet, volume" << std::endl;
-  }
-  if(c.verbose==0){
-    print_statistics_small(CD-1, 
+      break;
+    case 3:
+          pretty_print_statistics(CD-1, 
                            PD,
                            Res.current_dimension(),
                            initial_pointset_size,
@@ -200,30 +230,19 @@ int main(const int argc,const char** argv){
                            -1,//volume(Res,Pdets)
                            Res,
                            c);
-  }else{
-    pretty_print_statistics(CD-1, 
-                           PD,
-                           Res.current_dimension(),
-                           initial_pointset_size,
-                           pointset.size(),
-                           num_of_triangs.first+num_of_triangs.second,
-                           Res.number_of_vertices(),
-#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
-                           count_extreme_vertices(Res),
-#else
-                           -1,
-#endif
-                           tstopall-tstartall, // overall time
-                           conv_time, // Res convex hull time
-                           recompute_time, // Res convex hull offline time
-                           dets.get_determinant_time()+
-                           Pdets.get_determinant_time(), // determinant time
-                           -1,//volume(Res,Pdets)
-                           Res,
-                           c);
-  }
+           break;
+     default:
+       std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
+              << "num_of_input_points, numoftriangs, numofvertices,"  
+              << "numofextremevertices, timeall, timehull, timeofflinehull,"
+              << "timedet, volume" << std::endl;
+      break;
 
-  if(c.verbose>1){
+  }
+  
+
+
+  if(c.verbose==4){
     //std::cout << "convex hull time = " << conv_time << std::endl;
     // we print for debugging purposes the matrix of the hashed points
     //Pdets.print_matrix(std::cout);
@@ -236,6 +255,7 @@ int main(const int argc,const char** argv){
     polymakefile.open("f_vector.polymake");
     print_polymake_fvector(Res,polymakefile);
     system ("polymake f_vector.polymake");
+    std::cout<<std::endl;
   }
   /*
   int cells, triang_facets, facets, edges, vertices;
