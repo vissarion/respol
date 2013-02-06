@@ -127,7 +127,7 @@ public:
   }
 
   int put(data d){
-    std::pair<base_iterator,bool> result = insert(d);
+    std::pair<base_iterator,bool> result = this->insert(d);
     return (result.second)?1:0;
   }
 
@@ -138,7 +138,7 @@ public:
   }
 
   void pop_back(){
-    erase(back());
+		this->erase(back());
   }
 
   // insert data
