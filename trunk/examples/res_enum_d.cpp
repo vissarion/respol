@@ -35,8 +35,8 @@ int PD;				//this is the dimension of the projection
 //#include <../include/cgal_chd_hornus.h>
 //#include <../include/cgal_chd_hornus_with_cgal_det.h>
 #include <res_enum_functions.h>
-#include <randomized_res.h>
-#include <simplices_augmentation.h>
+//#include <randomized_res.h>
+//#include <simplices_augmentation.h>
 //#include <../include/cgal_chd_hornus_cellinfo_placing.h>
 //#include <../include/cgal_chd_hornus_cellinfo_with_cgal_det.h>
 
