@@ -744,6 +744,70 @@ int get_illegal_facet(Triangulation& Res,
 		return 0;
 }
 
+//compute discriminant vertex using TropLi software as an oracle
+template <class NT_>
+std::vector<NT_> compute_disc_vertex(	
+              const std::vector<std::vector<NT_> >& pointset,
+              const PVector_d &nli) {
+	//std::cout << "discriminant"<<std::endl;
+	//std::cout<< "pointset" << pointset << "\n";
+	//std::cout<< "lifting" << nli << "\n";
+	std::ofstream troplifile;
+	troplifile.open("tropli_vertex");
+	troplifile << D+1 << " " << pointset.size()<< std::endl;
+	for (int i=0; i<D; ++i){
+		for (typename std::vector<std::vector<Field> >::const_iterator vit=pointset.begin();
+					vit!=pointset.end();++vit){
+	    troplifile << (*vit)[i].numerator() << " ";
+	  }
+	  troplifile << std::endl;
+	}
+	for (typename std::vector<std::vector<Field> >::const_iterator vit=pointset.begin();
+			 vit!=pointset.end();++vit){
+		troplifile << "1 ";
+	}
+	troplifile << std::endl;
+	troplifile << std::endl;
+	//CGAL::Gmpz gcd((*(nli.deltas_begin())).denominator()), prod(1);
+	CGAL::Gmpz gcd(1), prod(1);
+	for (PVector_d::Delta_const_iterator vit=nli.deltas_begin(); 
+	     vit!=nli.deltas_end(); ++vit){
+		//troplifile << (*vit).numerator() << "/" << (*vit).denominator() << " ";
+		prod *= (*vit).denominator();
+		//gcd = CGAL::gcd(gcd,(*vit).denominator());
+		//std::cout << gcd << " ";
+	}
+	Field lcd=prod/gcd;
+	std::cout << "LCD=" << lcd << std::endl;
+	Vector_d nliv = Field(-1) * lcd * nli.vector();
+	std::cout << "normalized " << nliv << std::endl;
+	for (Vector_d::Cartesian_const_iterator vit=nliv.cartesian_begin(); 
+	     vit!=nliv.cartesian_end(); ++vit){
+		if ((*vit).denominator() != Field(1)){
+		  std::cout << "GCD fault...aborting..." <<  std::endl;
+		}
+		troplifile << (*vit).numerator() << " ";
+	}
+	//std::cout << "vector= " << nli.vector() << std::endl;
+	//std::cout << "vector*= " << max*nli.vector() << std::endl;
+	troplifile << std::endl;
+	system ("./tropli_disc < tropli_vertex");
+	//read disc vertex from output file
+	std::ifstream troplidisc;
+	troplidisc.open("disc_vertices.out");
+	Field vertex_cartesian;
+	troplidisc >> vertex_cartesian;
+	troplidisc >> vertex_cartesian;
+	std::cout << "disc vertex" << PD << std::endl;
+	std::vector<Field> new_vertex;
+	for (int i=0; i<PD; ++i) {
+		troplidisc >> vertex_cartesian;
+		new_vertex.push_back(vertex_cartesian);
+	}
+	std::cout << new_vertex << std::endl;
+	return new_vertex;
+}
+
 
 // compute a Res vertex by constructing a lifting triangulation
 // project and compute the volumes of some cells
@@ -768,7 +832,12 @@ std::vector<NT_> compute_res_vertex(
 	PVector_d nli = normal_list_d.back();
 	normal_list_d.pop_back();
 	//std::cout << "normal vector:" << nli << std::endl;
-
+  
+  if(conf.polytope_type==2){
+	  //discriminant case
+	  return compute_disc_vertex(pointset,nli);
+	}
+  
 	if (pointset.size() == proj.size()){
 		// make a new T
 		CTriangulation Tl(CD);
@@ -832,6 +901,12 @@ std::vector<NT_> compute_res_vertex2(
 	//PVector_d nli = normal_list_d.back();
 	//normal_list_d.pop_back();
 	//std::cout << "normal vector:" << nli << std::endl;
+
+   if(conf.polytope_type==2){
+	  //discriminant case
+	  return compute_disc_vertex(pointset,nli);
+	}
+
 
 	if (pointset.size() == proj.size()){
 		// make a new T
@@ -1079,7 +1154,7 @@ Field volume(const Triangulation& Res, HD& Pdets){
 		//std::cout<<simplex_points_indices<<" --> "<<
 		//abs(Pdets.homogeneous_determinant(simplex_points_indices))
 		//<<std::endl;
-		vol+=abs(Pdets.homogeneous_determinant(simplex_points_indices));
+		vol+=CGAL::abs(Pdets.homogeneous_determinant(simplex_points_indices));
 	}
 	vol*=(1/factorial(Res.current_dimension()));
 	return vol;

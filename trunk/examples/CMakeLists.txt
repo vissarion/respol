@@ -50,7 +50,7 @@ if ( CGAL_FOUND )
   #                         "show info about LRS execution" OFF
   #                         "RESPOL_USE_LRS" OFF )
   #option ( RESPOL_USE_EIGEN "use Eigen to compute determinants" OFF )
-  option ( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY "preprocess the input" ON )
+  option ( RESPOL_EXTREME_SPECIALIZED_POINTS_ONLY "preprocess the input" OFF )
   option ( RESPOL_BUILD_RANDOMIZED "also build randomized init version" OFF )
   option ( RESPOL_BUILD_CONVERTERS "build input file converters" OFF )
 

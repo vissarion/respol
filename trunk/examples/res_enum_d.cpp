@@ -59,10 +59,11 @@ int main(const int argc,const char** argv){
     bool correct=false;
     if(!strcmp(argv[i],"-h")||!strcmp(argv[i],"--help")){
       std::cerr<<
-        "-f, --f-vector\t\toutput the f-vector\n"<<
+        "-f, --f-vector\t\toutput the f-vector (require polymake)\n"<<
         "-h, --help\t\tshow this message\n"<<
         "-i, --input file\tset input file (read input from stdin otherwise)\n"<<
         "-r, --resultant\t\tcompute the resultant polytope (default)\n"<<
+        "-d, --discriminant\t\tcompute the discriminant polytope (require tropli)\n"<<
         "-s, --secondary\t\tcompute the secondary polytope\n"<<
         "-v, --verbose n\t\tset verbosity level to 0, 1 (default), 2, 3,"<<
         " 4(returns the vertices of computed polytope)\n";
@@ -83,6 +84,10 @@ int main(const int argc,const char** argv){
     }
     if(!strcmp(argv[i],"-s")||!strcmp(argv[i],"--secondary")){
       c.polytope_type=1;
+      correct=true;
+    }
+    if(!strcmp(argv[i],"-d")||!strcmp(argv[i],"--discriminant")){
+      c.polytope_type=2;
       correct=true;
     }
     if(!strcmp(argv[i],"-v")||!strcmp(argv[i],"--verbose")){
@@ -124,8 +129,18 @@ int main(const int argc,const char** argv){
   // compute the cayley points set
 	cayley_trick(pointset, mi);
 	
-	// this is the dimension of the resultant (and secondary) polytope
- 	int RD = n - 2*D -1;
+	// this is the dimension of the resultant (or secondary or discriminant) polytope
+ 	int RD;
+  if(c.polytope_type==0){
+    // compute the cayley points set for the resultant case
+          cayley_trick(pointset, mi);
+          // this is the dimension of the resultant
+          RD = n - 2*D -1;
+  }else{
+          CD = D+1;
+          // this is the dimension of the secondary and discriminant (no Cayley trick)
+          RD = n - D -1;
+  }
   
 	// compute the big matrix
 	// you don't have to homogenize!

@@ -321,6 +321,7 @@ void print_output(const Triang &Res,
   typedef typename Triang::Point_d                      P;
   typedef typename P::Cartesian_const_iterator          PCCI;
   for (VCI vit = Res.vertices_begin(); vit != Res.vertices_end(); vit++){
+    os << vit->point().dimension() << " ";
     for (PCCI cit=vit->point().cartesian_begin();
          cit != vit->point().cartesian_end();
          cit++){
