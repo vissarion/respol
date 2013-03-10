@@ -51,7 +51,7 @@ int main(const int argc,const char** argv){
 //		exit(-1);
 //	}		
   ResPol::config c;
-  c.verbose=1;
+  c.verbose=0;
   c.read_from_file=false;
   c.output_f_vector=false;
   c.polytope_type=0; // resultant polytope
@@ -65,7 +65,7 @@ int main(const int argc,const char** argv){
         "-r, --resultant\t\tcompute the resultant polytope (default)\n"<<
         "-d, --discriminant\t\tcompute the discriminant polytope (require tropli)\n"<<
         "-s, --secondary\t\tcompute the secondary polytope\n"<<
-        "-v, --verbose n\t\tset verbosity level to 0, 1 (default), 2, 3,"<<
+        "-v, --verbose n\t\tset verbosity level to 0 (default), 1 , 2, 3,"<<
         " 4(returns the vertices of computed polytope)\n";
       exit(-1);
     }
@@ -128,7 +128,9 @@ int main(const int argc,const char** argv){
   
   // compute the cayley points set
 	cayley_trick(pointset, mi);
+	int RD = n - 2*D -1;
 	
+	/*
 	// this is the dimension of the resultant (or secondary or discriminant) polytope
  	int RD;
   if(c.polytope_type==0){
@@ -141,7 +143,7 @@ int main(const int argc,const char** argv){
           // this is the dimension of the secondary and discriminant (no Cayley trick)
           RD = n - D -1;
   }
-  
+  */
 	// compute the big matrix
 	// you don't have to homogenize!
   HD dets(pointset.begin(),pointset.end());
@@ -186,7 +188,7 @@ int main(const int argc,const char** argv){
 	//print_res_vertices(Res,std::cout);
   //#endif
 	//print_res_facets_number(Res);
-  generate_polymake_scripts(Res);
+  
   std::ofstream outfile;
   outfile.open("res_vertices.txt");
   print_output(Res,outfile);
@@ -247,17 +249,22 @@ int main(const int argc,const char** argv){
                            c);
            break;
      default:
-       std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
-              << "num_of_input_points, numoftriangs, numofvertices,"  
-              << "numofextremevertices, timeall, timehull, timeofflinehull,"
-              << "timedet, volume" << std::endl;
+       //std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
+       //       << "num_of_input_points, numoftriangs, numofvertices,"  
+       //       << "numofextremevertices, timeall, timehull, timeofflinehull,"
+       //       << "timedet, volume" << std::endl;
       break;
 
   }
-  
 
-
-  if(c.verbose==4){
+  if(c.verbose==0){
+		std::cout<< "\nThe vertices of the " ;
+		switch(c.polytope_type){
+			case 0: std::cout << " resultant "; break;
+			case 1: std::cout << " secondary "; break;
+			case 2: std::cout << " discriminant "; break;
+		}
+		std::cout<< "polytope: " << std::endl;	
     //std::cout << "convex hull time = " << conv_time << std::endl;
     // we print for debugging purposes the matrix of the hashed points
     //Pdets.print_matrix(std::cout);
@@ -266,6 +273,7 @@ int main(const int argc,const char** argv){
   }
 
   if(c.output_f_vector){
+		generate_polymake_scripts(Res);
     std::ofstream polymakefile;
     polymakefile.open("f_vector.polymake");
     print_polymake_fvector(Res,polymakefile);

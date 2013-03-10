@@ -798,13 +798,13 @@ std::vector<NT_> compute_disc_vertex(
 	Field vertex_cartesian;
 	troplidisc >> vertex_cartesian;
 	troplidisc >> vertex_cartesian;
-	std::cout << "disc vertex" << PD << std::endl;
+	//std::cout << "disc vertex" << PD << std::endl;
 	std::vector<Field> new_vertex;
 	for (int i=0; i<PD; ++i) {
 		troplidisc >> vertex_cartesian;
 		new_vertex.push_back(vertex_cartesian);
 	}
-	std::cout << new_vertex << std::endl;
+	//std::cout << new_vertex << std::endl;
 	return new_vertex;
 }
 
@@ -1154,7 +1154,7 @@ Field volume(const Triangulation& Res, HD& Pdets){
 		//std::cout<<simplex_points_indices<<" --> "<<
 		//abs(Pdets.homogeneous_determinant(simplex_points_indices))
 		//<<std::endl;
-		vol+=CGAL::abs(Pdets.homogeneous_determinant(simplex_points_indices));
+		vol+=abs(Pdets.homogeneous_determinant(simplex_points_indices));
 	}
 	vol*=(1/factorial(Res.current_dimension()));
 	return vol;
