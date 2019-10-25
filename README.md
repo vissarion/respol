@@ -4,12 +4,12 @@
 
 This archive contains patches to sources of the `CGAL` library, the old experimental `CGAL` packages `Triangulation` and `Extreme points` (not the one that are part of the `CGAL` library, both were included here thanks to the kind permission of its authors) and the `respol` sources. Both `CGAL` and `respol` are written in `C++`.
 
-To compile and use `respol`, you need first to compile the `CGAL` library, or download the precompiled library (this software has been tested with `CGAL` version `3.6` and `3.7`). You can follow these steps:
+To compile and use `respol`, you need first to compile the `CGAL` library, or download the precompiled library (this software has been tested with `CGAL` version `4.14`). You can follow these steps:
 
 
 ### Compile `CGAL` sources
 
-Follow the `CGAL` installation manual. It states that `CGAL` requires the `Boost` libraries. In particular the header files and the threading library binaries. Version 1.39 (or higher) are needed. Having `GMP` version 4.2 or higher and MPFR version 2.2.1 or higher installed is recommended by `CGAL` but needed by `respol`. Once you have installed these libraries, execute:
+Follow the `CGAL` installation manual. It states that `CGAL` requires the `Boost` libraries. In particular the header files and the threading library binaries. Having `GMP` version 4.2 or higher and MPFR version 2.2.1 or higher installed is recommended by `CGAL` but needed by `respol`. Once you have installed these libraries, execute:
 
 ```
 $ cmake .
@@ -73,10 +73,11 @@ $ ./res_enum_d < inputs/cayley4_small_implic.tmp
 ### `respol` output
 
 The default output list the vertices of the computed polytope. *E.g.* for the above command:
-`
+
+```
 The vertices of the  resultant polytope: 
 [6,4,11,12],[12,8,16,16],[12,4,12,0],[12,8,0,24],[12,8,8,16],[12,4,4,0],[12,0,4,0],[12,0,0,4],[12,0,8,0],[0,0,0,30],[0,0,3,12],[6,0,4,0],[6,0,0,4],[6,0,7,0],[6,4,3,12],[0,0,0,15],[12,4,0,4],[0,0,6,12],[6,4,0,15],[6,4,11,12]
-`
+```
 
 Using option `-v` with arguments `1` or `2` we can have compressed and detailed versions output.
 

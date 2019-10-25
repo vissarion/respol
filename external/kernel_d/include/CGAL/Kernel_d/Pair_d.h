@@ -68,7 +68,7 @@ Direction_d direction() const
 
 void read(std::istream& is)
 { 
-  switch( is.iword(CGAL::IO::mode) ) {
+  switch( CGAL::get_mode(is) ) {
     case CGAL::IO::ASCII :
       is >> _p[0] >> _p[1]; break;
     case CGAL::IO::BINARY :
@@ -80,7 +80,7 @@ void read(std::istream& is)
 
 void print(std::ostream& os, const char* _name) const
 { 
-  switch( os.iword(CGAL::IO::mode) ) {
+  switch( CGAL::get_mode(os) ) {
     case CGAL::IO::ASCII :
       os << _p[0] << " " <<  _p[1]; break;
     case CGAL::IO::BINARY :
