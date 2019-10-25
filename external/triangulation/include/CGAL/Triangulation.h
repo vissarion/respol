@@ -137,7 +137,7 @@ public:
     template< class Face_ >
     int index_of_covertex(const Face_ & f) const
     {
-        return tds().index_of_covertex<Face_>(f);
+        return tds().index_of_covertex(f);
     }
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - CREATION

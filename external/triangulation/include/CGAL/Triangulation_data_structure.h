@@ -354,7 +354,7 @@ public:
     template< typename OutputIterator >
     Full_cell_handle insert_in_tagged_hole(Vertex_handle, Facet, OutputIterator);
 
-	Vertex_handle insert_increase_dimension(Vertex_handle); /* Concept */
+    Vertex_handle insert_increase_dimension(Vertex_handle = Vertex_handle()); /* Concept */
 
 private:
 
@@ -1110,8 +1110,7 @@ void Triangulation_data_structure<Dim, Vb, Sb>
 
 template <class Dim, class Vb, class Sb>
 typename Triangulation_data_structure<Dim, Vb, Sb>::Vertex_handle
-Triangulation_data_structure<Dim, Vb, Sb>
-::insert_increase_dimension(Vertex_handle star = Vertex_handle()) /* Concept */
+Triangulation_data_structure<Dim, Vb, Sb>::insert_increase_dimension(Vertex_handle star) /* Concept */
 {
     const int prev_cur_dim = current_dimension();
     CGAL_precondition(prev_cur_dim < ambient_dimension());

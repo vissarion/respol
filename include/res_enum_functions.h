@@ -791,7 +791,7 @@ std::vector<NT_> compute_disc_vertex(
 	//std::cout << "vector= " << nli.vector() << std::endl;
 	//std::cout << "vector*= " << max*nli.vector() << std::endl;
 	troplifile << std::endl;
-	system ("./tropli_disc < tropli_vertex");
+    int res = system ("./tropli_disc < tropli_vertex");
 	//read disc vertex from output file
 	std::ifstream troplidisc;
 	troplidisc.open("disc_vertices.out");
