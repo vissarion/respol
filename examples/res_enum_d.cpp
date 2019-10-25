@@ -277,7 +277,7 @@ int main(const int argc,const char** argv){
     std::ofstream polymakefile;
     polymakefile.open("f_vector.polymake");
     print_polymake_fvector(Res,polymakefile);
-    system ("polymake f_vector.polymake");
+    int res = system ("polymake f_vector.polymake");
     std::cout<<std::endl;
   }
   /*

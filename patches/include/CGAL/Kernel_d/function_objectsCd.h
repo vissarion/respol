@@ -234,7 +234,7 @@ public:
 // points. This way, we gain a bit by avoiding coordinates copy and a lot
 // by computing only d multiplication and d additions instead of computing
 // the determinant of a matrix of size d.
-template <class R>
+template <class T>
 class OrientationCd{
 public:    
     template <class ForwardIterator>
