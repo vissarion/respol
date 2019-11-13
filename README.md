@@ -86,6 +86,8 @@ Using option `-v` with arguments `1` or `2` we can have compressed and detailed 
 Copyright (c) 2012-2019 Vissarion Fisikopoulos  
 Copyright (c) 2012-2019 Luis Penaranda  
 
+Maintainer: [Vissarion Fisikopoulos](https://github.com/vissarion)
+
 You may redistribute or modify the software under the GNU Lesser General Public License as published by Free Software Foundation, either version 3 of the License, or (at your option) any later version. It is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY.  
 
 The development started by Vissarion Fisikopoulos and Luis Penaranda while they were affiliated with University of Athens (UoA, Greece).
