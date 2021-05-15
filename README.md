@@ -51,8 +51,13 @@ where `_YOUR_CGAL_PATH_` is the path where `CGAL` library was compiled.
 For additional options, set by CMake flags, see README.FLAGS
 (it is normally not needed to change default compilation options).
 
+The following command will execute the test-suite
+```
+$ ctest
+```
 
-### Use `respol`
+
+### Use `respol` for resultant polytopes
 
 Then, you can test the code with some inputs from the `examples/input` directory. The format of the input files is:
 
@@ -86,24 +91,38 @@ Input example (file: `inputs/cayley4_small.tmp`)
 1], [2, 0, 0], [0, 0, 0], [0, 1, 4],[0, 1, 5]]
 ```
 
-This input belongs to the case (a) *i.e* implicitization. By adding `| 0 2 5 6 7 8 9` in the second line, we are in the case (b) *i.e.* arbitrary projection. On the other hand, by adding only `|` we are in the case (c) *i.e.* generic resultant polytope.
+This input belongs to the case
+(a) *i.e* implicitization.
+By adding `| 0 2 5 6 7 8 9` in the second line, we are in the case
+(b) *i.e.* arbitrary projection. On the other hand, by adding only `|` we are in the case
+(c) *i.e.* generic resultant polytope.
 
 To run `respol` with this input execute:
 
 `
-$ ./res_enum_d < inputs/cayley4_small_implic.tmp
+$ ./res_enum_d -v 2 < resultant_examples/cayley4_small.tmp
 `
 
 ### `respol` output
 
-The default output list the vertices of the computed polytope. *E.g.* for the above command:
+The `-v 2` verbose option will return information about the algorithm execution
+and at the end the vertices of the computed polytope as well as the volume.
+*E.g.* for the above command:
 
 ```
-The vertices of the  resultant polytope: 
-[6,4,11,12],[12,8,16,16],[12,4,12,0],[12,8,0,24],[12,8,8,16],[12,4,4,0],[12,0,4,0],[12,0,0,4],[12,0,8,0],[0,0,0,30],[0,0,3,12],[6,0,4,0],[6,0,0,4],[6,0,7,0],[6,4,3,12],[0,0,0,15],[12,4,0,4],[0,0,6,12],[6,4,0,15],[6,4,11,12]
+volume:					4575/1
+
+The vertices of the  resultant polytope:
+[6,4,11,12],[0,0,0,30],[12,8,16,16],[12,8,8,16],[12,0,4,0],[6,0,4,0],[6,0,0,4],[0,0,3,12],[12,4,4,0],[12,8,0,24],[12,0,0,4],[12,0,8,0],[12,4,12,0],[6,0,7,0],[6,4,3,12],[0,0,0,15],[12,4,0,4],[0,0,6,12],[6,4,0,15],[6,4,11,12]
 ```
 
-Using option `-v` with arguments `1` or `2` we can have compressed and detailed versions output.
+Using option `-v` with argument `1` we can have a compressed version of output
+while with `-v 0` we get only the number of output vertices (used by the test-suite).
+
+### `respol` for discriminant and secondary polytopes
+
+`respol` can be used to compute discriminant and secondary polytopes. Example files are
+in `discriminant_examples` and `secondary_examples` directories respectively.
 
 #### Credits
 
