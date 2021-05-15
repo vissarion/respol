@@ -33,17 +33,17 @@ $ cmake .
 $ make
 ```
 
-Download and install the LEDA library from
+Download the LEDA library from
 https://www.algorithmic-solutions.com/index.php/products/leda-free-edition
 
-Then copy the `libleda.a` file shipped with LEDA into `respol` directory.
+Then copy the downloaded folder into `external` directory and rename it to `leda`.
 
 ### Compile `respol` sources
 
 In folder `respol` execute:
 
 ```
-$ cmake -DCGAL_DIR=_YOUR_CGAL_PATH_ -Wno-dev .
+$ cmake -DCGAL_DIR=_YOUR_CGAL_PATH_ -Wno-dev -DCMAKE_BUILD_TYPE=Release .
 $ make
 ```
 

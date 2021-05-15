@@ -181,7 +181,7 @@ if ( CGAL_FOUND )
     create_single_source_cgal_program("res_enum_d_rand.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_BUILD_RANDOMIZED )
 
-  find_library(LEDA NAMES libleda.a PATHS .)
+  find_library(LEDA NAMES libleda.a PATHS ../external/leda/)
 
   if (NOT LEDA)
 
