@@ -163,7 +163,6 @@ int main(const int argc,const char** argv){
   std::pair<int,int> num_of_triangs =
     compute_res(pointset,n,mi,RD,proj,dets,Pdets,Res,c);
   
-	//std::pair<int,int> num_of_triangs =
   //RandomizedInnerQ(pointset,n,mi,RD,proj,dets,Pdets,Res);
   
   //std::pair<int,int> num_of_triangs =
@@ -196,8 +195,6 @@ int main(const int argc,const char** argv){
   // print some statistics
   
   switch (c.verbose) {
-		case 0:
-		  break;
     case 1:
       print_statistics_small(CD-1, 
                            PD,
@@ -216,17 +213,11 @@ int main(const int argc,const char** argv){
                            recompute_time, // Res convex hull offline time
                            dets.get_determinant_time()+
                            Pdets.get_determinant_time(), // determinant time
-                           -1,//volume(Res,Pdets)
+                           volume(Res,Pdets),
                            Res,
                            c);
        break;
     case 2:
-      std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
-              << "num_of_input_points, numoftriangs, numofvertices,"  
-              << "numofextremevertices, timeall, timehull, timeofflinehull,"
-              << "timedet, volume" << std::endl;
-      break;
-    case 3:
           pretty_print_statistics(CD-1, 
                            PD,
                            Res.current_dimension(),
@@ -244,34 +235,25 @@ int main(const int argc,const char** argv){
                            recompute_time, // Res convex hull offline time
                            dets.get_determinant_time()+
                            Pdets.get_determinant_time(), // determinant time
-                           -1,//volume(Res,Pdets)
+                           volume(Res,Pdets),
                            Res,
                            c);
            break;
      default:
-       //std::cout << "Cdim, Pdim, current_dim , init_num_of_input_points," 
-       //       << "num_of_input_points, numoftriangs, numofvertices,"  
-       //       << "numofextremevertices, timeall, timehull, timeofflinehull,"
-       //       << "timedet, volume" << std::endl;
       break;
 
   }
 
-  if(c.verbose==0){
-		std::cout<< "\nThe vertices of the " ;
-		switch(c.polytope_type){
-			case 0: std::cout << " resultant "; break;
-			case 1: std::cout << " secondary "; break;
-			case 2: std::cout << " discriminant "; break;
-		}
-		std::cout<< "polytope: " << std::endl;	
-    //std::cout << "convex hull time = " << conv_time << std::endl;
-    // we print for debugging purposes the matrix of the hashed points
-    //Pdets.print_matrix(std::cout);
-    print_res_vertices(Res,std::cout);
-    //recompute_Res(Res);
-  }
-
+  // print the vertices of the polytope
+  std::cout<< "\nThe vertices of the " ;
+	switch(c.polytope_type){
+		case 0: std::cout << " resultant "; break;
+		case 1: std::cout << " secondary "; break;
+		case 2: std::cout << " discriminant "; break;
+	}
+	std::cout<< "polytope: " << std::endl;	
+  print_res_vertices(Res,std::cout);
+    
   if(c.output_f_vector){
 		generate_polymake_scripts(Res);
     std::ofstream polymakefile;

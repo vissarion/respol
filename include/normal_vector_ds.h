@@ -66,12 +66,12 @@ public:
     for (int i=0; i<pow(base,PD); ++i){
       std::vector<DT> extreme_point;
       std::vector<int> v=int2vectord(i,base,PD);
-      //copy(v.begin(),v.end(),ostream_iterator<int>(std::cout," "));
+      copy(v.begin(),v.end(),ostream_iterator<int>(std::cout," "));
       for (std::vector<int>::iterator it=v.begin(); it!=v.end(); it++){
         extreme_point.push_back(vec[*it]);
-        //std::cout << vec[*it] << " ";
+        std::cout << vec[*it] << " ";
       }
-      //std::cout << std::endl;
+      std::cout << std::endl;
       if (!is_zero(extreme_point)){
         data lft(PD,extreme_point.begin(),extreme_point.end());
         put(lft);
@@ -80,16 +80,30 @@ public:
   }
 
   void random_initialize(){
-    // Instanciate a random point generator
-    //CGAL::Random rng;
-    //typedef CGAL::Random_points_in_cube_d<V> Random_points_iterator;
-    //Random_points_iterator rand_it(PD, 1.0, rng);
+      int vec[]={-1,1};
+      for (int j=0; j<2; j++){
+        for (int i=0; i<PD; i++){
+          std::vector<int> extreme_point(PD,0);
+          extreme_point[i]=vec[j];
+          //for (int i=0; i<PD; i++){
+          //  std::cout<<extreme_point[i]<<" ";
+          //}
+          //std::cout<<std::endl;
+          data lft(PD,extreme_point.begin(),extreme_point.end());
+          put(lft);
+        }
+      }
+      /*
+      // Instanciate a random point generator
+      CGAL::Random rng;
+      typedef CGAL::Random_points_in_cube_d<V> Random_points_iterator;
+      Random_points_iterator rand_it(PD, 1.0, rng);
 
-    // Generate 1 random point
-    //std::vector<V> points;
-    //CGAL::copy_n(rand_it, 1, std::back_inserter(points));
-    //put(V(*(points.begin())));
-    ;
+      // Generate 1 random point
+      std::vector<V> points;
+      CGAL::copy_n(rand_it, 1, std::back_inserter(points));
+      put(V(*(points.begin())));
+      */
   }
 
   // initialization of ds

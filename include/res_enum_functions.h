@@ -24,6 +24,8 @@
 #include <string>
 #include <algorithm>
 
+#include <tropli/tropli_disc.cpp>
+
 // include d-dimensional things from CGAL
 //#include <CGAL/Filtered_kernel_d.h>
 //#include <CGAL/Pure_complex.h>
@@ -130,6 +132,7 @@ typedef HashedDeterminant<Field>::Table                 HD;
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>
 #include "normal_set_ds.h"
+//#include "normal_vector_ds.h"
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
@@ -147,11 +150,11 @@ typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
 /////////////////////////////////////////////////////////////////
 // math
-//template <class Field>
-//inline Field factorial(Field n)
-//{
-//  return (n == Field(1) || n == Field(0)) ? Field(1) : factorial(n - 1) * n;
-//}
+template <class Field>
+inline Field compute_factorial(Field n)
+{
+  return (n == Field(1) || n == Field(0)) ? Field(1) : compute_factorial(n - 1) * n;
+}
 
 template <class Field>
 inline Field factorial(Field n)
@@ -694,9 +697,9 @@ void insert_new_Rvertex2(Triangulation& Res,
 
 // TODO: make it more efficient, don't gather all infinite cells
 int get_illegal_facet(Triangulation& Res,
-											NV_ds& normal_list,
-											PVector_d& current_vector,
-											PSimplex_d& near_cell){
+                      NV_ds& normal_list,
+                      PVector_d& current_vector,
+                      PSimplex_d& near_cell){
 	//typedef std::vector<PSimplex_d> Simplices;
 	//Simplices inf_simplices;
 	//std::back_insert_iterator<Simplices> out(inf_simplices);
@@ -717,12 +720,17 @@ int get_illegal_facet(Triangulation& Res,
 			std::vector<PPoint_d> facet_points;
 			for (int i=1; i<=Res.current_dimension(); i++){
 				facet_points.push_back(sit->vertex(i)->point());
-				//std::cout << (*sit)->vertex(i)->point() << " ";
+                //std::cout << (*sit)->vertex(i)->point() << " ";
 			}
 			//std::cout << std::endl;
-			PPoint_d opposite_point = sit->neighbor(0)->vertex(sit->mirror_index(0))->point();
-			// compute a hyperplane which has in its negative side the opposite point
-			PHyperplane_d hp(facet_points.begin(),facet_points.end(),opposite_point,CGAL::ON_NEGATIVE_SIDE);
+            PPoint_d opposite_point = sit->neighbor(0)
+                                         ->vertex(sit->mirror_index(0))->point();
+            // compute a hyperplane which has in its negative side the
+            // opposite point
+            PHyperplane_d hp(facet_points.begin(),
+                             facet_points.end(),
+                             opposite_point,
+                             CGAL::ON_NEGATIVE_SIDE);
 			//is_neg=true;
 			current_vector = hp.orthogonal_direction();
 			//for (PVector_d::Delta_const_iterator dit=current_vector.deltas_begin();
@@ -754,18 +762,21 @@ std::vector<NT_> compute_disc_vertex(
 	//std::cout<< "lifting" << nli << "\n";
 	std::ofstream troplifile;
 	troplifile.open("tropli_vertex");
-	troplifile << D+1 << " " << pointset.size()<< std::endl;
-	for (int i=0; i<D; ++i){
+    //troplifile << D+1 << " " << pointset.size()<< std::endl;
+    troplifile << D << " " << pointset.size()<< std::endl;
+    for (int i=0; i<D; ++i){
 		for (typename std::vector<std::vector<Field> >::const_iterator vit=pointset.begin();
 					vit!=pointset.end();++vit){
 	    troplifile << (*vit)[i].numerator() << " ";
 	  }
 	  troplifile << std::endl;
 	}
-	for (typename std::vector<std::vector<Field> >::const_iterator vit=pointset.begin();
+    /*
+    for (typename std::vector<std::vector<Field> >::const_iterator vit=pointset.begin();
 			 vit!=pointset.end();++vit){
 		troplifile << "1 ";
 	}
+    */
 	troplifile << std::endl;
 	troplifile << std::endl;
 	//CGAL::Gmpz gcd((*(nli.deltas_begin())).denominator()), prod(1);
@@ -778,9 +789,11 @@ std::vector<NT_> compute_disc_vertex(
 		//std::cout << gcd << " ";
 	}
 	Field lcd=prod/gcd;
-	std::cout << "LCD=" << lcd << std::endl;
 	Vector_d nliv = Field(-1) * lcd * nli.vector();
+#ifdef TROPLI_DEBUG 
+	std::cout << "LCD=" << lcd << std::endl;
 	std::cout << "normalized " << nliv << std::endl;
+#endif
 	for (Vector_d::Cartesian_const_iterator vit=nliv.cartesian_begin(); 
 	     vit!=nliv.cartesian_end(); ++vit){
 		if ((*vit).denominator() != Field(1)){
@@ -791,7 +804,7 @@ std::vector<NT_> compute_disc_vertex(
 	//std::cout << "vector= " << nli.vector() << std::endl;
 	//std::cout << "vector*= " << max*nli.vector() << std::endl;
 	troplifile << std::endl;
-    int res = system ("./tropli_disc < tropli_vertex");
+  int res = system ("./tropli_disc < tropli_vertex");
 	//read disc vertex from output file
 	std::ifstream troplidisc;
 	troplidisc.open("disc_vertices.out");
@@ -807,6 +820,75 @@ std::vector<NT_> compute_disc_vertex(
 	//std::cout << new_vertex << std::endl;
 	return new_vertex;
 }
+
+//compute discriminant vertex using TropLi software as an oracle
+template <class NT_>
+std::vector<NT_> compute_disc_vertex_stream(const std::vector<std::vector<NT_> >& pointset,
+                                            const PVector_d &nli) {
+	//std::cout << "discriminant"<<std::endl;
+	//std::cout<< "pointset" << pointset << "\n";
+	//std::cout<< "lifting" << nli << "\n";
+	std::stringstream tropli_input;
+	//tropli_input.open("tropli_vertex");
+  //tropli_input << D+1 << " " << pointset.size()<< std::endl;
+  tropli_input << D << " " << pointset.size()<< std::endl;
+  for (int i=0; i<D; ++i) {
+		for (auto vit=pointset.begin(); vit!=pointset.end(); ++vit) {
+	    tropli_input << (*vit)[i].numerator() << " ";
+	  }
+	  tropli_input << std::endl;
+	}
+  
+	tropli_input << std::endl;
+	tropli_input << std::endl;
+	//CGAL::Gmpz gcd((*(nli.deltas_begin())).denominator()), prod(1);
+	CGAL::Gmpz gcd(1), prod(1);
+	for (PVector_d::Delta_const_iterator vit=nli.deltas_begin(); 
+	     vit!=nli.deltas_end(); ++vit){
+		//tropli_input << (*vit).numerator() << "/" << (*vit).denominator() << " ";
+		prod *= (*vit).denominator();
+		//gcd = CGAL::gcd(gcd,(*vit).denominator());
+		//std::cout << gcd << " ";
+	}
+	Field lcd=prod/gcd;
+	Vector_d nliv = Field(-1) * lcd * nli.vector();
+#ifdef TROPLI_DEBUG 
+	std::cout << "LCD=" << lcd << std::endl;
+	std::cout << "normalized " << nliv << std::endl;
+#endif
+	for (Vector_d::Cartesian_const_iterator vit=nliv.cartesian_begin(); 
+	     vit!=nliv.cartesian_end(); ++vit){
+		if ((*vit).denominator() != Field(1)){
+		  std::cout << "GCD fault...aborting..." <<  std::endl;
+		}
+		tropli_input << (*vit).numerator() << " ";
+	}
+	//std::cout << "vector= " << nli.vector() << std::endl;
+	//std::cout << "vector*= " << max*nli.vector() << std::endl;
+	tropli_input << std::endl;
+  
+  //std::istream tropli_istream;
+  std::string tropli_output;
+  //tropli_istream << tropli_input;
+  tropli_disc(tropli_input, tropli_output);
+  
+  //int res = system ("./tropli_disc < tropli_vertex");
+	//read disc vertex from output file
+	std::ifstream troplidisc;
+	troplidisc.open("disc_vertices.out");
+	Field vertex_cartesian;
+	troplidisc >> vertex_cartesian;
+	troplidisc >> vertex_cartesian;
+	//std::cout << "disc vertex" << PD << std::endl;
+	std::vector<Field> new_vertex;
+	for (int i=0; i<PD; ++i) {
+		troplidisc >> vertex_cartesian;
+		new_vertex.push_back(vertex_cartesian);
+	}
+	//std::cout << new_vertex << std::endl;
+	return new_vertex;
+}
+
 
 
 // compute a Res vertex by constructing a lifting triangulation
@@ -835,7 +917,8 @@ std::vector<NT_> compute_res_vertex(
   
   if(conf.polytope_type==2){
 	  //discriminant case
-	  return compute_disc_vertex(pointset,nli);
+	  //return compute_disc_vertex(pointset,nli);
+	  return compute_disc_vertex_stream(pointset,nli);
 	}
   
 	if (pointset.size() == proj.size()){
@@ -904,7 +987,8 @@ std::vector<NT_> compute_res_vertex2(
 
    if(conf.polytope_type==2){
 	  //discriminant case
-	  return compute_disc_vertex(pointset,nli);
+	  //return compute_disc_vertex(pointset,nli);
+	  return compute_disc_vertex_stream(pointset,nli);
 	}
 
 
@@ -956,14 +1040,14 @@ std::vector<NT_> compute_res_vertex2(
 
 template <class NT_>
 int initialize_Res(const std::vector<std::vector<NT_> >& pointset,
-								 const std::vector<int>& mi,
-								 int RD,
-								 const std::vector<int>& proj,
-								 HD& dets,
-								 HD& Pdets,
-								 Triangulation& Res,
-								 const CTriangulation& T,
-                 const ResPol::config &conf){
+                   const std::vector<int>& mi,
+                   int RD,
+                   const std::vector<int>& proj,
+                   HD& dets,
+                   HD& Pdets,
+                   Triangulation& Res,
+                   const CTriangulation& T,
+                   const ResPol::config &conf){
 
   typedef NT_                                           Field;
 	int num_of_triangs=0;
@@ -973,16 +1057,21 @@ int initialize_Res(const std::vector<std::vector<NT_> >& pointset,
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
   //normal_list_d.simple_initialize();
-  normal_list_d.initialize();
+  //normal_list_d.initialize();
+  normal_list_d.random_initialize(100);
   
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors
   int minD = (PD>RD)?RD:PD;
   //std::cout << "minD:"<<minD<<"PD:"<<PD<<std::endl;
-  while(Res.current_dimension()<minD && !normal_list_d.empty()){
+  while(//Res.current_dimension()<minD &&
+        !normal_list_d.empty()){
+    if(conf.verbose>1){
+        std::cout << "compute new vertex" << std::endl;
+    }
     std::vector<Field> new_vertex=compute_res_vertex(
-      pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d,conf);
-		// insert it in the complex Res (if it is not already there)
+    pointset,mi,RD,proj,dets,Pdets,Res,T,normal_list_d,conf);
+    // insert it in the complex Res (if it is not already there)
   	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0)
   		insert_new_Rvertex(Res,normal_list_d,new_vertex,Pdets,conf);
 		num_of_triangs++;
@@ -1001,17 +1090,17 @@ int initialize_Res(const std::vector<std::vector<NT_> >& pointset,
 
 template <class NT_>
 int augment_Res(const std::vector<std::vector<NT_> >& pointset,
-								 const std::vector<int>& mi,
-								 int RD,
-								 const std::vector<int>& proj,
-								 HD& dets,
-								 HD& Pdets,
-								 Triangulation& Res,
-								 const CTriangulation& T,
-                 const ResPol::config &conf){
+                const std::vector<int>& mi,
+                int RD,
+                const std::vector<int>& proj,
+                HD& dets,
+                HD& Pdets,
+                Triangulation& Res,
+                const CTriangulation& T,
+                const ResPol::config &conf){
 
   typedef NT_                                           Field;
-	int num_of_triangs=0;
+  int num_of_triangs=0;
   if(conf.verbose>1){
     std::cout << "\n\nAUGMENTING RESULTANT POLYTOPE" << std::endl;
     //print_res_vertices(Res);
@@ -1023,46 +1112,46 @@ int augment_Res(const std::vector<std::vector<NT_> >& pointset,
   PVector_d current_vector;
   // make a stack (stl vector) with normals vectors used
   NV_ds normal_list_d;
-	//hint cell
-	PSimplex_d near_cell;
+  //hint cell
+  PSimplex_d near_cell;
   clock_t t_start;
   while(get_illegal_facet(Res,normal_list_d,current_vector,near_cell)){
-    if(conf.verbose>1){
-      std::cout << "\nAUGmenting step " << num_of_triangs << std::endl;
-      std::cout << "current normal" << current_vector << std::endl;
-      t_start=clock();
-    }
-		std::vector<Field> new_vertex =
-      compute_res_vertex2(
-        pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector,conf);
-    if(conf.verbose>1){
-      std::cout << "Compute triang time= "<<
-        ((double)(clock()-t_start))/CLOCKS_PER_SEC<<std::endl;
-    }
-		
-		// insert it in the complex Res (if it is not already there)
-  	if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0){	
-  		insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell,conf);
-		}
-    if(conf.verbose>1){
-      {
-        int cells, triang_facets, facets, edges, vertices;
-        f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
-        std::cout<<"("<<cells<<","<<triang_facets<<","
-          <<facets<<","<<edges<<","<<vertices<<"\n";
+      if(conf.verbose>1){
+          std::cout << "\nAUGmenting step " << num_of_triangs << std::endl;
+          std::cout << "current normal" << current_vector << std::endl;
+          t_start=clock();
       }
-    }
-		#ifdef RESTRICTED_RES
-			if (Res.number_of_vertices() == restricted_num_Res){
-				return num_of_triangs;
-			}
-		#endif
-		//if (Res.number_of_vertices() == 40){
-		//		return num_of_triangs;
-		//	}
-		++num_of_triangs;
-	}
-	return num_of_triangs;
+      std::vector<Field> new_vertex =
+              compute_res_vertex2(
+                  pointset,mi,RD,proj,dets,Pdets,Res,T,current_vector,conf);
+      if(conf.verbose>1){
+          std::cout << "Compute triang time= "<<
+                       ((double)(clock()-t_start))/CLOCKS_PER_SEC<<std::endl;
+      }
+
+      // insert it in the complex Res (if it is not already there)
+      if (Pdets.find(new_vertex) == -1 && new_vertex.size() != 0){
+          insert_new_Rvertex2(Res,new_vertex,Pdets,near_cell,conf);
+      }
+      if(conf.verbose>1){
+          {
+              int cells, triang_facets, facets, edges, vertices;
+              f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
+              std::cout<<"("<<cells<<","<<triang_facets<<","
+                      <<facets<<","<<edges<<","<<vertices<<"\n";
+          }
+      }
+#ifdef RESTRICTED_RES
+      if (Res.number_of_vertices() == restricted_num_Res){
+          return num_of_triangs;
+      }
+#endif
+      //if (Res.number_of_vertices() == 40){
+      //		return num_of_triangs;
+      //	}
+      ++num_of_triangs;
+  }
+  return num_of_triangs;
 }
 
 ////////////////////////////////////////////////////////////
@@ -1088,6 +1177,7 @@ std::pair<int,int> compute_res(
 	//std::cout << "static dim:" << T.current_dimension() << std::endl;
 	
   // start by computing a simplex
+  if(conf.verbose>1){std::cout << "Computing the starting simplex..." << std::endl;}
   int start_triangs=
     initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
 
@@ -1156,7 +1246,7 @@ Field volume(const Triangulation& Res, HD& Pdets){
 		//<<std::endl;
 		vol+=abs(Pdets.homogeneous_determinant(simplex_points_indices));
 	}
-	vol*=(1/factorial(Res.current_dimension()));
+	vol*=(Field(1)/Field(compute_factorial(Res.current_dimension())));
 	return vol;
 #else
   return Field(-1);

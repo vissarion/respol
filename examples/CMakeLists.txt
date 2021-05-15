@@ -6,11 +6,11 @@ project( Resultant_enumeration_example )
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4.5)
 
-set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
-
 if ( COMMAND cmake_policy )
   cmake_policy( SET CMP0005 NEW )
 endif()
+
+set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS true)
 
 find_package(CGAL QUIET COMPONENTS Core )
 
@@ -63,6 +63,7 @@ if ( CGAL_FOUND )
   include_directories (BEFORE ../external/spatial_sorting/include)
   include_directories (BEFORE ../external/extreme_points_d/include)
   include_directories (BEFORE ../external/kernel_d/include)
+  include_directories (BEFORE ../external)
   include_directories (BEFORE ../include)
   include_directories (BEFORE ../patches/include)
   include_directories (BEFORE ../external/leda/include)
@@ -195,8 +196,8 @@ if ( CGAL_FOUND )
   # COMPILATION
   ######################################################################
 
-  #create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
-  create_single_source_cgal_program("tropli_disc.cpp")
+  create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
+  #create_single_source_cgal_program("tropli_disc.cpp")
   #create_single_source_cgal_program("compute_ch.cpp")
   endif()
 
