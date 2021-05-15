@@ -65,6 +65,7 @@ if ( CGAL_FOUND )
   include_directories (BEFORE ../external/kernel_d/include)
   include_directories (BEFORE ../include)
   include_directories (BEFORE ../patches/include)
+  include_directories (BEFORE ../external/leda/include)
 
   # OTHER COMPILATION DEFINITIONS
   ######################################################################
@@ -179,11 +180,25 @@ if ( CGAL_FOUND )
     create_single_source_cgal_program("res_enum_d_rand.cpp" ${RESPOL_AUX_PROGS})
   endif( RESPOL_BUILD_RANDOMIZED )
 
+  find_library(LEDA NAMES libleda.a PATHS .)
+
+
+  if (NOT LEDA)
+
+    message(FATAL_ERROR "This program requires the leda library, and will not be compiled.")
+
+  else ()
+
+    message(STATUS "Library leda found: ${LEDA}")
+    link_libraries(${LEDA})
+
   # COMPILATION
   ######################################################################
 
-  create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
+  #create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
+  create_single_source_cgal_program("tropli_disc.cpp")
   #create_single_source_cgal_program("compute_ch.cpp")
+  endif()
 
 else()
 
