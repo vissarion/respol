@@ -2,34 +2,54 @@
   <img src="figs/respol_logo.png">
 </p>
 
-`ResPol` is a software to compute a projection of the Newton polytope of the resultant of a given polynomial system.
+`ResPol` is a software to compute projections of the Newton polytopes of the
+resultant of a given polynomial system, the dicriminant of a multivariate polynomial
+or the principal A-determinant a.k.a. the secondary polytope.
 
 ## Compile and use
 
-This archive contains patches to sources of the `CGAL` library, the old experimental `CGAL` packages `Triangulation` and `Extreme points` (not the one that are part of the `CGAL` library, both were included here thanks to the kind permission of its authors) and the `respol` sources. Both `CGAL` and `respol` are written in `C++`.
+This archive contains patches to sources of the `CGAL` library, the old experimental
+`CGAL` packages `Triangulation` and `Extreme points` (not the one that are part
+of the `CGAL` library, both were included here thanks to the kind permission of
+its authors) and the `respol` sources. Both `CGAL` and `respol` are written in `C++`.
 
-To compile and use `respol`, you need first to compile the `CGAL` library, or download the precompiled library (this software has been tested with `CGAL` version `4.14`). You can follow these steps:
+To compile and use `respol`, you need first to compile the `CGAL` library,
+or download the precompiled library (this software has been tested with `CGAL`
+version `4.14` available from https://github.com/CGAL/cgal/tree/v4.14).
+
+You can follow these steps:
 
 
-### Compile `CGAL` sources
+### Compile dependencies
 
-Follow the `CGAL` installation manual. It states that `CGAL` requires the `Boost` libraries. In particular the header files and the threading library binaries. Having `GMP` version 4.2 or higher and MPFR version 2.2.1 or higher installed is recommended by `CGAL` but needed by `respol`. Once you have installed these libraries, execute:
+Follow the `CGAL` installation manual. It states that `CGAL` requires the
+`Boost` libraries. In particular the header files and the threading library
+binaries. Having `GMP` version 4.2 or higher and MPFR version 2.2.1 or higher
+installed is recommended by `CGAL` but needed by `respol`.
+Once you have installed these libraries, execute:
 
 ```
 $ cmake .
 $ make
 ```
 
+Download and install the LEDA library from
+https://www.algorithmic-solutions.com/index.php/products/leda-free-edition
+
+Then copy the `libleda.a` file shipped with LEDA into `respol` directory.
+
 ### Compile `respol` sources
 
-In folder `respol/examples` execute:
+In folder `respol` execute:
 
 ```
-$ cmake -DCGAL_DIR=_YOUR_CGAL_PATH_ .
+$ cmake -DCGAL_DIR=_YOUR_CGAL_PATH_ -Wno-dev .
 $ make
 ```
 
-where `_YOUR_CGAL_PATH_` is the path where `CGAL` library was compiled. For additional options, set by CMake flags, see README.FLAGS (it is normally not needed to change default compilation options).
+where `_YOUR_CGAL_PATH_` is the path where `CGAL` library was compiled.
+For additional options, set by CMake flags, see README.FLAGS
+(it is normally not needed to change default compilation options).
 
 
 ### Use `respol`
