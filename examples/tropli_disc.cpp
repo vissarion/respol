@@ -1,8 +1,8 @@
 //TropLi_disc Source Code --- version 0.1
 
 
-#include <gmpxx.h>
-#include <Eigen/Dense>
+
+
 #include <LEDA/numbers/integer_matrix.h>
 #include <LEDA/numbers/integer_vector.h>
 #include <LEDA/numbers/integer.h>
@@ -34,27 +34,9 @@ using leda::integer;
 
 
 
-void computepreferences (unsigned long k,
-                         list<unsigned long> *order,
-                         integer_matrix *pDMred,
-                         list<unsigned long> pvec [],
-                         list<unsigned long> F [],
-                         unsigned long sub [],
-                         integer_matrix *pT,
-                         integer_matrix *pvectors,
-                         integer_vector *ptempvec,
-                         bool bits [],
-                         bool bits2 []);
+void computepreferences (unsigned long k, list<unsigned long> *order, integer_matrix *pDMred, list<unsigned long> pvec [], list<unsigned long> F [], unsigned long sub [], integer_matrix *pT, integer_matrix *pvectors, integer_vector *ptempvec, bool bits [], bool bits2 []);
 
-void computecone (list<unsigned long> *porder,
-                  list<unsigned long> pvec [],
-                  list<unsigned long> F [],
-                  unsigned long sub [],
-                  integer_matrix *pT,
-                  integer_matrix *pvectors,
-                  integer_vector *ptempvec,
-                  bool bits [],
-                  bool bits2 []);
+void computecone (list<unsigned long> *porder, list<unsigned long> pvec [], list<unsigned long> F [], unsigned long sub [], integer_matrix *pT, integer_matrix *pvectors, integer_vector *ptempvec, bool bits [], bool bits2 []);
 
 unsigned long numray ( bool bits [] );
 
@@ -97,21 +79,6 @@ bool flagrandom = false;
 //main
 int main(int argc, char* argv[]) {
 
-    //unsigned long d2, n2, m2;
-    cin >> d;
-    cin >> n;
-
-    typedef Eigen::Matrix<mpq_class, Eigen::Dynamic, Eigen::Dynamic> MatrixXd;
-    MatrixXd M2(d, n);
-
-    for (auto i=0; i<d; i++) {
-        for (auto j=0; j<n; j++) {
-            cin >> M2(i,j);
-        }
-    }
-
-    //cout << M2 << std::endl;
-
   //initial declarations
   unsigned long t, t2;
   time_t tstart, tend;
@@ -125,8 +92,8 @@ int main(int argc, char* argv[]) {
   cin >> M;
 
   //define n and m and d
-  //d = M.dim1();
-  //n = M.dim2();
+  d = M.dim1();
+  n = M.dim2();
   m = n-d;
 
   //determine flags
@@ -158,20 +125,12 @@ int main(int argc, char* argv[]) {
       cin >> w(i,0);
     }
   }
-  MatrixXd w2(n,nws);
-  if (!flagrandom) {
-    for (i=0; i<n; i++) {
-      cin >> w2(i,0);
-    }
-  }
 
   //get time
   time (&tstart);
 
   //verify rank is m
-  //if (rank(M)!=d) {
-  Eigen::FullPivLU<MatrixXd> lu_decomp(M2);
-  if (lu_decomp.rank()!=d) {
+  if (rank(M)!=d) {
     cout << "The rank of the matrix is not equal to the number of rows.\n";
     return 0;
   }
@@ -181,10 +140,6 @@ int main(int argc, char* argv[]) {
   integer_vector tempvec(n);
   integer_matrix vectors(n,n);
 
-  MatrixXd T2(n-1,n);
-  MatrixXd tempvec(n,1);
-  MatrixXd vectors(n,n);
-
   //definitions
   integer_matrix N(d,d);
   integer_matrix INV(d,d);
@@ -193,15 +148,6 @@ int main(int argc, char* argv[]) {
 
   integer_matrix Mred(d,n);
   integer_matrix DMred(m,n);
-
-  MatrixXd N2(d,d);
-  MatrixXd INV2(d,d);
-  mpq_t deter2;
-  MatrixXd vec2(d,1);
-
-  MatrixXd Mred(d,n);
-  MatrixXd DMred(m,n);
-
   unsigned long sub [m];
   list<unsigned long> F [n];
   list<unsigned long> pvec [m];
@@ -220,8 +166,7 @@ int main(int argc, char* argv[]) {
   //fill some part of the matrix T with the matrix M
   for (j=0; j<n; j++) {
     for (i=0; i<d; i++) {
-        //T(i+m-1,j) = M(i,j);
-        T2(i+m-1,j) = M2(i,j);
+      T(i+m-1,j) = M(i,j);
     }
   }
 
@@ -253,7 +198,7 @@ int main(int argc, char* argv[]) {
 
   for (j=m; j<n; j++) { //fills the initial matrix N with the corresponding columns of M
     for (i=0; i<d; i++) {
-      N2(i,j-m) = M2(i,j);
+      N(i,j-m) = M(i,j);
     }
   }
 
