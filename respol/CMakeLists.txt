@@ -65,9 +65,9 @@ if ( CGAL_FOUND )
   include_directories (BEFORE ../external/kernel_d/include)
   include_directories (BEFORE ../external)
   include_directories (BEFORE ../include)
+  include_directories (BEFORE ../external/leda/incl)
   include_directories (BEFORE ../patches/include)
-  include_directories (BEFORE ../external/leda/include)
-
+  
   # OTHER COMPILATION DEFINITIONS
   ######################################################################
 
