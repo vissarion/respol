@@ -183,7 +183,6 @@ if ( CGAL_FOUND )
 
   find_library(LEDA NAMES libleda.a PATHS .)
 
-
   if (NOT LEDA)
 
     message(FATAL_ERROR "This program requires the leda library, and will not be compiled.")
@@ -197,9 +196,16 @@ if ( CGAL_FOUND )
   ######################################################################
 
   create_single_source_cgal_program("res_enum_d.cpp" ${RESPOL_AUX_PROGS})
+  create_single_source_cgal_program("test_suite.cpp")
   #create_single_source_cgal_program("tropli_disc.cpp")
   #create_single_source_cgal_program("compute_ch.cpp")
+
+  enable_testing()
+  add_test(NAME test_suite COMMAND "test_suite")
+  set_tests_properties(test_suite PROPERTIES FAIL_REGULAR_EXPRESSION "FAIL")
   endif()
+
+
 
 else()
 

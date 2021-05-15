@@ -195,65 +195,71 @@ int main(const int argc,const char** argv){
   // print some statistics
   
   switch (c.verbose) {
-    case 1:
-      print_statistics_small(CD-1, 
-                           PD,
-                           Res.current_dimension(),
-                           initial_pointset_size,
-                           pointset.size(),
-                           num_of_triangs.first+num_of_triangs.second,
-                           Res.number_of_vertices(),
-         #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
-                           count_extreme_vertices(Res),
-         #else
-                           -1,
-         #endif
-                           tstopall-tstartall, // overall time
-                           conv_time, // Res convex hull time
-                           recompute_time, // Res convex hull offline time
-                           dets.get_determinant_time()+
-                           Pdets.get_determinant_time(), // determinant time
-                           volume(Res,Pdets),
-                           Res,
-                           c);
-       break;
-    case 2:
-          pretty_print_statistics(CD-1, 
-                           PD,
-                           Res.current_dimension(),
-                           initial_pointset_size,
-                           pointset.size(),
-                           num_of_triangs.first+num_of_triangs.second,
-                           Res.number_of_vertices(),
-#ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY                   
-                           count_extreme_vertices(Res),
-#else
-                           -1,
-#endif
-                           tstopall-tstartall, // overall time
-                           conv_time, // Res convex hull time
-                           recompute_time, // Res convex hull offline time
-                           dets.get_determinant_time()+
-                           Pdets.get_determinant_time(), // determinant time
-                           volume(Res,Pdets),
-                           Res,
-                           c);
-           break;
-     default:
+  case 0:
+      // for test-suite
+      std::cout <<  Res.number_of_vertices() << std::endl;
+      break;
+      break;
+  case 1:
+      print_statistics_small(CD-1,
+                             PD,
+                             Res.current_dimension(),
+                             initial_pointset_size,
+                             pointset.size(),
+                             num_of_triangs.first+num_of_triangs.second,
+                             Res.number_of_vertices(),
+                       #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
+                             count_extreme_vertices(Res),
+                       #else
+                             -1,
+                       #endif
+                             tstopall-tstartall, // overall time
+                             conv_time, // Res convex hull time
+                             recompute_time, // Res convex hull offline time
+                             dets.get_determinant_time()+
+                             Pdets.get_determinant_time(), // determinant time
+                             volume(Res,Pdets),
+                             Res,
+                             c);
+      break;
+  case 2:
+      pretty_print_statistics(CD-1,
+                              PD,
+                              Res.current_dimension(),
+                              initial_pointset_size,
+                              pointset.size(),
+                              num_of_triangs.first+num_of_triangs.second,
+                              Res.number_of_vertices(),
+                        #ifdef USE_EXTREME_SPECIALIZED_POINTS_ONLY
+                              count_extreme_vertices(Res),
+                        #else
+                              -1,
+                        #endif
+                              tstopall-tstartall, // overall time
+                              conv_time, // Res convex hull time
+                              recompute_time, // Res convex hull offline time
+                              dets.get_determinant_time()+
+                              Pdets.get_determinant_time(), // determinant time
+                              volume(Res,Pdets),
+                              Res,
+                              c);
+      break;
+  default:
       break;
 
   }
 
-  // print the vertices of the polytope
-  std::cout<< "\nThe vertices of the " ;
-	switch(c.polytope_type){
-		case 0: std::cout << " resultant "; break;
-		case 1: std::cout << " secondary "; break;
-		case 2: std::cout << " discriminant "; break;
-	}
-	std::cout<< "polytope: " << std::endl;	
-  print_res_vertices(Res,std::cout);
-    
+  if (c.verbose != 0) {
+      // print the vertices of the polytope
+      std::cout<< "\nThe vertices of the " ;
+      switch(c.polytope_type){
+      case 0: std::cout << " resultant "; break;
+      case 1: std::cout << " secondary "; break;
+      case 2: std::cout << " discriminant "; break;
+      }
+      std::cout<< "polytope: " << std::endl;
+      print_res_vertices(Res,std::cout);
+  }
   if(c.output_f_vector){
 		generate_polymake_scripts(Res);
     std::ofstream polymakefile;

@@ -131,8 +131,8 @@ typedef HashedDeterminant<Field>::Table                 HD;
 
 // normal vectors data structure
 //#include <../include/normal_vector_ds.h>
-#include "normal_set_ds.h"
-//#include "normal_vector_ds.h"
+//#include "normal_set_ds.h"
+#include "normal_vector_ds.h"
 
 typedef Normal_Vector_ds<PVector_d,Field>					NV_ds;
 
@@ -917,8 +917,8 @@ std::vector<NT_> compute_res_vertex(
   
   if(conf.polytope_type==2){
 	  //discriminant case
-	  //return compute_disc_vertex(pointset,nli);
-	  return compute_disc_vertex_stream(pointset,nli);
+      //return compute_disc_vertex(pointset,nli);
+      return compute_disc_vertex_stream(pointset,nli);
 	}
   
 	if (pointset.size() == proj.size()){
@@ -1056,14 +1056,14 @@ int initialize_Res(const std::vector<std::vector<NT_> >& pointset,
   }
   // make a stack (stl vector) with normals vectors and initialize
   NV_ds normal_list_d;
-  //normal_list_d.simple_initialize();
+  normal_list_d.simple_initialize();
   //normal_list_d.initialize();
-  normal_list_d.random_initialize(100);
+  //normal_list_d.random_initialize(100);
   
   // compute trinagulations using normals as liftings until we compute a simplex
   // or run out of normal vectors
   int minD = (PD>RD)?RD:PD;
-  //std::cout << "minD:"<<minD<<"PD:"<<PD<<std::endl;
+  //std::cout << "minD:"<<minD<<"PD:"<<PD<<"RD:"<<RD<<std::endl;
   while(//Res.current_dimension()<minD &&
         !normal_list_d.empty()){
     if(conf.verbose>1){
@@ -1136,7 +1136,7 @@ int augment_Res(const std::vector<std::vector<NT_> >& pointset,
       if(conf.verbose>1){
           {
               int cells, triang_facets, facets, edges, vertices;
-              f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
+              //f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
               std::cout<<"("<<cells<<","<<triang_facets<<","
                       <<facets<<","<<edges<<","<<vertices<<"\n";
           }
@@ -1180,6 +1180,11 @@ std::pair<int,int> compute_res(
   if(conf.verbose>1){std::cout << "Computing the starting simplex..." << std::endl;}
   int start_triangs=
     initialize_Res(pointset,mi,RD,proj,dets,Pdets,Res,T,conf);
+
+  if (Res.current_dimension() == -1) {
+      std::cout << "Unable to compute the initial simplex, check the input." << std::endl;
+      exit(-1);
+  }
 
   // augment simplex to compute the Res polytope
   int augment_triangs=

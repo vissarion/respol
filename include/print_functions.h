@@ -524,7 +524,7 @@ void print_statistics_small(int Cdim,
                             Triang& Res,
                             const ResPol::config &conf){
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
+  //f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
 #ifdef LOG_MEMORY
   struct proc_t usage;
   look_up_our_self(&usage);
@@ -576,7 +576,7 @@ void pretty_print_statistics(int Cdim,
                             Triang& Res,
                             const ResPol::config &conf){
   int cells, triang_facets, facets, edges, vertices;
-  f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
+  //f_vector(Res,cells,triang_facets,facets,edges,vertices,conf);
   std::cout << "\ndimension (Cayley(d),proj(m),Res): \t(" 
             << Cdim << ","
             << Pdim << ","
@@ -604,6 +604,19 @@ void pretty_print_statistics(int Cdim,
   look_up_our_self(&usage);
   std::cout << "vsize: " << usage.vsize << '\n';
 #endif
+}
+
+template <class Vol>
+void simple_print_statistics(int Cdim,
+                            int Pdim,
+                            int numofvertices,
+                            double timeall,
+                            const Vol &volume){
+  std::cout << "\n======================\n Cayley dimension: " << Cdim << std::endl
+            << "dimension of projection: " << Pdim << std::endl
+            << "#vertices: " << numofvertices << std::endl
+            << "volume: " << volume << std::endl
+            << "time: " << timeall << std::endl;
 }
 
 template <class Vol>

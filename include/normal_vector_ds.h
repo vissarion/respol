@@ -66,7 +66,7 @@ public:
     for (int i=0; i<pow(base,PD); ++i){
       std::vector<DT> extreme_point;
       std::vector<int> v=int2vectord(i,base,PD);
-      copy(v.begin(),v.end(),ostream_iterator<int>(std::cout," "));
+      //copy(v.begin(),v.end(),ostream_iterator<int>(std::cout," "));
       for (std::vector<int>::iterator it=v.begin(); it!=v.end(); it++){
         extreme_point.push_back(vec[*it]);
         std::cout << vec[*it] << " ";
@@ -108,8 +108,8 @@ public:
 
   // initialization of ds
   void simple_initialize(){
-    int vec[]={-1,1};
-    for (int j=0; j<2; j++){
+    int vec[]={-1,1,2};
+    for (int j=0; j<=2; j++){
       for (int i=0; i<PD; i++){
         std::vector<int> extreme_point(PD,0);
         extreme_point[i]=vec[j];
