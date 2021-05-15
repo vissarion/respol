@@ -1,6 +1,10 @@
-![respol-logo](figs/respol_logo.png)
+<p align="center">
+  <img src="figs/respol_logo.png">
+</p>
 
-`respol` is a software to compute a projection of the Newton polytope of the resultant of a given polynomial system.
+`ResPol` is a software to compute a projection of the Newton polytope of the resultant of a given polynomial system.
+
+## Compile and use
 
 This archive contains patches to sources of the `CGAL` library, the old experimental `CGAL` packages `Triangulation` and `Extreme points` (not the one that are part of the `CGAL` library, both were included here thanks to the kind permission of its authors) and the `respol` sources. Both `CGAL` and `respol` are written in `C++`.
 
